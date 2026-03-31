@@ -12,6 +12,7 @@
   <style>
     :root {
       --main-orange: #ff6a11ff;
+      --bright-orange: #ff9c5a; /* [추가] 더 밝은 오렌지 */
       --bg-black: #000000;
       --dark-gray: #121212;
       --card-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 6px 6px rgba(255, 106, 17, 0.1);
@@ -27,7 +28,7 @@
     html, body {
       width: 100%; height: 100%;
       background-color: var(--bg-black);
-      overscroll-behavior-y: contain; /* 브라우저 기본 당겨서 새로고침 방지 (커스텀 구현 위해) */
+      overscroll-behavior-y: contain; /* 브라우저 기본 새로고침 방지 */
     }
     
     body {
@@ -42,54 +43,61 @@
       position: relative;
       display: flex; flex-direction: column;
       overflow: hidden;
+      transition: transform 0.2s; /* 탄성 효과를 위한 트랜지션 */
     }
 
-    /* [추가] 상단 오렌지 그라데이션 */
+    /* [수정] 상단 곡선 그라데이션 및 밝기 수정 */
     #app-container::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 400px;
-      background: linear-gradient(180deg, rgba(255, 106, 17, 0.25) 0%, rgba(0, 0, 0, 0) 100%);
+      height: 400px; /* NEAR 글자 근처까지 */
+      background: radial-gradient(circle at top, var(--bright-orange) 0%, rgba(255, 106, 17, 0.3) 60%, rgba(0, 0, 0, 0) 100%);
       pointer-events: none;
       z-index: 1;
     }
 
-    /* 당겨서 새로고침 인디케이터 */
+    /* [수정] 당겨서 새로고침 인디케이터 초기 위치 및 트랜지션 */
     #pull-indicator {
       position: absolute;
-      top: -50px; left: 0; right: 0;
-      height: 50px;
-      display: flex; justify-content: center; align-items: center;
+      top: -150px; left: 0; right: 0; /* 더 길게 */
+      height: 150px;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
       color: var(--main-orange);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       z-index: 10;
-      transition: transform 0.2s;
+      transition: transform 0.2s, top 0.2s;
+      gap: 10px;
+    }
+    .refresh-spinner {
+      display: none; width: 20px; height: 20px;
+      border: 3px solid rgba(255,106,17,0.3);
+      border-radius: 50%; border-top-color: var(--main-orange);
+      animation: spin 1s linear infinite;
     }
 
     /* Header */
     header {
-      padding: max(55px, env(safe-area-inset-top)) 20px 15px 20px;
+      padding: max(60px, env(safe-area-inset-top)) 20px 15px 20px;
       display: flex; justify-content: space-between; align-items: center;
       position: relative; z-index: 2;
     }
     
     .profile-area { display: flex; align-items: center; gap: 12px; }
     
-    /* [수정] 개 실루엣 아이콘 (블랙 실루엣 강조) */
     .dog-silhouette {
-      width: 44px; height: 44px;
+      width: 46px; height: 46px;
       background-color: var(--main-orange);
       border-radius: 12px;
       display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 4px 10px rgba(255, 106, 17, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 106, 17, 0.3);
     }
 
-    .user-info .sub-text { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
-    .user-info .main-text { font-size: 1.15rem; font-weight: bold; }
+    .user-info .sub-text { font-size: 0.75rem; color: rgba(255,255,255,0.7); }
+    .user-info .main-text { font-size: 1.2rem; font-weight: bold; }
 
     .notification-bell { position: relative; cursor: pointer; }
-    .bell-icon { fill: var(--main-orange); width: 30px; height: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+    .bell-icon { fill: var(--main-orange); width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
     .notification-badge {
       position: absolute; top: -2px; right: -2px;
       background-color: #ff3b30; color: white;
@@ -98,42 +106,42 @@
       border: 2px solid var(--bg-black);
     }
 
-    /* 주간 캘린더 */
+    /* [수정] 스케줄 달력 UI 다듬기 */
     .calendar-section { padding: 5px 0 20px 0; position: relative; z-index: 2; }
     .calendar-strip {
-      display: flex; overflow-x: auto; gap: 12px; padding: 0 20px;
+      display: flex; overflow-x: auto; gap: 10px; padding: 0 20px;
       scrollbar-width: none;
     }
     .calendar-strip::-webkit-scrollbar { display: none; }
 
     .date-item {
-      min-width: 90px;
-      background-color: rgba(30, 30, 30, 0.8);
+      min-width: calc((100% - 75px) / 5.5); /* [수정] 크기 줄여 5.5일 표현 */
+      background-color: rgba(30, 30, 30, 0.4); /* [수정] 반투명 배경 */
       border-radius: 16px;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
       border: 1px solid rgba(255,255,255,0.1);
       box-shadow: var(--card-shadow);
       cursor: pointer;
+      backdrop-filter: blur(10px); /* [수정] 유리 느낌 */
+      flex-shrink: 0;
     }
-    .date-item.today { border-color: var(--main-orange); background-color: rgba(40, 40, 40, 0.9); }
-    .date-item .day-label { font-size: 0.75rem; color: #888; margin-bottom: 5px; }
-    .date-item .date-label { font-size: 1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 8px; }
-    .date-item .meeting-info { font-size: 0.7rem; color: #aaa; line-height: 1.4; }
+    .date-item.today { border-color: rgba(255, 106, 17, 0.6); background-color: rgba(50, 50, 50, 0.5); }
+    .date-item .date-label { font-size: 0.9rem; font-weight: bold; color: var(--main-orange); margin-bottom: 6px; white-space: nowrap; }
+    .date-item .meeting-info { font-size: 0.7rem; color: #aaa; line-height: 1.4; white-space: nowrap; }
 
     /* Main Content */
     main {
       flex: 1;
-      padding: 0 20px 100px 20px; /* 하단바 공간 확보 */
+      padding: 0 20px 100px 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
     }
 
-    /* 카드 그림자 및 입체감 추가 */
     .near-card {
       background-color: var(--main-orange);
-      border-radius: 24px;
+      border-radius: 26px;
       padding: 24px; color: #000;
       position: relative; overflow: hidden;
       min-height: 220px;
@@ -169,7 +177,7 @@
     .filled .card-subtitle { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; }
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
 
-    /* [수정] 하단 네비게이션바 고정 및 여백 최적화 */
+    /* [수정] 하단 네비게이션바 고정 및 여백 최적화 (공간 확보) */
     nav {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -177,19 +185,19 @@
       backdrop-filter: blur(15px);
       border-top: 1px solid rgba(255,255,255,0.05);
       display: flex;
-      padding: 15px 0 calc(10px + env(safe-area-inset-bottom)) 0;
+      padding: 15px 0 max(25px, calc(10px + env(safe-area-inset-bottom))) 0; /* [수정] 하단 여백 추가 */
       justify-content: space-around;
       z-index: 100;
     }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.7rem; color: #555; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #555; }
     .nav-icon { 
-      width: 24px; height: 24px; background-color: var(--main-orange); 
+      width: 26px; height: 26px; background-color: var(--main-orange); 
       border-radius: 6px; opacity: 0.5; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .nav-item.active { color: #fff; }
     .nav-item.active .nav-icon { opacity: 1; box-shadow: 0 0 10px rgba(255, 106, 17, 0.4); }
 
-    /* [추가] 알림 팝업 & 블러 배경 */
+    /* 알림 팝업 */
     #notification-overlay {
       display: none;
       position: absolute;
@@ -209,14 +217,37 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.8);
       position: relative;
     }
-    .popup-header { color: var(--main-orange); font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; display: flex; justify-content: space-between; }
-    .notification-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 0.9rem; border-left: 4px solid var(--main-orange); }
+    .popup-header { color: var(--main-orange); font-size: 1.25rem; font-weight: bold; margin-bottom: 18px; display: flex; justify-content: space-between; }
+    .notification-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 0.95rem; border-left: 4px solid var(--main-orange); }
+
+    /* 애니메이션 및 탄성 효과를 위한 클래스 */
+    .pull-indicator-active {
+      transform: translateY(150px) !important;
+    }
+    
+    /* [추가] 새로고침 중 탄성 효과 (bouncing) */
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      30% { transform: translateY(-30px); }
+      50% { transform: translateY(0); }
+      70% { transform: translateY(-10px); }
+      100% { transform: translateY(0); }
+    }
+
+    .bouncing {
+      animation: bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
   <div id="app-container">
-    <div id="pull-indicator">↓ 당겨서 새로고침</div>
+    <div id="pull-indicator">
+      <div class="pull-text">↓ 당겨서 새로고침</div>
+      <div class="refresh-spinner"></div>
+    </div>
 
     <div id="notification-overlay" onclick="closePopup()">
       <div class="popup-content" onclick="event.stopPropagation()">
@@ -308,12 +339,16 @@
         const d = new Date(); d.setDate(now.getDate() + i);
         const item = document.createElement('div');
         item.className = 'date-item' + (i === 0 ? ' today' : '');
-        item.innerHTML = `<div class="day-label">${days[d.getDay()]}</div><div class="date-label">${(d.getMonth()+1)}.${d.getDate()}</div><div class="meeting-info">${i<2 ? '(1: 13:00)' : '-'}</div>`;
+        
+        // 월.일(요일) 형식으로 다듬기
+        const dateLabel = `${d.getMonth() + 1}.${d.getDate()}(${days[d.getDay()]})`;
+        
+        item.innerHTML = `<div class="date-label">${dateLabel}</div><div class="meeting-info">${i<2 ? '(1: 13:00)' : '-'}</div>`;
         strip.appendChild(item);
       }
     }
 
-    // [수정] 알림 팝업 함수
+    // 알림 팝업 함수
     function openNotifications() {
       document.getElementById('notification-overlay').style.display = 'flex';
     }
@@ -321,10 +356,12 @@
       document.getElementById('notification-overlay').style.display = 'none';
     }
 
-    // [추가] 당겨서 새로고침 로직
+    // 당겨서 새로고침 로직
     function initPullToRefresh() {
       const container = document.getElementById('app-container');
       const indicator = document.getElementById('pull-indicator');
+      const pullText = indicator.querySelector('.pull-text');
+      const spinner = indicator.querySelector('.refresh-spinner');
       let startY = 0;
       let pulling = false;
 
@@ -332,6 +369,11 @@
         if (document.getElementById('main-scroll').scrollTop === 0) {
           startY = e.touches[0].pageY;
           pulling = true;
+          pullText.innerText = "↓ 당겨서 새로고침";
+          spinner.style.display = "none";
+          // 트랜지션 제거
+          container.style.transition = 'none';
+          indicator.style.transition = 'none';
         }
       });
 
@@ -339,7 +381,8 @@
         if (!pulling) return;
         const currentY = e.touches[0].pageY;
         const diff = currentY - startY;
-        if (diff > 0 && diff < 100) {
+        if (diff > 0 && diff < 200) {
+          // 트랜지션 없이 즉시 이동
           container.style.transform = `translateY(${diff}px)`;
           indicator.style.transform = `translateY(${diff}px)`;
         }
@@ -347,10 +390,23 @@
 
       container.addEventListener('touchend', e => {
         const diff = e.changedTouches[0].pageY - startY;
+        
         if (pulling && diff > 70) {
-          indicator.innerText = "업데이트 중...";
-          location.reload(true);
+          pullText.innerText = "업데이트 중...";
+          spinner.style.display = "block";
+          // 탄성 효과를 위해 CSS 클래스 추가
+          container.classList.add('bouncing');
+          indicator.classList.add('bouncing');
+          
+          // 강제 새로고침
+          setTimeout(() => {
+            location.reload(true);
+          }, 1000); 
+          
         } else {
+          // 트랜지션 복구 및 즉시 제자리 이동
+          container.style.transition = 'transform 0.2s';
+          indicator.style.transition = 'transform 0.2s';
           container.style.transform = `translateY(0)`;
           indicator.style.transform = `translateY(0)`;
         }
