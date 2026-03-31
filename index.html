@@ -22,14 +22,16 @@
       margin: 0; padding: 0;
       font-family: 'Helvetica Neue', Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
-      user-select: none; /* 모바일 롱프레스 시 텍스트 선택 방지 */
+      user-select: none; 
     }
     
     html, body {
-      /* [수정] 하단 빈 공간 제거를 위한 dvh 단위 사용 및 백그라운드 강제 지정 */
-      width: 100%; height: 100dvh; 
+      width: 100%; 
+      /* 하단 공백 제거를 위한 iOS 전용 화면 채움 속성 추가 */
+      min-height: 100vh;
+      min-height: -webkit-fill-available; 
       background-color: var(--bg-black);
-      overscroll-behavior-y: none; /* 브라우저 기본 당겨서 새로고침 완벽 차단 */
+      overscroll-behavior-y: none; 
     }
     
     body {
@@ -43,20 +45,16 @@
       background-color: var(--bg-black);
       position: relative;
       display: flex; flex-direction: column;
-      /* 블러 처리를 위해 overflow 속성 조정 */
       transition: filter 0.3s ease, transform 0.3s ease;
     }
 
-    /* 메인 컨텐츠 래퍼 (새로고침 시 함께 움직일 영역) */
     #pull-wrapper {
       position: absolute; top: 0; left: 0; right: 0; bottom: 0;
       display: flex; flex-direction: column;
       transform: translateY(0);
-      /* 당길 때 즉각 반응, 놓을 때 탄성 복귀 */
       transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
     }
 
-    /* [수정] 상단 선명한 수평 그라데이션 */
     #pull-wrapper::before {
       content: '';
       position: absolute;
@@ -67,13 +65,12 @@
       z-index: 1;
     }
 
-    /* [수정] 당겨서 새로고침 인디케이터 (오렌지색 연장 및 오동작 방지) */
     #pull-indicator {
       position: absolute;
-      top: -300px; /* 상단 여백을 충분히 길게 */
+      top: -300px; 
       left: 0; right: 0;
       height: 300px;
-      background-color: var(--main-orange); /* 당겨도 검은색이 안 보이게 동일한 오렌지색 적용 */
+      background-color: var(--main-orange); 
       display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
       padding-bottom: 20px;
       color: #000; font-weight: bold; font-size: 0.85rem;
@@ -87,7 +84,6 @@
       animation: spin 1s linear infinite;
     }
 
-    /* Header */
     header {
       padding: max(60px, env(safe-area-inset-top)) 20px 15px 20px;
       display: flex; justify-content: space-between; align-items: center;
@@ -117,11 +113,10 @@
       border: 2px solid var(--main-orange);
     }
 
-    /* [수정] 스케줄 달력 UI (입체적인 개별 그림자 추가) */
     .calendar-section { padding: 5px 0 20px 0; position: relative; z-index: 2; }
     .calendar-strip {
       display: flex; overflow-x: auto; gap: 12px; 
-      padding: 10px 20px 20px 20px; /* [수정] 그림자가 잘리지 않도록 하단/상단 패딩 확보 */
+      padding: 10px 20px 20px 20px; 
       scrollbar-width: none;
     }
     .calendar-strip::-webkit-scrollbar { display: none; }
@@ -133,17 +128,16 @@
       padding: 12px 8px;
       text-align: center;
       border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1); /* [수정] 개별 그림자 및 유리 입체감 */
+      box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1); 
       backdrop-filter: blur(12px);
       flex-shrink: 0;
       transition: transform 0.2s, background-color 0.2s;
     }
-    .date-item:active { transform: scale(0.95); } /* 터치 피드백 */
+    .date-item:active { transform: scale(0.95); } 
     .date-item.today { border-color: rgba(255, 106, 17, 0.8); background-color: rgba(60, 40, 30, 0.7); }
     .date-item .date-label { font-size: 0.85rem; font-weight: bold; color: var(--main-orange); margin-bottom: 6px; white-space: nowrap; }
     .date-item .meeting-info { font-size: 0.7rem; color: #ccc; line-height: 1.4; white-space: nowrap; }
 
-    /* Main Content */
     main {
       flex: 1;
       padding: 0 20px 100px 20px;
@@ -189,14 +183,16 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
-    /* 하단 네비게이션 (app-container에 종속, pull-wrapper 바깥에 위치하여 새로고침 시 안 내려감) */
+    /* 네비게이션 고정 위치 오류 해결을 위한 position: fixed 및 중앙 정렬 적용 */
     nav {
-      position: absolute; bottom: 0; left: 0; right: 0;
+      position: fixed; 
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px;
       background-color: rgba(18, 18, 18, 0.98);
       border-top: 1px solid rgba(255,255,255,0.05);
       display: flex;
-      padding: 15px 0 max(30px, env(safe-area-inset-bottom)) 0; /* [수정] 하단 여백 추가 확보 */
-      justify-content: space-around; z-index: 100;
+      padding: 15px 0 max(30px, env(safe-area-inset-bottom)) 0; 
+      justify-content: space-around; z-index: 9999;
     }
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #666; cursor: pointer; }
     .nav-icon { 
@@ -206,12 +202,11 @@
     .nav-item.active { color: #fff; }
     .nav-item.active .nav-icon { opacity: 1; box-shadow: 0 0 12px rgba(255, 106, 17, 0.5); }
 
-    /* [추가] 롱프레스 미팅 상세 팝업 */
     .blur-bg { filter: blur(15px); transform: scale(0.97); }
     
     #overlay-container {
-      display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.6); z-index: 1000;
+      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(0, 0, 0, 0.6); z-index: 10000;
       justify-content: center; align-items: center; padding: 20px;
       animation: fadeIn 0.2s ease;
     }
@@ -226,8 +221,7 @@
     }
     .detail-popup h3 { color: var(--main-orange); margin-bottom: 20px; font-size: 1.3rem; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;}
     .detail-row { display: flex; margin-bottom: 12px; font-size: 0.95rem; }
-    .detail-icon { width: 30px; font-size: 1.1rem; }
-    .detail-label { color: #888; width: 60px; }
+    .detail-label { color: #888; width: 65px; }
     .detail-value { font-weight: bold; color: #ddd; flex: 1; }
     .close-btn { 
       width: 100%; padding: 12px; margin-top: 20px; border-radius: 12px; border: none;
@@ -273,7 +267,7 @@
 
       <section class="calendar-section">
         <div class="calendar-strip" id="calendar-strip">
-          </div>
+        </div>
       </section>
 
       <main id="main-scroll">
@@ -304,20 +298,24 @@
         </section>
       </main>
       
-    </div> <nav>
+    </div> 
+
+    <nav>
       <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
       <div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
       <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
       <div class="nav-item"><div class="nav-icon"></div><div>설정</div></div>
     </nav>
 
-  </div> <div id="overlay-container" onclick="closePopup()">
+  </div>
+
+  <div id="overlay-container" onclick="closePopup()">
     <div class="detail-popup" onclick="event.stopPropagation()">
       <h3 id="popup-title">3.31(화) 미팅</h3>
-      <div class="detail-row"><span class="detail-icon">🧑‍🤝‍🧑</span><span class="detail-label">누구랑</span><span class="detail-value" id="popup-who">정프로, 김대리</span></div>
-      <div class="detail-row"><span class="detail-icon">📍</span><span class="detail-label">어디서</span><span class="detail-value" id="popup-where">인하대점</span></div>
-      <div class="detail-row"><span class="detail-icon">☕</span><span class="detail-label">무엇을</span><span class="detail-value" id="popup-what">아이스 아메리카노 3잔</span></div>
-      <div class="detail-row"><span class="detail-icon">💳</span><span class="detail-label">결제자</span><span class="detail-value" id="popup-payer">내가 쏜다! (주선자)</span></div>
+      <div class="detail-row"><span class="detail-label">누구랑 :</span><span class="detail-value" id="popup-who">정프로, 김대리</span></div>
+      <div class="detail-row"><span class="detail-label">어디서 :</span><span class="detail-value" id="popup-where">인하대점</span></div>
+      <div class="detail-row"><span class="detail-label">무엇을 :</span><span class="detail-value" id="popup-what">아이스 아메리카노 3잔</span></div>
+      <div class="detail-row"><span class="detail-label">결제자 :</span><span class="detail-value" id="popup-payer">내가 쏜다! (주선자)</span></div>
       <button class="close-btn" onclick="closePopup()">확인</button>
     </div>
   </div>
@@ -328,7 +326,6 @@
       initPullToRefresh();
     });
 
-    // 1. 캘린더 생성 및 롱프레스 이벤트 연결
     function generateCalendar() {
       const strip = document.getElementById('calendar-strip');
       const days = ['일', '월', '화', '수', '목', '금', '토'];
@@ -344,7 +341,6 @@
         
         item.innerHTML = `<div class="date-label">${dateStr}</div><div class="meeting-info">${hasMeeting ? '(1: 13:00)' : '-'}</div>`;
         
-        // 롱프레스 로직 추가
         let pressTimer;
         let isScrolling = false;
         
@@ -352,10 +348,10 @@
           isScrolling = false;
           pressTimer = setTimeout(() => {
             if (!isScrolling) {
-              if (navigator.vibrate) navigator.vibrate(50); // 모바일 진동 피드백
+              if (navigator.vibrate) navigator.vibrate(50);
               openPopup(dateStr, hasMeeting);
             }
-          }, 500); // 0.5초 길게 누르면 팝업
+          }, 500); 
         }, {passive: true});
         
         item.addEventListener('touchmove', () => { isScrolling = true; clearTimeout(pressTimer); }, {passive: true});
@@ -366,9 +362,8 @@
       }
     }
 
-    // 2. 팝업 로직 (배경 블러 처리)
     function openPopup(dateStr, hasMeeting) {
-      document.getElementById('pull-wrapper').classList.add('blur-bg'); // 배경 블러
+      document.getElementById('pull-wrapper').classList.add('blur-bg'); 
       document.getElementById('overlay-container').style.display = 'flex';
       document.getElementById('popup-title').innerText = `${dateStr} 미팅`;
       
@@ -390,7 +385,6 @@
       document.getElementById('overlay-container').style.display = 'none';
     }
 
-    // 3. 당겨서 새로고침 완벽 개선 (탄성 추가 및 오동작 방지)
     function initPullToRefresh() {
       const wrapper = document.getElementById('pull-wrapper');
       const text = document.getElementById('pull-text');
@@ -399,13 +393,13 @@
       
       let startY = 0;
       let pulling = false;
-      const resistance = 0.4; // [수정] 예민도 낮춤 (저항값)
+      const resistance = 0.4; 
 
       wrapper.addEventListener('touchstart', e => {
         if (scrollArea.scrollTop === 0) {
           startY = e.touches[0].pageY;
           pulling = true;
-          wrapper.style.transition = 'none'; // 당길 땐 즉각 반영
+          wrapper.style.transition = 'none'; 
           text.innerText = "↓ 아래로 당겨서 업데이트";
           spinner.style.display = 'none';
         }
@@ -417,7 +411,7 @@
         let diff = (currentY - startY) * resistance; 
         
         if (diff > 0) {
-          if (diff > 120) diff = 120 + (diff - 120) * 0.2; // 한계치 넘으면 더 뻑뻑하게
+          if (diff > 120) diff = 120 + (diff - 120) * 0.2; 
           wrapper.style.transform = `translateY(${diff}px)`;
         }
       }, {passive: false});
@@ -427,20 +421,17 @@
         pulling = false;
         const diff = (e.changedTouches[0].pageY - startY) * resistance;
         
-        // 탄성 복귀 애니메이션 속성 재부여
         wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
 
         if (diff > 60) {
-          // 새로고침 실행
           text.innerText = "업데이트 중...";
           spinner.style.display = 'block';
-          wrapper.style.transform = `translateY(60px)`; // 스피너 보일 만큼만 남겨두고 정지
+          wrapper.style.transform = `translateY(60px)`; 
           
           setTimeout(() => {
             location.reload(true);
           }, 1000);
         } else {
-          // 취소 복귀
           wrapper.style.transform = `translateY(0)`;
         }
       });
