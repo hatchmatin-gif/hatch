@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Coffee Chat</title>
+  
+  <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNvZmZlZSBDaGF0IiwKICAic2hvcnRfbmFtZSI6ICJDb2ZmZWUiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3ciOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMDAwMDAiLAogICJpY29ucyI6IFtdCn0=">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+    }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+    }
+    
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffffff;
+      overflow: hidden;
+      position: fixed; 
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    #app-container {
+      width: 100%;
+      max-width: 480px;
+      height: 100%;
+      background-color: #000000;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #splash-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      animation: splashFadeOut 0.8s ease-in-out 1.5s forwards;
+    }
+
+    .splash-text {
+      color: #ff6a11ff;
+      font-size: 2.5rem;
+      font-weight: 900;
+      text-transform: lowercase;
+      letter-spacing: -1px;
+      animation: splashZoom 1.5s ease-in-out forwards;
+    }
+
+    @keyframes splashZoom {
+      0% { transform: scale(0.5); opacity: 0; }
+      20% { transform: scale(1); opacity: 1; }
+      80% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(5); opacity: 0; }
+    }
+
+    @keyframes splashFadeOut {
+      to { visibility: hidden; opacity: 0; }
+    }
+
+    header {
+      padding: max(45px, env(safe-area-inset-top)) 20px 20px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #000000;
+    }
+    
+    .profile-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .profile-icon {
+      width: 45px;
+      height: 45px;
+      background-color: #ff6a11ff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      color: #000;
+    }
+
+    .user-info .sub-text {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    
+    .user-info .main-text {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .header-icons {
+      display: flex;
+      gap: 15px;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    main {
+      flex: 1;
+      padding: 0 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+    }
+
+    .near-card {
+      background-color: #ff6a11ff;
+      border-radius: 15px;
+      padding: 20px;
+      color: #000;
+      position: relative;
+      overflow: hidden;
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .near-header {
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(0,0,0,0.2);
+      padding-bottom: 5px;
+    }
+
+    .near-bg-text {
+      position: absolute;
+      bottom: -10px;
+      left: 10px;
+      font-size: 4.5rem;
+      font-weight: 900;
+      transform: rotate(-10deg);
+      opacity: 0.8;
+      line-height: 1;
+    }
+
+    .near-badge {
+      align-self: flex-end;
+      background-color: #000;
+      color: #ff6a11ff;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      z-index: 1;
+      cursor: pointer;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 15px;
+    }
+
+    .action-card {
+      border: 1px solid #ff6a11ff;
+      border-radius: 15px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .action-card:active {
+      background-color: rgba(255, 106, 17, 0.2);
+    }
+
+    .action-card.filled {
+      background-color: #ff6a11ff;
+      color: #000;
+      grid-row: span 2;
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-align: right;
+      color: #ff6a11ff;
+    }
+
+    .filled .card-title {
+      color: #000;
+      text-align: left;
+    }
+
+    .filled .card-subtitle {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .filled ul {
+      list-style: none;
+      font-size: 0.85rem;
+      font-weight: bold;
+      line-height: 1.4;
+    }
+
+    .my-usual {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    
+    .point-display {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ff6a11ff;
+      align-self: flex-start;
+      margin-bottom: 10px;
+    }
+
+    nav {
+      background-color: #111;
+      border-top: 1px solid #333;
+      display: flex;
+      border-radius: 25px 25px 0 0;
+      padding: 15px 0 max(25px, calc(10px + env(safe-area-inset-bottom))) 0;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      color: #888;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      color: #fff;
+    }
+
+    #admin-panel {
+      display: none;
+      padding: 15px;
+      background-color: #333;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    
+    #admin-panel input, #admin-panel button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: none;
+    }
+    
+    #admin-panel button {
+      background-color: #ff6a11ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    <div id="splash-screen">
+      <div class="splash-text">coffee<br>chat</div>
+    </div>
+
+    <header>
+      <div class="profile-area">
+        <div class="profile-icon">👑</div>
+        <div class="user-info">
+          <div class="sub-text" id="user-role">normal meeter. v7</div>
+          <div class="main-text" id="user-name">Kim yum</div>
+        </div>
+      </div>
+      <div class="header-icons">
+        <div onclick="toggleAdminPanel()">🔔</div>
+        <div>📅</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="near-card">
+        <div class="near-header">인하대점 - 아이스 아메리카노 T</div>
+        <div style="flex:1; border:1px dashed rgba(0,0,0,0.3); border-radius:10px; display:flex; justify-content:center; align-items:center; font-size:0.9rem; font-weight:bold;">
+          [ 이미지 / 영상 노출 영역 ]
+        </div>
+        <div class="near-bg-text">NEAR!</div>
+        <div class="near-badge" onclick="mockChargePoint()">산미가 뛰어나네요! ✨</div>
+      </section>
+
+      <section class="grid-container">
+        <div class="action-card">
+          <div class="card-title">POINT<br>Launcher</div>
+        </div>
+        
+        <div class="action-card filled">
+          <div class="card-title">MOIZA</div>
+          <div class="card-subtitle">모이자</div>
+          <ul>
+            <li>- 주선자 포인트 결제</li>
+            <li>- 메뉴/결제 미리하기</li>
+            <li>- 실시간 위치 공유</li>
+          </ul>
+        </div>
+
+        <div class="action-card my-usual">
+          <div class="point-display"><span id="point-balance">16,200</span> (CUP)</div>
+          <div class="card-title">MY<br>USUAL</div>
+        </div>
+      </section>
+
+      <section id="admin-panel">
+        <h4 style="color:#ff6a11ff; margin-bottom:10px;">관리자 포인트 조정 (시험용)</h4>
+        <input type="text" id="target-user" placeholder="대상 계정 (예: 사용자1)" value="사용자0">
+        <input type="number" id="target-point" placeholder="변경할 포인트 값">
+        <button onclick="executeAdminPointChange()">포인트 강제 적용</button>
+      </section>
+    </main>
+
+    <nav>
+      <div class="nav-item">
+        <div style="font-size:1.2rem;">🛡️</div>
+        <div>포인트 전송</div>
+      </div>
+      <div class="nav-item">
+        <div style="font-size:1.2rem;">👁️</div>
+        <div>단골 주문</div>
+      </div>
+    </nav>
+  </div>
+
+  <script>
+    // 앱스 스크립트 배포 후 생성된 웹앱 URL을 여기에 입력하십시오.
+    const GAS_API_URL = '여기에_배포된_GAS_웹앱_URL을_입력하세요';
+
+    document.addEventListener("DOMContentLoaded", () => {
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.remove();
+      }, 2500);
+    });
+
+    function mockChargePoint() {
+      const chargeAmount = 10000;
+      const confirmCharge = confirm('1만원을 충전하시겠습니까?');
+      
+      if (confirmCharge) {
+        alert('[서버 연동 대기중] ' + chargeAmount + '원 충전 요청 완료');
+        
+        // UI 즉시 반영
+        let currentPointText = document.getElementById('point-balance').innerText.replace(/,/g, '');
+        let newPoint = parseInt(currentPointText) + chargeAmount;
+        document.getElementById('point-balance').innerText = newPoint.toLocaleString();
+        
+        // 실제 연동 시 아래와 같이 fetch를 사용합니다.
+        /*
+        fetch(GAS_API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'chargePoints', userId: '사용자0', amount: chargeAmount })
+        }).then(res => res.json()).then(data => console.log(data));
+        */
+      }
+    }
+
+    function toggleAdminPanel() {
+      const panel = document.getElementById('admin-panel');
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function executeAdminPointChange() {
+      const targetUser = document.getElementById('target-user').value;
+      const newPoint = document.getElementById('target-point').value;
+      
+      if (!targetUser || !newPoint) {
+        alert('대상 계정과 포인트 값을 정확히 입력하세요.');
+        return;
+      }
+
+      document.getElementById('point-balance').innerText = parseInt(newPoint).toLocaleString();
+      alert('[시험구동] ' + targetUser + '의 포인트가 ' + newPoint + '로 변경되었습니다.');
+      toggleAdminPanel();
+    }
+  </script>
+</body>
+</html>
