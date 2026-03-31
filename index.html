@@ -8,7 +8,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Coffee Chat</title>
   
-  <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNvZmZlZSBDaGF0IiwKICAic2hvcnRfbmFtZSI6ICJDb2ZmZWUiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3ciOiAiIzAwMDAwMCIsCiAgInRoZW1lX2NvbG9yIjogIiMwMDAwMDAiLAogICJpY29ucyI6IFtdCn0=">
+  <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNvZmZlZSBDaGF0IiwKICAic2hvcnRfbmFtZSI6ICJDb2ZmZWUiLAogICstart_url": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": []
+}">
   
   <style>
     * {
@@ -97,18 +102,13 @@
       gap: 15px;
     }
     
-    .profile-icon {
-      width: 45px;
-      height: 45px;
-      background-color: #ff6a11ff;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      color: #000;
+    /* [녹색 수정] 왕관 이모티콘 및 원형 배경 제거, 검정색 개 이모티콘 추가. */
+    .profile-area-modified {
+      font-size: 2.5rem; /* 개 이모티콘 크기 */
+      color: black; /* 검정색 강조 */
+      margin-right: 15px; /* 텍스트와의 여백 */
     }
-
+    
     .user-info .sub-text {
       font-size: 0.8rem;
       color: #aaa;
@@ -119,11 +119,12 @@
       font-weight: bold;
     }
 
-    .header-icons {
-      display: flex;
-      gap: 15px;
-      font-size: 1.2rem;
-      cursor: pointer;
+    /* [빨간색 수정] 기존 아이콘 제거, 오렌지색 사각형 추가 */
+    .header-icons-modified {
+      width: 80px; /* 적당한 너비 */
+      height: 30px; /* 적당한 높이 */
+      background-color: #ff6a11ff; /* 오렌지색 */
+      border-radius: 5px; /* 약간 둥글게 */
     }
 
     main {
@@ -253,6 +254,8 @@
       display: flex;
       border-radius: 25px 25px 0 0;
       padding: 15px 0 max(25px, calc(10px + env(safe-area-inset-bottom))) 0;
+      /* [파란색 수정] 4개 버튼을 위한 균등 배치 설정 */
+      justify-content: space-around; 
     }
 
     .nav-item {
@@ -264,10 +267,20 @@
       font-size: 0.8rem;
       color: #888;
       cursor: pointer;
+      min-width: 60px; /* 각 아이템 최소 너비 보장 */
     }
 
     .nav-item:hover {
       color: #fff;
+    }
+    
+    /* [파란색 수정] 아이콘 색상을 오렌지색으로 만들기 위해 가짜 아이콘 영역을 div로 구현 */
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      background-color: #ff6a11ff; /* 오렌지색 */
+      border-radius: 5px; /* 약간 둥글게 */
+      margin-bottom: 3px;
     }
 
     #admin-panel {
@@ -303,16 +316,13 @@
 
     <header>
       <div class="profile-area">
-        <div class="profile-icon">👑</div>
+        <div class="profile-area-modified">🐕</div>
         <div class="user-info">
           <div class="sub-text" id="user-role">normal meeter. v7</div>
           <div class="main-text" id="user-name">Kim yum</div>
         </div>
       </div>
-      <div class="header-icons">
-        <div onclick="toggleAdminPanel()">🔔</div>
-        <div>📅</div>
-      </div>
+      <div class="header-icons-modified"></div>
     </header>
 
     <main>
@@ -356,12 +366,20 @@
 
     <nav>
       <div class="nav-item">
-        <div style="font-size:1.2rem;">🛡️</div>
+        <div class="nav-icon"></div>
+        <div>홈</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon"></div>
         <div>포인트 전송</div>
       </div>
       <div class="nav-item">
-        <div style="font-size:1.2rem;">👁️</div>
+        <div class="nav-icon"></div>
         <div>단골 주문</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon"></div>
+        <div>설정</div>
       </div>
     </nav>
   </div>
