@@ -146,7 +146,8 @@
 
     main {
       flex: 1;
-      padding: 0 20px calc(70px + env(safe-area-inset-bottom)) 20px;
+      /* JS가 --nav-total-height를 동적으로 설정 */
+      padding: 0 20px var(--nav-total-height, 90px) 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
@@ -189,9 +190,8 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
-    /* ✅ 핵심 수정: nav를 fixed로, overflow:hidden 바깥에서 safe-area까지 완전히 채움 */
     nav {
-      position: fixed; /* absolute → fixed 로 변경 */
+      position: absolute;
       bottom: 0; left: 0; right: 0;
       background-color: rgba(20, 20, 20, 0.95);
       backdrop-filter: blur(20px);
@@ -199,12 +199,19 @@
       border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
       justify-content: space-around;
+      /* JS가 동적으로 padding-bottom을 설정하므로 기본값만 */
       padding-top: 12px;
-      /* ✅ 홈 인디케이터 영역까지 배경이 채워지도록 safe-area 포함 */
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
+      padding-bottom: 12px;
       z-index: 9999;
+    }
+
+    /* ✅ 홈 인디케이터 영역을 채우는 전용 블록 */
+    #nav-safe-area {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background-color: rgba(20, 20, 20, 0.95);
+      height: 0; /* JS가 safe-area 높이로 동적 설정 */
+      z-index: 9998;
     }
 
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
@@ -311,15 +318,18 @@
       </main>
       
     </div>
-  </div>
 
-  <!-- ✅ nav를 app-container 완전 밖으로 분리 -->
-  <nav>
-    <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
-    <div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
-    <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
-    <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
-  </nav>
+    <nav id="main-nav">
+      <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
+      <div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
+      <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
+      <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
+    </nav>
+
+    <!-- ✅ nav 바로 아래 홈 인디케이터 영역을 채우는 전용 div -->
+    <div id="nav-safe-area"></div>
+
+  </div>
 
   <div id="overlay-container" onclick="closePopup()">
     <div class="detail-popup" onclick="event.stopPropagation()">
@@ -334,9 +344,56 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      applySafeArea();
       generateCalendar();
       initPullToRefresh();
     });
+
+    function applySafeArea() {
+      // ✅ JS로 safe-area-inset-bottom 값을 직접 읽어서 적용
+      // CSS env()가 제대로 안 읽히는 iOS PWA 환경 완벽 대응
+      const safeBottom = parseInt(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue('--sat') // 아래 CSS 변수 트릭으로 읽음
+      ) || 0;
+
+      // CSS 변수 트릭: 더미 엘리먼트로 safe-area 값을 읽는 방법
+      const probe = document.createElement('div');
+      probe.style.cssText = `
+        position: fixed;
+        bottom: 0;
+        height: env(safe-area-inset-bottom, 0px);
+        width: 0;
+        visibility: hidden;
+        pointer-events: none;
+      `;
+      document.body.appendChild(probe);
+      
+      // 렌더링 후 실제 픽셀값 읽기
+      requestAnimationFrame(() => {
+        const safeAreaHeight = probe.getBoundingClientRect().height || 0;
+        document.body.removeChild(probe);
+
+        const nav = document.getElementById('main-nav');
+        const safeDiv = document.getElementById('nav-safe-area');
+        const navContentHeight = 12 + 24 + 6 + 14 + 12; // padding-top + icon + gap + text + padding-bottom ≈ 68px
+
+        // nav를 safe-area 바로 위에 위치시킴
+        nav.style.bottom = safeAreaHeight + 'px';
+        nav.style.paddingBottom = '12px';
+
+        // safe-area 영역을 nav 배경색으로 채움
+        safeDiv.style.height = safeAreaHeight + 'px';
+
+        // main 스크롤 영역이 nav + safe-area에 가리지 않도록 여백 확보
+        const totalNavHeight = navContentHeight + safeAreaHeight;
+        document.getElementById('main-scroll').style.paddingBottom = totalNavHeight + 'px';
+
+        // CSS 변수로도 저장 (혹시 다른 곳에서 쓸 경우 대비)
+        document.documentElement.style.setProperty('--nav-total-height', totalNavHeight + 'px');
+        document.documentElement.style.setProperty('--safe-area-bottom', safeAreaHeight + 'px');
+      });
+    }
 
     function generateCalendar() {
       const strip = document.getElementById('calendar-strip');
