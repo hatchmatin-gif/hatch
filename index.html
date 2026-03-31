@@ -25,6 +25,7 @@
       user-select: none; 
     }
     
+    /* ✅ 핵심 수정: html은 100%, body는 fill-available로 iOS safe area 완벽 대응 */
     html {
       width: 100%;
       height: 100%;
@@ -34,6 +35,7 @@
     body {
       width: 100%;
       height: 100%;
+      /* iOS PWA에서 실제 뷰포트를 fill-available로 채움 */
       min-height: -webkit-fill-available;
       background-color: var(--bg-black);
       overscroll-behavior-y: none;
@@ -44,6 +46,7 @@
       color: #ffffff;
     }
 
+    /* ✅ 핵심 수정: app-container도 fill-available 적용 */
     #app-container {
       width: 100%;
       max-width: 480px;
@@ -146,6 +149,7 @@
 
     main {
       flex: 1;
+      /* ✅ 핵심 수정: nav 높이 + safe-area를 padding-bottom으로 확보 */
       padding: 0 20px calc(70px + env(safe-area-inset-bottom)) 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
@@ -189,6 +193,8 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
+    /* ✅ 핵심 수정: nav를 app-container 기준 absolute로 완전 밀착
+       배경색이 홈 인디케이터 아래까지 채워지고, 아이콘은 safe-area 위에 위치 */
     nav {
       position: absolute;
       bottom: 0; left: 0; right: 0;
@@ -198,8 +204,10 @@
       border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
       justify-content: space-around;
+      /* 상단 패딩 고정, 하단은 safe-area만큼 추가 */
       padding-top: 12px;
       padding-bottom: max(12px, env(safe-area-inset-bottom));
+      /* ✅ 좌우도 safe-area 대응 (가로 모드 등) */
       padding-left: env(safe-area-inset-left);
       padding-right: env(safe-area-inset-right);
       z-index: 9999;
