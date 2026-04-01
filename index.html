@@ -146,8 +146,7 @@
 
     main {
       flex: 1;
-      /* JS가 --nav-total-height를 동적으로 설정 */
-      padding: 0 20px var(--nav-total-height, 90px) 20px;
+      padding: 0 20px 90px 20px; /* JS가 정확한 값으로 덮어씀 */
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
@@ -199,19 +198,9 @@
       border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
       justify-content: space-around;
-      /* JS가 동적으로 padding-bottom을 설정하므로 기본값만 */
       padding-top: 12px;
-      padding-bottom: 12px;
+      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
       z-index: 9999;
-    }
-
-    /* ✅ 홈 인디케이터 영역을 채우는 전용 블록 */
-    #nav-safe-area {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background-color: rgba(20, 20, 20, 0.95);
-      height: 0; /* JS가 safe-area 높이로 동적 설정 */
-      z-index: 9998;
     }
 
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
@@ -326,9 +315,6 @@
       <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
     </nav>
 
-    <!-- ✅ nav 바로 아래 홈 인디케이터 영역을 채우는 전용 div -->
-    <div id="nav-safe-area"></div>
-
   </div>
 
   <div id="overlay-container" onclick="closePopup()">
@@ -343,57 +329,57 @@
   </div>
 
   <script>
+    // ✅ 가장 먼저 실행 - DOMContentLoaded 전에 safe-area 계산
+    (function initLayout() {
+      // PWA 모드 감지 (홈화면에서 실행 여부)
+      const isPWA = window.navigator.standalone === true;
+
+      // safe-area 값을 probe 엘리먼트로 측정
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
+      document.documentElement.appendChild(probe);
+
+      function applyLayout() {
+        const safeBottom = probe.offsetHeight || 0;
+        document.documentElement.removeChild(probe);
+
+        const nav = document.getElementById('main-nav');
+        const mainScroll = document.getElementById('main-scroll');
+        const appContainer = document.getElementById('app-container');
+
+        // nav 아이콘 영역 높이 (padding-top 12 + icon 24 + gap 6 + text 14 + padding-bottom 12 = 68)
+        const NAV_CONTENT_HEIGHT = 68;
+
+        if (isPWA && safeBottom > 0) {
+          // ✅ PWA 모드 + safe-area 있음:
+          // app-container 높이를 safe-area만큼 줄여서 overflow:hidden이 올바른 위치에서 자르도록
+          appContainer.style.height = `calc(100% - ${safeBottom}px)`;
+          // nav는 app-container 맨 아래에 딱 붙음 (bottom:0, absolute)
+          nav.style.paddingBottom = '12px';
+          // app-container 아래 빈 공간을 nav 배경색으로 채우기 위해 body 배경 활용
+          document.body.style.background = 'rgba(20,20,20,0.95)';
+        } else {
+          // Safari 브라우저 or safe-area 없는 환경: 기존 방식 유지
+          nav.style.paddingBottom = `calc(12px + ${safeBottom}px)`;
+        }
+
+        // main 스크롤 padding-bottom = nav 전체 높이
+        const totalNavHeight = NAV_CONTENT_HEIGHT + (isPWA ? 0 : safeBottom);
+        mainScroll.style.paddingBottom = totalNavHeight + 'px';
+      }
+
+      // probe가 렌더링된 후 높이를 읽기 위해 rAF 사용
+      if (document.body) {
+        requestAnimationFrame(applyLayout);
+      } else {
+        document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(applyLayout));
+      }
+    })();
+
     document.addEventListener("DOMContentLoaded", () => {
-      applySafeArea();
       generateCalendar();
       initPullToRefresh();
     });
-
-    function applySafeArea() {
-      // ✅ JS로 safe-area-inset-bottom 값을 직접 읽어서 적용
-      // CSS env()가 제대로 안 읽히는 iOS PWA 환경 완벽 대응
-      const safeBottom = parseInt(
-        getComputedStyle(document.documentElement)
-          .getPropertyValue('--sat') // 아래 CSS 변수 트릭으로 읽음
-      ) || 0;
-
-      // CSS 변수 트릭: 더미 엘리먼트로 safe-area 값을 읽는 방법
-      const probe = document.createElement('div');
-      probe.style.cssText = `
-        position: fixed;
-        bottom: 0;
-        height: env(safe-area-inset-bottom, 0px);
-        width: 0;
-        visibility: hidden;
-        pointer-events: none;
-      `;
-      document.body.appendChild(probe);
-      
-      // 렌더링 후 실제 픽셀값 읽기
-      requestAnimationFrame(() => {
-        const safeAreaHeight = probe.getBoundingClientRect().height || 0;
-        document.body.removeChild(probe);
-
-        const nav = document.getElementById('main-nav');
-        const safeDiv = document.getElementById('nav-safe-area');
-        const navContentHeight = 12 + 24 + 6 + 14 + 12; // padding-top + icon + gap + text + padding-bottom ≈ 68px
-
-        // nav를 safe-area 바로 위에 위치시킴
-        nav.style.bottom = safeAreaHeight + 'px';
-        nav.style.paddingBottom = '12px';
-
-        // safe-area 영역을 nav 배경색으로 채움
-        safeDiv.style.height = safeAreaHeight + 'px';
-
-        // main 스크롤 영역이 nav + safe-area에 가리지 않도록 여백 확보
-        const totalNavHeight = navContentHeight + safeAreaHeight;
-        document.getElementById('main-scroll').style.paddingBottom = totalNavHeight + 'px';
-
-        // CSS 변수로도 저장 (혹시 다른 곳에서 쓸 경우 대비)
-        document.documentElement.style.setProperty('--nav-total-height', totalNavHeight + 'px');
-        document.documentElement.style.setProperty('--safe-area-bottom', safeAreaHeight + 'px');
-      });
-    }
 
     function generateCalendar() {
       const strip = document.getElementById('calendar-strip');
