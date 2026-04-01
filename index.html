@@ -111,42 +111,47 @@
     }
 
     .calendar-section { padding: 5px 0 5px 0; position: relative; z-index: 2; }
+    
     .calendar-strip {
       display: flex; overflow-x: auto; gap: 12px; 
-      padding: 5px 20px 10px 20px; 
+      /* 하단 패딩을 25px로 넉넉하게 늘려 그림자 잘림(Clipping) 현상 원천 차단 */
+      padding: 10px 20px 25px 20px; 
       scrollbar-width: none;
     }
     .calendar-strip::-webkit-scrollbar { display: none; }
 
     .date-item {
       min-width: calc((100% - 85px) / 5.5);
-      /* 배경 투명도 증가 (0.6 -> 0.35) */
-      background-color: rgba(40, 40, 40, 0.35);
-      border-radius: 16px;
-      /* 하단 패딩 증가로 그림자 어색함 해결 */
-      padding: 8px 6px 14px 6px;
+      /* 배경 투명도를 더 높여 유리 같은 느낌 강조 */
+      background-color: rgba(30, 30, 30, 0.15);
+      border-radius: 18px;
+      /* 상하 비율을 맞춰 자연스럽게 높이 확보 */
+      padding: 12px 6px 14px 6px;
       text-align: center;
-      border: 1px solid rgba(255,255,255,0.08);
-      /* 그림자 방향과 깊이 재조정 */
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15); 
-      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      /* 잘리지 않는 공간에 넓고 부드럽게 퍼지는 그림자 적용 */
+      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.05); 
+      backdrop-filter: blur(15px);
       flex-shrink: 0;
       transition: transform 0.2s, background-color 0.2s;
     }
     .date-item:active { transform: scale(0.95); } 
-    /* 오늘 날짜 버튼 투명도 조절 */
-    .date-item.today { border-color: rgba(255, 106, 17, 0.6); background-color: rgba(255, 106, 17, 0.2); }
+    
+    .date-item.today { 
+      border-color: rgba(255, 106, 17, 0.5); 
+      background-color: rgba(255, 106, 17, 0.15); 
+    }
     
     .date-item .date-label { 
       font-size: 0.85rem; font-weight: bold; color: var(--main-orange); 
       margin-bottom: 6px; white-space: nowrap; 
-      /* 글자 그림자 추가 */
-      text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+      /* 내부 텍스트에 강한 그림자를 주어 개방감 속에서도 또렷하게 떠오르도록 처리 */
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
     }
+    
     .date-item .meeting-info { 
       font-size: 0.7rem; color: #ccc; line-height: 1.4; white-space: nowrap; 
-      /* 숫자/정보 그림자 추가 */
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 5px rgba(0, 0, 0, 0.9);
     }
 
     main {
@@ -334,6 +339,7 @@
             <div class="point-display">16,200 (CUP)</div>
             <div class="card-title">MY<br>USUAL</div>
           </div>
+          <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
           <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
           <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
           <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
