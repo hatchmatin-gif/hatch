@@ -146,7 +146,7 @@
 
     main {
       flex: 1;
-      padding: 0 20px 90px 20px; /* JS가 정확한 값으로 덮어씀 */
+      padding: 0 20px 90px 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
@@ -199,7 +199,7 @@
       display: flex;
       justify-content: space-around;
       padding-top: 12px;
-      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
+      padding-bottom: 12px;
       z-index: 9999;
     }
 
@@ -274,8 +274,7 @@
       </header>
 
       <section class="calendar-section">
-        <div class="calendar-strip" id="calendar-strip">
-        </div>
+        <div class="calendar-strip" id="calendar-strip"></div>
       </section>
 
       <main id="main-scroll">
@@ -329,12 +328,11 @@
   </div>
 
   <script>
-    // ✅ 가장 먼저 실행 - DOMContentLoaded 전에 safe-area 계산
+    // ✅ PWA/Safari 환경 모두 대응하는 레이아웃 초기화
     (function initLayout() {
-      // PWA 모드 감지 (홈화면에서 실행 여부)
       const isPWA = window.navigator.standalone === true;
 
-      // safe-area 값을 probe 엘리먼트로 측정
+      // probe로 실제 safe-area-inset-bottom 픽셀값 측정
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
       document.documentElement.appendChild(probe);
@@ -347,28 +345,28 @@
         const mainScroll = document.getElementById('main-scroll');
         const appContainer = document.getElementById('app-container');
 
-        // nav 아이콘 영역 높이 (padding-top 12 + icon 24 + gap 6 + text 14 + padding-bottom 12 = 68)
+        // nav 콘텐츠 높이: padding-top(12) + icon(24) + gap(6) + text(14) + padding-bottom(12) = 68px
         const NAV_CONTENT_HEIGHT = 68;
 
         if (isPWA && safeBottom > 0) {
-          // ✅ PWA 모드 + safe-area 있음:
-          // app-container 높이를 safe-area만큼 줄여서 overflow:hidden이 올바른 위치에서 자르도록
+          // ✅ PWA 모드:
+          // 1. app-container를 safe-area만큼 줄여서 overflow:hidden 경계를 홈 인디케이터 바로 위로 설정
           appContainer.style.height = `calc(100% - ${safeBottom}px)`;
-          // nav는 app-container 맨 아래에 딱 붙음 (bottom:0, absolute)
+          // 2. nav는 줄어든 app-container 맨 아래(bottom:0)에 딱 붙음 → 버튼이 홈 인디케이터 바로 위
           nav.style.paddingBottom = '12px';
-          // app-container 아래 빈 공간을 nav 배경색으로 채우기 위해 body 배경 활용
-          document.body.style.background = 'rgba(20,20,20,0.95)';
+          // 3. body 배경으로 safe-area 빈 공간을 nav와 같은 색으로 채움
+          document.body.style.backgroundColor = 'rgba(20, 20, 20, 0.95)';
+          // 4. main 스크롤은 줄어든 컨테이너 기준이므로 nav 높이만큼만 여백
+          mainScroll.style.paddingBottom = NAV_CONTENT_HEIGHT + 'px';
         } else {
-          // Safari 브라우저 or safe-area 없는 환경: 기존 방식 유지
+          // ✅ Safari 브라우저 모드:
+          // nav padding-bottom에 safe-area 추가하면 배경이 아래까지 채워지고 버튼은 위로 올라옴
           nav.style.paddingBottom = `calc(12px + ${safeBottom}px)`;
+          // main 스크롤은 nav 전체 높이(콘텐츠 + safe-area)만큼 여백
+          mainScroll.style.paddingBottom = (NAV_CONTENT_HEIGHT + safeBottom) + 'px';
         }
-
-        // main 스크롤 padding-bottom = nav 전체 높이
-        const totalNavHeight = NAV_CONTENT_HEIGHT + (isPWA ? 0 : safeBottom);
-        mainScroll.style.paddingBottom = totalNavHeight + 'px';
       }
 
-      // probe가 렌더링된 후 높이를 읽기 위해 rAF 사용
       if (document.body) {
         requestAnimationFrame(applyLayout);
       } else {
@@ -470,43 +468,4 @@
       wrapper.addEventListener('touchmove', e => {
         if (!pulling) return;
         const currentY = e.touches[0].pageY;
-        let diff = (currentY - startY) * resistance; 
-        
-        if (diff > 0) {
-          if (diff > 120) {
-            diff = 120 + (diff - 120) * 0.2; 
-            if (!readyToRefresh && diff > 130) {
-              readyToRefresh = true;
-              text.innerText = "손을 놓으면 업데이트 됩니다";
-              if (navigator.vibrate) navigator.vibrate(30);
-            }
-          } else {
-            readyToRefresh = false;
-            text.innerText = "↓ 아래로 당겨서 업데이트";
-          }
-          wrapper.style.transform = `translateY(${diff}px)`;
-        }
-      }, {passive: false});
-
-      wrapper.addEventListener('touchend', e => {
-        if (!pulling) return;
-        pulling = false;
-        const diff = (e.changedTouches[0].pageY - startY) * resistance;
-        
-        wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
-        wrapper.style.transform = `translateY(0)`; 
-
-        if (diff > 60) {
-          text.innerText = "업데이트 중...";
-          spinner.style.display = 'block';
-          if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-          
-          setTimeout(() => {
-            location.reload(true);
-          }, 350); 
-        }
-      });
-    }
-  </script>
-</body>
-</html>
+        let d
