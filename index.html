@@ -146,7 +146,6 @@
 
     main {
       flex: 1;
-      /* JS가 --nav-total-height를 동적으로 설정 */
       padding: 0 20px var(--nav-total-height, 90px) 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
@@ -190,39 +189,39 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
-    /* ✅ 네비게이션: 반투명 및 블러 효과 적용 */
+    /* ✅ 수정된 네비게이션 바: 너비 100%, 텍스트 제거, 하단 밀착, 반투명 유리 효과 */
     nav {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      background-color: rgba(25, 25, 25, 0.65); /* 반투명 그레이 */
+      background-color: rgba(25, 25, 25, 0.75); /* 인스타 느낌의 반투명 그레이 */
       backdrop-filter: blur(15px);
       -webkit-backdrop-filter: blur(15px);
-      border-top: 1px solid rgba(255,255,255,0.1);
+      border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
       justify-content: space-around;
-      padding-top: 12px;
-      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
+      align-items: center; /* 세로 중앙 정렬 */
+      /* JS가 하단 패딩(safe-area 포함)을 덮어씁니다. 상단 패딩은 고정 */
+      padding-top: 18px; 
+      padding-bottom: 18px;
       z-index: 9999;
     }
 
-    /* ✅ 홈 인디케이터 영역: 반투명 및 블러 효과 동일 적용 (네비게이션과 일체감) */
-    #nav-safe-area {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background-color: rgba(25, 25, 25, 0.65); /* 네비게이션과 동일한 반투명 */
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      height: 0; /* JS가 safe-area 높이로 동적 설정 */
-      z-index: 9998;
-    }
-
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
+    /* 텍스트가 빠진 만큼 아이템 구성을 간결하게 변경 */
+    .nav-item { flex: 1; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+    
+    /* 글씨가 사라져 확보된 공간만큼 아이콘 크기를 살짝 키움 */
     .nav-icon { 
-      width: 24px; height: 24px; background-color: var(--main-orange); 
+      width: 28px; height: 28px; 
+      background-color: var(--main-orange); 
       border-radius: 6px; opacity: 0.3;
+      transition: all 0.2s ease;
     }
-    .nav-item.active { color: #fff; }
-    .nav-item.active .nav-icon { opacity: 1; box-shadow: 0 0 12px rgba(255, 106, 17, 0.6); }
+    
+    .nav-item.active .nav-icon { 
+      opacity: 1; 
+      box-shadow: 0 0 15px rgba(255, 106, 17, 0.6); 
+      transform: scale(1.1); /* 활성화 시 살짝 커지는 효과 */
+    }
 
     .blur-bg { filter: blur(15px); transform: scale(0.97); }
     
@@ -315,21 +314,17 @@
             <div class="point-display">16,200 (CUP)</div>
             <div class="card-title">MY<br>USUAL</div>
           </div>
-          <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
-          <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
         </section>
       </main>
       
     </div>
 
     <nav id="main-nav">
-      <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
-      <div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
-      <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
-      <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
+      <div class="nav-item active"><div class="nav-icon"></div></div>
+      <div class="nav-item"><div class="nav-icon"></div></div>
+      <div class="nav-item"><div class="nav-icon"></div></div>
+      <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div></div>
     </nav>
-
-    <div id="nav-safe-area"></div>
 
   </div>
 
@@ -345,11 +340,10 @@
   </div>
 
   <script>
-    // ✅ PWA/Safari 환경 모두 대응하는 레이아웃 초기화
+    // ✅ 형님의 완벽한 safe-area 계산 로직 유지 + 네비게이션 바 수정 반영
     (function initLayout() {
       const isPWA = window.navigator.standalone === true;
 
-      // probe로 실제 safe-area-inset-bottom 픽셀값 측정
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
       document.documentElement.appendChild(probe);
@@ -359,32 +353,26 @@
         document.documentElement.removeChild(probe);
 
         const nav = document.getElementById('main-nav');
-        const safeDiv = document.getElementById('nav-safe-area');
         const mainScroll = document.getElementById('main-scroll');
         const appContainer = document.getElementById('app-container');
 
-        // nav 콘텐츠 높이: padding-top(12) + icon(24) + gap(6) + text(14) + padding-bottom(12) = 68px
-        const NAV_CONTENT_HEIGHT = 68;
+        // ✅ 글씨가 삭제되었으므로 순수 아이콘 영역의 높이만 계산 (padding-top 18 + icon 28 + padding-bottom 기본 18 = 64px)
+        const NAV_CONTENT_HEIGHT = 64;
 
-        // ✅ 핵심 변경: 반투명 효과를 위해 app-container 높이를 자르지 않고 그대로 둡니다.
-        // 대신 mainScroll의 padding-bottom을 넉넉히 주어 콘텐츠가 바닥까지 스크롤되도록 합니다.
         if (isPWA && safeBottom > 0) {
-          appContainer.style.height = '100%'; // 자르지 않음
-          nav.style.bottom = safeBottom + 'px';
-          nav.style.paddingBottom = '12px';
+          appContainer.style.height = '100%'; 
+          nav.style.bottom = '0px'; 
+          // 안전 영역(safeBottom)을 네비게이션 바의 하단 패딩으로 모두 밀어넣어 바닥과 밀착
+          nav.style.paddingBottom = (18 + safeBottom) + 'px'; 
         } else {
-          nav.style.bottom = safeBottom + 'px';
-          nav.style.paddingBottom = '12px';
+          nav.style.bottom = '0px';
+          nav.style.paddingBottom = (18 + safeBottom) + 'px';
         }
 
-        // safe-area 영역 높이 설정 (네비게이션 바와 동일한 반투명 블러 적용됨)
-        safeDiv.style.height = safeBottom + 'px';
-
-        // 컨텐츠가 네비게이션과 인디케이터 뒤로 지나가고 멈추도록 전체 높이만큼 패딩 부여 (20px은 추가 여유)
+        // 스크롤이 네비게이션 뒤로 충분히 지나가도록 전체 높이 + 여유 공간 패딩
         const totalNavHeight = NAV_CONTENT_HEIGHT + safeBottom;
         mainScroll.style.paddingBottom = (totalNavHeight + 20) + 'px';
 
-        // CSS 변수로 저장
         document.documentElement.style.setProperty('--nav-total-height', (totalNavHeight + 20) + 'px');
       }
 
