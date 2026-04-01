@@ -146,7 +146,8 @@
 
     main {
       flex: 1;
-      padding: 0 20px 90px 20px;
+      /* JS가 --nav-total-height를 동적으로 설정 */
+      padding: 0 20px var(--nav-total-height, 90px) 20px;
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
@@ -189,18 +190,30 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
+    /* ✅ 네비게이션: 반투명 및 블러 효과 적용 */
     nav {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      background-color: rgba(20, 20, 20, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.08);
+      background-color: rgba(25, 25, 25, 0.65); /* 반투명 그레이 */
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-top: 1px solid rgba(255,255,255,0.1);
       display: flex;
       justify-content: space-around;
       padding-top: 12px;
-      padding-bottom: 12px;
+      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
       z-index: 9999;
+    }
+
+    /* ✅ 홈 인디케이터 영역: 반투명 및 블러 효과 동일 적용 (네비게이션과 일체감) */
+    #nav-safe-area {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background-color: rgba(25, 25, 25, 0.65); /* 네비게이션과 동일한 반투명 */
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      height: 0; /* JS가 safe-area 높이로 동적 설정 */
+      z-index: 9998;
     }
 
     .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
@@ -302,6 +315,8 @@
             <div class="point-display">16,200 (CUP)</div>
             <div class="card-title">MY<br>USUAL</div>
           </div>
+          <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
+          <div class="action-card"><div class="card-title" style="color:#aaa;">추가 기능<br>준비 중</div></div>
         </section>
       </main>
       
@@ -313,6 +328,8 @@
       <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
       <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
     </nav>
+
+    <div id="nav-safe-area"></div>
 
   </div>
 
@@ -342,29 +359,33 @@
         document.documentElement.removeChild(probe);
 
         const nav = document.getElementById('main-nav');
+        const safeDiv = document.getElementById('nav-safe-area');
         const mainScroll = document.getElementById('main-scroll');
         const appContainer = document.getElementById('app-container');
 
         // nav 콘텐츠 높이: padding-top(12) + icon(24) + gap(6) + text(14) + padding-bottom(12) = 68px
         const NAV_CONTENT_HEIGHT = 68;
 
+        // ✅ 핵심 변경: 반투명 효과를 위해 app-container 높이를 자르지 않고 그대로 둡니다.
+        // 대신 mainScroll의 padding-bottom을 넉넉히 주어 콘텐츠가 바닥까지 스크롤되도록 합니다.
         if (isPWA && safeBottom > 0) {
-          // ✅ PWA 모드:
-          // 1. app-container를 safe-area만큼 줄여서 overflow:hidden 경계를 홈 인디케이터 바로 위로 설정
-          appContainer.style.height = `calc(100% - ${safeBottom}px)`;
-          // 2. nav는 줄어든 app-container 맨 아래(bottom:0)에 딱 붙음 → 버튼이 홈 인디케이터 바로 위
+          appContainer.style.height = '100%'; // 자르지 않음
+          nav.style.bottom = safeBottom + 'px';
           nav.style.paddingBottom = '12px';
-          // 3. body 배경으로 safe-area 빈 공간을 nav와 같은 색으로 채움
-          document.body.style.backgroundColor = 'rgba(20, 20, 20, 0.95)';
-          // 4. main 스크롤은 줄어든 컨테이너 기준이므로 nav 높이만큼만 여백
-          mainScroll.style.paddingBottom = NAV_CONTENT_HEIGHT + 'px';
         } else {
-          // ✅ Safari 브라우저 모드:
-          // nav padding-bottom에 safe-area 추가하면 배경이 아래까지 채워지고 버튼은 위로 올라옴
-          nav.style.paddingBottom = `calc(12px + ${safeBottom}px)`;
-          // main 스크롤은 nav 전체 높이(콘텐츠 + safe-area)만큼 여백
-          mainScroll.style.paddingBottom = (NAV_CONTENT_HEIGHT + safeBottom) + 'px';
+          nav.style.bottom = safeBottom + 'px';
+          nav.style.paddingBottom = '12px';
         }
+
+        // safe-area 영역 높이 설정 (네비게이션 바와 동일한 반투명 블러 적용됨)
+        safeDiv.style.height = safeBottom + 'px';
+
+        // 컨텐츠가 네비게이션과 인디케이터 뒤로 지나가고 멈추도록 전체 높이만큼 패딩 부여 (20px은 추가 여유)
+        const totalNavHeight = NAV_CONTENT_HEIGHT + safeBottom;
+        mainScroll.style.paddingBottom = (totalNavHeight + 20) + 'px';
+
+        // CSS 변수로 저장
+        document.documentElement.style.setProperty('--nav-total-height', (totalNavHeight + 20) + 'px');
       }
 
       if (document.body) {
