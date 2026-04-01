@@ -110,13 +110,35 @@
       border: 2px solid var(--main-orange);
     }
 
+    /* 달력 영역: 상대 위치로 설정하여 블러 배경과 버튼 섹션의 기준이 되도록 함 */
     .calendar-section { padding: 5px 0 5px 0; position: relative; z-index: 2; }
     
+    /* [새로운 배경 요소]: 점진적인 블러 구현 */
+    .calendar-blur-bg {
+      position: absolute;
+      top: -15px; /* 헤더 영역으로 미세하게 겹쳐서 자연스러운 블러 효과 */
+      left: 0;
+      right: 0;
+      bottom: -15px; /* 스크롤 그림자 잘림 방지 영역으로도 겹침 */
+      
+      /* 기본 블러 세기를 강하게 설정 */
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      
+      /* [점진적 블러의 핵심]: 마스킹 기법 적용 */
+      /* 상단은 완전히 불투명하게(블러 적용), 하단은 완전히 투명하게(블러 없음) 그라데이션 적용 */
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+      
+      z-index: -1; /* 달력 버튼 섹션 뒤에 위치 */
+    }
+
     .calendar-strip {
       display: flex; overflow-x: auto; gap: 12px; 
-      /* 그림자 크기가 줄었으므로 하단 여백을 15px로 적당히 조절 */
-      padding: 10px 20px 15px 20px; 
+      /* 그림자가 더 잘릴 수 있으므로 하단 여백을 20px로 약간 늘려 컴팩트하면서도 자연스럽게 */
+      padding: 10px 20px 20px 20px; 
       scrollbar-width: none;
+      position: relative; /* 블러 배경 위에 올리기 위해 설정 */
     }
     .calendar-strip::-webkit-scrollbar { display: none; }
 
@@ -124,10 +146,10 @@
       min-width: calc((100% - 85px) / 5.5);
       background-color: rgba(30, 30, 30, 0.15);
       border-radius: 16px;
-      padding: 10px 6px;
+      /* 미세하게 패딩을 줄여 더 컴팩트하게 다듬음 */
+      padding: 9px 6px;
       text-align: center;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      /* 그림자 크기와 퍼짐 정도를 컴팩트하게 축소 */
       box-shadow: 0 6px 10px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.05); 
       backdrop-filter: blur(15px);
       flex-shrink: 0;
@@ -308,6 +330,7 @@
       </header>
 
       <section class="calendar-section">
+        <div class="calendar-blur-bg"></div>
         <div class="calendar-strip" id="calendar-strip"></div>
       </section>
 
