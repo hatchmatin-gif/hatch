@@ -25,16 +25,19 @@
       user-select: none; 
     }
     
-    html, body {
+    html {
       width: 100%;
-      /* 최신 모바일 대응 동적 뷰포트 단위 사용 */
-      height: 100dvh;
-      background-color: var(--bg-black);
-      overscroll-behavior-y: none;
-      overflow: hidden;
+      height: 100%;
+      background-color: #000;
     }
 
     body {
+      width: 100%;
+      height: 100%;
+      min-height: -webkit-fill-available;
+      background-color: var(--bg-black);
+      overscroll-behavior-y: none;
+      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: flex-start;
@@ -44,7 +47,8 @@
     #app-container {
       width: 100%;
       max-width: 480px;
-      height: 100dvh;
+      height: 100%;
+      min-height: -webkit-fill-available;
       background-color: var(--bg-black);
       position: relative;
       overflow: hidden;
@@ -142,8 +146,7 @@
 
     main {
       flex: 1;
-      /* CSS 자체적으로 네비게이션바 크기 + 안전영역을 계산하여 패딩 확보 */
-      padding: 0 20px calc(80px + env(safe-area-inset-bottom)) 20px;
+      padding: 0 20px 90px 20px; /* JS가 정확한 값으로 덮어씀 */
       display: flex; flex-direction: column; gap: 20px;
       overflow-y: auto;
       position: relative; z-index: 2;
@@ -186,9 +189,8 @@
     .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
     .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
 
-    /* CSS만으로 해결하는 네비게이션 바 하단 고정 */
     nav {
-      position: fixed;
+      position: absolute;
       bottom: 0; left: 0; right: 0;
       background-color: rgba(20, 20, 20, 0.95);
       backdrop-filter: blur(20px);
@@ -197,8 +199,7 @@
       display: flex;
       justify-content: space-around;
       padding-top: 12px;
-      /* 물리적 바닥까지 배경이 늘어나고 아이콘은 안전영역 위로 올라오도록 설정 */
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
       z-index: 9999;
     }
 
@@ -305,7 +306,7 @@
         </section>
       </main>
       
-    </div> 
+    </div>
 
     <nav id="main-nav">
       <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
@@ -313,6 +314,7 @@
       <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
       <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
     </nav>
+
   </div>
 
   <div id="overlay-container" onclick="closePopup()">
@@ -327,6 +329,53 @@
   </div>
 
   <script>
+    // ✅ 가장 먼저 실행 - DOMContentLoaded 전에 safe-area 계산
+    (function initLayout() {
+      // PWA 모드 감지 (홈화면에서 실행 여부)
+      const isPWA = window.navigator.standalone === true;
+
+      // safe-area 값을 probe 엘리먼트로 측정
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
+      document.documentElement.appendChild(probe);
+
+      function applyLayout() {
+        const safeBottom = probe.offsetHeight || 0;
+        document.documentElement.removeChild(probe);
+
+        const nav = document.getElementById('main-nav');
+        const mainScroll = document.getElementById('main-scroll');
+        const appContainer = document.getElementById('app-container');
+
+        // nav 아이콘 영역 높이 (padding-top 12 + icon 24 + gap 6 + text 14 + padding-bottom 12 = 68)
+        const NAV_CONTENT_HEIGHT = 68;
+
+        if (isPWA && safeBottom > 0) {
+          // ✅ PWA 모드 + safe-area 있음:
+          // app-container 높이를 safe-area만큼 줄여서 overflow:hidden이 올바른 위치에서 자르도록
+          appContainer.style.height = `calc(100% - ${safeBottom}px)`;
+          // nav는 app-container 맨 아래에 딱 붙음 (bottom:0, absolute)
+          nav.style.paddingBottom = '12px';
+          // app-container 아래 빈 공간을 nav 배경색으로 채우기 위해 body 배경 활용
+          document.body.style.background = 'rgba(20,20,20,0.95)';
+        } else {
+          // Safari 브라우저 or safe-area 없는 환경: 기존 방식 유지
+          nav.style.paddingBottom = `calc(12px + ${safeBottom}px)`;
+        }
+
+        // main 스크롤 padding-bottom = nav 전체 높이
+        const totalNavHeight = NAV_CONTENT_HEIGHT + (isPWA ? 0 : safeBottom);
+        mainScroll.style.paddingBottom = totalNavHeight + 'px';
+      }
+
+      // probe가 렌더링된 후 높이를 읽기 위해 rAF 사용
+      if (document.body) {
+        requestAnimationFrame(applyLayout);
+      } else {
+        document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(applyLayout));
+      }
+    })();
+
     document.addEventListener("DOMContentLoaded", () => {
       generateCalendar();
       initPullToRefresh();
