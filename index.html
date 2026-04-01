@@ -1,338 +1,354 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#000000">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Coffee Chat</title>
-  
-  <style>
-    :root {
-      --main-orange: #ff6a11;
-      --bg-black: #000000;
-      --dark-gray: #121212;
-      --card-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 4px 8px rgba(255, 106, 17, 0.15);
-    }
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Coffee Chat</title>
 
-    * {
-      box-sizing: border-box;
-      margin: 0; padding: 0;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none; 
-    }
-    
+<style>
+:root {
+--main-orange: #ff6a11;
+--bg-black: #000000;
+--dark-gray: #121212;
+--card-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 4px 8px rgba(255, 106, 17, 0.15);
+}
+
+* {
+box-sizing: border-box;
+margin: 0; padding: 0;
+font-family: 'Helvetica Neue', Arial, sans-serif;
+-webkit-tap-highlight-color: transparent;
+user-select: none; 
+}
+
+    html, body {
     html {
-      width: 100%;
+width: 100%;
+      /* 최신 모바일 대응 동적 뷰포트 단위 사용 */
+      height: 100dvh;
+      background-color: var(--bg-black);
+      overscroll-behavior-y: none;
+      overflow: hidden;
       height: 100%;
       background-color: #000;
-    }
+}
 
-    body {
+body {
       width: 100%;
       height: 100%;
       min-height: -webkit-fill-available;
       background-color: var(--bg-black);
       overscroll-behavior-y: none;
       overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      color: #ffffff;
-    }
+display: flex;
+justify-content: center;
+align-items: flex-start;
+color: #ffffff;
+}
 
-    #app-container {
-      width: 100%;
-      max-width: 480px;
+#app-container {
+width: 100%;
+max-width: 480px;
+      height: 100dvh;
       height: 100%;
       min-height: -webkit-fill-available;
-      background-color: var(--bg-black);
-      position: relative;
-      overflow: hidden;
-    }
+background-color: var(--bg-black);
+position: relative;
+overflow: hidden;
+}
 
-    #pull-wrapper {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      display: flex; flex-direction: column;
-      transform: translateY(0);
-      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
-    }
+#pull-wrapper {
+position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+display: flex; flex-direction: column;
+transform: translateY(0);
+transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); 
+}
 
-    #pull-wrapper::before {
-      content: '';
+#pull-wrapper::before {
+content: '';
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 380px;
+background: linear-gradient(180deg, #ff6a11 0%, rgba(255, 106, 17, 0.6) 30%, rgba(255, 106, 17, 0) 100%);
+pointer-events: none;
+z-index: 1;
+}
+
+#pull-indicator {
+position: absolute;
+top: -300px; 
+left: 0; right: 0;
+height: 300px;
+background-color: var(--main-orange); 
+display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+padding-bottom: 25px;
+color: #000; font-weight: bold; font-size: 0.85rem;
+z-index: 10;
+}
+
+.refresh-spinner {
+display: none; width: 24px; height: 24px; margin-top: 10px;
+border: 3px solid rgba(0,0,0,0.2);
+border-radius: 50%; border-top-color: #000;
+animation: spin 1s linear infinite;
+}
+
+header {
+padding: max(60px, env(safe-area-inset-top)) 20px 15px 20px;
+display: flex; justify-content: space-between; align-items: center;
+position: relative; z-index: 2;
+}
+
+.profile-area { display: flex; align-items: center; gap: 12px; }
+
+.dog-silhouette {
+width: 46px; height: 46px;
+background-color: var(--main-orange);
+border-radius: 12px;
+display: flex; justify-content: center; align-items: center;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.user-info .sub-text { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
+.user-info .main-text { font-size: 1.2rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+.notification-bell { position: relative; cursor: pointer; }
+.bell-icon { fill: #000; width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+.notification-badge {
+position: absolute; top: -2px; right: -2px;
+background-color: #ff3b30; color: white;
+font-size: 0.65rem; padding: 2px 6px;
+border-radius: 10px; font-weight: bold;
+border: 2px solid var(--main-orange);
+}
+
+.calendar-section { padding: 5px 0 20px 0; position: relative; z-index: 2; }
+.calendar-strip {
+display: flex; overflow-x: auto; gap: 12px; 
+padding: 10px 20px 20px 20px; 
+scrollbar-width: none;
+}
+.calendar-strip::-webkit-scrollbar { display: none; }
+
+.date-item {
+min-width: calc((100% - 85px) / 5.5);
+background-color: rgba(40, 40, 40, 0.6);
+border-radius: 16px;
+padding: 12px 8px;
+text-align: center;
+border: 1px solid rgba(255,255,255,0.05);
+box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1); 
+backdrop-filter: blur(12px);
+flex-shrink: 0;
+transition: transform 0.2s, background-color 0.2s;
+}
+.date-item:active { transform: scale(0.95); } 
+.date-item.today { border-color: rgba(255, 106, 17, 0.8); background-color: rgba(60, 40, 30, 0.7); }
+.date-item .date-label { font-size: 0.85rem; font-weight: bold; color: var(--main-orange); margin-bottom: 6px; white-space: nowrap; }
+.date-item .meeting-info { font-size: 0.7rem; color: #ccc; line-height: 1.4; white-space: nowrap; }
+
+main {
+flex: 1;
+      /* CSS 자체적으로 네비게이션바 크기 + 안전영역을 계산하여 패딩 확보 */
+      padding: 0 20px calc(80px + env(safe-area-inset-bottom)) 20px;
+      padding: 0 20px 90px 20px; /* JS가 정확한 값으로 덮어씀 */
+display: flex; flex-direction: column; gap: 20px;
+overflow-y: auto;
+position: relative; z-index: 2;
+}
+
+.near-card {
+background-color: var(--main-orange);
+border-radius: 26px; padding: 24px; color: #000;
+position: relative; overflow: hidden; min-height: 220px;
+display: flex; flex-direction: column; justify-content: space-between;
+box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+}
+.near-header { font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid rgba(0,0,0,0.15); padding-bottom: 8px; }
+.near-bg-text {
+position: absolute; bottom: -10px; left: 15px;
+font-size: 4.5rem; font-weight: 900; transform: rotate(-8deg);
+opacity: 0.5; line-height: 1;
+}
+.near-badge {
+align-self: flex-end; background-color: #000; color: var(--main-orange);
+padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; z-index: 1;
+box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
+}
+
+.grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.action-card {
+background-color: var(--dark-gray);
+border: 1px solid rgba(255, 106, 17, 0.3);
+border-radius: 20px; padding: 18px;
+display: flex; flex-direction: column; justify-content: center;
+box-shadow: var(--card-shadow); cursor: pointer;
+}
+.action-card.filled { 
+background-color: var(--main-orange); color: #000; grid-row: span 2; 
+border: none; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+.card-title { font-size: 1.15rem; font-weight: 900; color: var(--main-orange); text-align: right; }
+.filled .card-title { color: #000; text-align: left; }
+.filled .card-subtitle { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; }
+.filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
+.point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
+
+    /* CSS만으로 해결하는 네비게이션 바 하단 고정 */
+nav {
+      position: fixed;
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 380px;
-      background: linear-gradient(180deg, #ff6a11 0%, rgba(255, 106, 17, 0.6) 30%, rgba(255, 106, 17, 0) 100%);
-      pointer-events: none;
-      z-index: 1;
-    }
+bottom: 0; left: 0; right: 0;
+background-color: rgba(20, 20, 20, 0.95);
+backdrop-filter: blur(20px);
+-webkit-backdrop-filter: blur(20px);
+border-top: 1px solid rgba(255,255,255,0.08);
+display: flex;
+justify-content: space-around;
+padding-top: 12px;
+      /* 물리적 바닥까지 배경이 늘어나고 아이콘은 안전영역 위로 올라오도록 설정 */
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      padding-bottom: 12px; /* JS가 safe-area만큼 추가로 덮어씀 */
+z-index: 9999;
+}
 
-    #pull-indicator {
-      position: absolute;
-      top: -300px; 
-      left: 0; right: 0;
-      height: 300px;
-      background-color: var(--main-orange); 
-      display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-      padding-bottom: 25px;
-      color: #000; font-weight: bold; font-size: 0.85rem;
-      z-index: 10;
-    }
-    
-    .refresh-spinner {
-      display: none; width: 24px; height: 24px; margin-top: 10px;
-      border: 3px solid rgba(0,0,0,0.2);
-      border-radius: 50%; border-top-color: #000;
-      animation: spin 1s linear infinite;
-    }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
+.nav-icon { 
+width: 24px; height: 24px; background-color: var(--main-orange); 
+border-radius: 6px; opacity: 0.3;
+}
+.nav-item.active { color: #fff; }
+.nav-item.active .nav-icon { opacity: 1; box-shadow: 0 0 12px rgba(255, 106, 17, 0.6); }
 
-    header {
-      padding: max(60px, env(safe-area-inset-top)) 20px 15px 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      position: relative; z-index: 2;
-    }
-    
-    .profile-area { display: flex; align-items: center; gap: 12px; }
-    
-    .dog-silhouette {
-      width: 46px; height: 46px;
-      background-color: var(--main-orange);
-      border-radius: 12px;
-      display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    }
+.blur-bg { filter: blur(15px); transform: scale(0.97); }
 
-    .user-info .sub-text { font-size: 0.75rem; color: rgba(255,255,255,0.8); }
-    .user-info .main-text { font-size: 1.2rem; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+#overlay-container {
+display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+background-color: rgba(0, 0, 0, 0.6); z-index: 10000;
+justify-content: center; align-items: center; padding: 20px;
+animation: fadeIn 0.2s ease;
+}
 
-    .notification-bell { position: relative; cursor: pointer; }
-    .bell-icon { fill: #000; width: 32px; height: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
-    .notification-badge {
-      position: absolute; top: -2px; right: -2px;
-      background-color: #ff3b30; color: white;
-      font-size: 0.65rem; padding: 2px 6px;
-      border-radius: 10px; font-weight: bold;
-      border: 2px solid var(--main-orange);
-    }
+.detail-popup {
+width: 100%; max-width: 320px;
+background-color: #1a1a1c; border-radius: 24px; padding: 25px;
+border: 1px solid rgba(255, 106, 17, 0.4);
+box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+color: #fff; text-align: left;
+transform: scale(0.8); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.detail-popup h3 { color: var(--main-orange); margin-bottom: 20px; font-size: 1.3rem; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;}
+.detail-row { display: flex; margin-bottom: 12px; font-size: 0.95rem; }
+.detail-label { color: #888; width: 65px; }
+.detail-value { font-weight: bold; color: #ddd; flex: 1; }
+.close-btn { 
+width: 100%; padding: 12px; margin-top: 20px; border-radius: 12px; border: none;
+background-color: var(--main-orange); color: #000; font-weight: bold; font-size: 1rem; cursor: pointer;
+}
 
-    .calendar-section { padding: 5px 0 20px 0; position: relative; z-index: 2; }
-    .calendar-strip {
-      display: flex; overflow-x: auto; gap: 12px; 
-      padding: 10px 20px 20px 20px; 
-      scrollbar-width: none;
-    }
-    .calendar-strip::-webkit-scrollbar { display: none; }
-
-    .date-item {
-      min-width: calc((100% - 85px) / 5.5);
-      background-color: rgba(40, 40, 40, 0.6);
-      border-radius: 16px;
-      padding: 12px 8px;
-      text-align: center;
-      border: 1px solid rgba(255,255,255,0.05);
-      box-shadow: 0 8px 15px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1); 
-      backdrop-filter: blur(12px);
-      flex-shrink: 0;
-      transition: transform 0.2s, background-color 0.2s;
-    }
-    .date-item:active { transform: scale(0.95); } 
-    .date-item.today { border-color: rgba(255, 106, 17, 0.8); background-color: rgba(60, 40, 30, 0.7); }
-    .date-item .date-label { font-size: 0.85rem; font-weight: bold; color: var(--main-orange); margin-bottom: 6px; white-space: nowrap; }
-    .date-item .meeting-info { font-size: 0.7rem; color: #ccc; line-height: 1.4; white-space: nowrap; }
-
-    main {
-      flex: 1;
-      padding: 0 20px 90px 20px;
-      display: flex; flex-direction: column; gap: 20px;
-      overflow-y: auto;
-      position: relative; z-index: 2;
-    }
-
-    .near-card {
-      background-color: var(--main-orange);
-      border-radius: 26px; padding: 24px; color: #000;
-      position: relative; overflow: hidden; min-height: 220px;
-      display: flex; flex-direction: column; justify-content: space-between;
-      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
-    }
-    .near-header { font-weight: bold; font-size: 0.9rem; border-bottom: 1px solid rgba(0,0,0,0.15); padding-bottom: 8px; }
-    .near-bg-text {
-      position: absolute; bottom: -10px; left: 15px;
-      font-size: 4.5rem; font-weight: 900; transform: rotate(-8deg);
-      opacity: 0.5; line-height: 1;
-    }
-    .near-badge {
-      align-self: flex-end; background-color: #000; color: var(--main-orange);
-      padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; z-index: 1;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer;
-    }
-
-    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .action-card {
-      background-color: var(--dark-gray);
-      border: 1px solid rgba(255, 106, 17, 0.3);
-      border-radius: 20px; padding: 18px;
-      display: flex; flex-direction: column; justify-content: center;
-      box-shadow: var(--card-shadow); cursor: pointer;
-    }
-    .action-card.filled { 
-      background-color: var(--main-orange); color: #000; grid-row: span 2; 
-      border: none; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    }
-    .card-title { font-size: 1.15rem; font-weight: 900; color: var(--main-orange); text-align: right; }
-    .filled .card-title { color: #000; text-align: left; }
-    .filled .card-subtitle { font-size: 1.5rem; font-weight: bold; margin-bottom: 10px; }
-    .filled ul { list-style: none; font-size: 0.85rem; font-weight: bold; line-height: 1.5; opacity: 0.9; }
-    .point-display { font-size: 1.1rem; font-weight: bold; color: var(--main-orange); margin-bottom: 5px; }
-
-    nav {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      background-color: rgba(20, 20, 20, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      justify-content: space-around;
-      padding-top: 12px;
-      padding-bottom: 12px;
-      z-index: 9999;
-    }
-
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.75rem; color: #888; cursor: pointer; }
-    .nav-icon { 
-      width: 24px; height: 24px; background-color: var(--main-orange); 
-      border-radius: 6px; opacity: 0.3;
-    }
-    .nav-item.active { color: #fff; }
-    .nav-item.active .nav-icon { opacity: 1; box-shadow: 0 0 12px rgba(255, 106, 17, 0.6); }
-
-    .blur-bg { filter: blur(15px); transform: scale(0.97); }
-    
-    #overlay-container {
-      display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0, 0, 0, 0.6); z-index: 10000;
-      justify-content: center; align-items: center; padding: 20px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .detail-popup {
-      width: 100%; max-width: 320px;
-      background-color: #1a1a1c; border-radius: 24px; padding: 25px;
-      border: 1px solid rgba(255, 106, 17, 0.4);
-      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
-      color: #fff; text-align: left;
-      transform: scale(0.8); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    }
-    .detail-popup h3 { color: var(--main-orange); margin-bottom: 20px; font-size: 1.3rem; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px;}
-    .detail-row { display: flex; margin-bottom: 12px; font-size: 0.95rem; }
-    .detail-label { color: #888; width: 65px; }
-    .detail-value { font-weight: bold; color: #ddd; flex: 1; }
-    .close-btn { 
-      width: 100%; padding: 12px; margin-top: 20px; border-radius: 12px; border: none;
-      background-color: var(--main-orange); color: #000; font-weight: bold; font-size: 1rem; cursor: pointer;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes popUp { to { transform: scale(1); } }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-  </style>
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popUp { to { transform: scale(1); } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
 
-  <div id="app-container">
-    <div id="pull-wrapper">
-      
-      <div id="pull-indicator">
-        <div id="pull-text">↓ 아래로 당겨서 업데이트</div>
-        <div class="refresh-spinner" id="pull-spinner"></div>
-      </div>
+<div id="app-container">
+<div id="pull-wrapper">
 
-      <header>
-        <div class="profile-area">
-          <div class="dog-silhouette">
-            <svg viewBox="0 0 24 24" width="28" height="28">
-              <path fill="#000000" d="M19,5.5c0-0.83-0.67-1.5-1.5-1.5S16,4.67,16,5.5c0,0.83,0.67,1.5,1.5,1.5S19,6.33,19,5.5z M22,10.5c0-1.38-1.12-2.5-2.5-2.5h-1.35c-0.34-1.16-1.41-2-2.65-2h-7c-1.38,0-2.5,1.12-2.5,2.5v1.35c-1.16,0.34-2,1.41-2,2.65v7c0,1.38,1.12,2.5,2.5,2.5h1.35c0.34,1.16,1.41,2,2.65,2h7c1.38,0,2.5-1.12,2.5-2.5v-1.35c1.16-0.34,2-1.41,2-2.65V10.5z M10,13.5L10,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C11.5,12.83,10.83,13.5,10,13.5z M16,13.5L16,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C17.5,12.83,16.83,13.5,16,13.5z"/>
-            </svg>
-          </div>
-          <div class="user-info">
-            <div class="sub-text">normal meeter. v7</div>
-            <div class="main-text">Kim yum</div>
-          </div>
-        </div>
-        
-        <div class="notification-bell" onclick="alert('알림 내역이 없습니다.')">
-          <svg class="bell-icon" viewBox="0 0 24 24">
-            <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-          </svg>
-          <div class="notification-badge">3</div>
-        </div>
-      </header>
+<div id="pull-indicator">
+<div id="pull-text">↓ 아래로 당겨서 업데이트</div>
+<div class="refresh-spinner" id="pull-spinner"></div>
+</div>
 
-      <section class="calendar-section">
-        <div class="calendar-strip" id="calendar-strip"></div>
-      </section>
+<header>
+<div class="profile-area">
+<div class="dog-silhouette">
+<svg viewBox="0 0 24 24" width="28" height="28">
+<path fill="#000000" d="M19,5.5c0-0.83-0.67-1.5-1.5-1.5S16,4.67,16,5.5c0,0.83,0.67,1.5,1.5,1.5S19,6.33,19,5.5z M22,10.5c0-1.38-1.12-2.5-2.5-2.5h-1.35c-0.34-1.16-1.41-2-2.65-2h-7c-1.38,0-2.5,1.12-2.5,2.5v1.35c-1.16,0.34-2,1.41-2,2.65v7c0,1.38,1.12,2.5,2.5,2.5h1.35c0.34,1.16,1.41,2,2.65,2h7c1.38,0,2.5-1.12,2.5-2.5v-1.35c1.16-0.34,2-1.41,2-2.65V10.5z M10,13.5L10,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C11.5,12.83,10.83,13.5,10,13.5z M16,13.5L16,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C17.5,12.83,16.83,13.5,16,13.5z"/>
+</svg>
+</div>
+<div class="user-info">
+<div class="sub-text">normal meeter. v7</div>
+<div class="main-text">Kim yum</div>
+</div>
+</div>
 
-      <main id="main-scroll">
-        <section class="near-card">
-          <div class="near-header">인하대점 - 아이스 아메리카노 T</div>
-          <div style="flex:1; border:1px dashed rgba(0,0,0,0.3); border-radius:18px; display:flex; justify-content:center; align-items:center; font-size:0.85rem; font-weight:bold; color:rgba(0,0,0,0.4);">
-            [ 이미지 / 영상 노출 영역 ]
-          </div>
-          <div class="near-bg-text">NEAR!</div>
-          <div class="near-badge" onclick="alert('포인트 10,000점 충전 완료')">산미가 뛰어나네요! ✨</div>
-        </section>
+<div class="notification-bell" onclick="alert('알림 내역이 없습니다.')">
+<svg class="bell-icon" viewBox="0 0 24 24">
+<path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+</svg>
+<div class="notification-badge">3</div>
+</div>
+</header>
 
-        <section class="grid-container">
-          <div class="action-card"><div class="card-title">POINT<br>Launcher</div></div>
-          <div class="action-card filled">
-            <div class="card-title">MOIZA</div>
-            <div class="card-subtitle">모이자</div>
-            <ul>
-              <li>- 주선자 포인트 결제</li>
-              <li>- 메뉴/결제 미리하기</li>
-              <li>- 실시간 위치 공유</li>
-            </ul>
-          </div>
-          <div class="action-card my-usual">
-            <div class="point-display">16,200 (CUP)</div>
-            <div class="card-title">MY<br>USUAL</div>
-          </div>
-        </section>
-      </main>
-      
+<section class="calendar-section">
+<div class="calendar-strip" id="calendar-strip">
+</div>
+</section>
+
+<main id="main-scroll">
+<section class="near-card">
+<div class="near-header">인하대점 - 아이스 아메리카노 T</div>
+<div style="flex:1; border:1px dashed rgba(0,0,0,0.3); border-radius:18px; display:flex; justify-content:center; align-items:center; font-size:0.85rem; font-weight:bold; color:rgba(0,0,0,0.4);">
+[ 이미지 / 영상 노출 영역 ]
+</div>
+<div class="near-bg-text">NEAR!</div>
+<div class="near-badge" onclick="alert('포인트 10,000점 충전 완료')">산미가 뛰어나네요! ✨</div>
+</section>
+
+<section class="grid-container">
+<div class="action-card"><div class="card-title">POINT<br>Launcher</div></div>
+<div class="action-card filled">
+<div class="card-title">MOIZA</div>
+<div class="card-subtitle">모이자</div>
+<ul>
+<li>- 주선자 포인트 결제</li>
+<li>- 메뉴/결제 미리하기</li>
+<li>- 실시간 위치 공유</li>
+</ul>
+</div>
+<div class="action-card my-usual">
+<div class="point-display">16,200 (CUP)</div>
+<div class="card-title">MY<br>USUAL</div>
+</div>
+</section>
+</main>
+
+    </div> 
     </div>
 
-    <nav id="main-nav">
-      <div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
-      <div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
-      <div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
-      <div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
-    </nav>
+<nav id="main-nav">
+<div class="nav-item active"><div class="nav-icon"></div><div>홈</div></div>
+<div class="nav-item"><div class="nav-icon"></div><div>포인트</div></div>
+<div class="nav-item"><div class="nav-icon"></div><div>단골</div></div>
+<div class="nav-item" onclick="triggerHapticRefresh()"><div class="nav-icon"></div><div>새로고침</div></div>
+</nav>
 
-  </div>
+</div>
 
-  <div id="overlay-container" onclick="closePopup()">
-    <div class="detail-popup" onclick="event.stopPropagation()">
-      <h3 id="popup-title">3.31(화) 미팅</h3>
-      <div class="detail-row"><span class="detail-label">누구랑 :</span><span class="detail-value" id="popup-who">정프로, 김대리</span></div>
-      <div class="detail-row"><span class="detail-label">어디서 :</span><span class="detail-value" id="popup-where">인하대점</span></div>
-      <div class="detail-row"><span class="detail-label">무엇을 :</span><span class="detail-value" id="popup-what">아이스 아메리카노 3잔</span></div>
-      <div class="detail-row"><span class="detail-label">결제자 :</span><span class="detail-value" id="popup-payer">내가 쏜다! (주선자)</span></div>
-      <button class="close-btn" onclick="closePopup()">확인</button>
-    </div>
-  </div>
+<div id="overlay-container" onclick="closePopup()">
+<div class="detail-popup" onclick="event.stopPropagation()">
+<h3 id="popup-title">3.31(화) 미팅</h3>
+<div class="detail-row"><span class="detail-label">누구랑 :</span><span class="detail-value" id="popup-who">정프로, 김대리</span></div>
+<div class="detail-row"><span class="detail-label">어디서 :</span><span class="detail-value" id="popup-where">인하대점</span></div>
+<div class="detail-row"><span class="detail-label">무엇을 :</span><span class="detail-value" id="popup-what">아이스 아메리카노 3잔</span></div>
+<div class="detail-row"><span class="detail-label">결제자 :</span><span class="detail-value" id="popup-payer">내가 쏜다! (주선자)</span></div>
+<button class="close-btn" onclick="closePopup()">확인</button>
+</div>
+</div>
 
-  <script>
-    // ✅ PWA/Safari 환경 모두 대응하는 레이아웃 초기화
+<script>
+    // ✅ 가장 먼저 실행 - DOMContentLoaded 전에 safe-area 계산
     (function initLayout() {
+      // PWA 모드 감지 (홈화면에서 실행 여부)
       const isPWA = window.navigator.standalone === true;
 
-      // probe로 실제 safe-area-inset-bottom 픽셀값 측정
+      // safe-area 값을 probe 엘리먼트로 측정
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:env(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden;';
       document.documentElement.appendChild(probe);
@@ -345,28 +361,28 @@
         const mainScroll = document.getElementById('main-scroll');
         const appContainer = document.getElementById('app-container');
 
-        // nav 콘텐츠 높이: padding-top(12) + icon(24) + gap(6) + text(14) + padding-bottom(12) = 68px
+        // nav 아이콘 영역 높이 (padding-top 12 + icon 24 + gap 6 + text 14 + padding-bottom 12 = 68)
         const NAV_CONTENT_HEIGHT = 68;
 
         if (isPWA && safeBottom > 0) {
-          // ✅ PWA 모드:
-          // 1. app-container를 safe-area만큼 줄여서 overflow:hidden 경계를 홈 인디케이터 바로 위로 설정
+          // ✅ PWA 모드 + safe-area 있음:
+          // app-container 높이를 safe-area만큼 줄여서 overflow:hidden이 올바른 위치에서 자르도록
           appContainer.style.height = `calc(100% - ${safeBottom}px)`;
-          // 2. nav는 줄어든 app-container 맨 아래(bottom:0)에 딱 붙음 → 버튼이 홈 인디케이터 바로 위
+          // nav는 app-container 맨 아래에 딱 붙음 (bottom:0, absolute)
           nav.style.paddingBottom = '12px';
-          // 3. body 배경으로 safe-area 빈 공간을 nav와 같은 색으로 채움
-          document.body.style.backgroundColor = 'rgba(20, 20, 20, 0.95)';
-          // 4. main 스크롤은 줄어든 컨테이너 기준이므로 nav 높이만큼만 여백
-          mainScroll.style.paddingBottom = NAV_CONTENT_HEIGHT + 'px';
+          // app-container 아래 빈 공간을 nav 배경색으로 채우기 위해 body 배경 활용
+          document.body.style.background = 'rgba(20,20,20,0.95)';
         } else {
-          // ✅ Safari 브라우저 모드:
-          // nav padding-bottom에 safe-area 추가하면 배경이 아래까지 채워지고 버튼은 위로 올라옴
+          // Safari 브라우저 or safe-area 없는 환경: 기존 방식 유지
           nav.style.paddingBottom = `calc(12px + ${safeBottom}px)`;
-          // main 스크롤은 nav 전체 높이(콘텐츠 + safe-area)만큼 여백
-          mainScroll.style.paddingBottom = (NAV_CONTENT_HEIGHT + safeBottom) + 'px';
         }
+
+        // main 스크롤 padding-bottom = nav 전체 높이
+        const totalNavHeight = NAV_CONTENT_HEIGHT + (isPWA ? 0 : safeBottom);
+        mainScroll.style.paddingBottom = totalNavHeight + 'px';
       }
 
+      // probe가 렌더링된 후 높이를 읽기 위해 rAF 사용
       if (document.body) {
         requestAnimationFrame(applyLayout);
       } else {
@@ -374,98 +390,137 @@
       }
     })();
 
-    document.addEventListener("DOMContentLoaded", () => {
-      generateCalendar();
-      initPullToRefresh();
-    });
+document.addEventListener("DOMContentLoaded", () => {
+generateCalendar();
+initPullToRefresh();
+});
 
-    function generateCalendar() {
-      const strip = document.getElementById('calendar-strip');
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      const now = new Date();
-      
-      for (let i = 0; i < 14; i++) {
-        const d = new Date(); d.setDate(now.getDate() + i);
-        const item = document.createElement('div');
-        item.className = 'date-item' + (i === 0 ? ' today' : '');
-        
-        const dateStr = `${d.getMonth() + 1}.${d.getDate()}(${days[d.getDay()]})`;
-        const hasMeeting = i < 2; 
-        
-        item.innerHTML = `<div class="date-label">${dateStr}</div><div class="meeting-info">${hasMeeting ? '(1: 13:00)' : '-'}</div>`;
-        
-        let pressTimer;
-        let isScrolling = false;
-        
-        item.addEventListener('touchstart', (e) => {
-          isScrolling = false;
-          pressTimer = setTimeout(() => {
-            if (!isScrolling) {
-              if (navigator.vibrate) navigator.vibrate(50);
-              openPopup(dateStr, hasMeeting);
-            }
-          }, 500); 
-        }, {passive: true});
-        
-        item.addEventListener('touchmove', () => { isScrolling = true; clearTimeout(pressTimer); }, {passive: true});
-        item.addEventListener('touchend', () => clearTimeout(pressTimer));
-        item.addEventListener('touchcancel', () => clearTimeout(pressTimer));
-        
-        strip.appendChild(item);
-      }
-    }
+function generateCalendar() {
+const strip = document.getElementById('calendar-strip');
+const days = ['일', '월', '화', '수', '목', '금', '토'];
+const now = new Date();
 
-    function openPopup(dateStr, hasMeeting) {
-      document.getElementById('pull-wrapper').classList.add('blur-bg'); 
-      document.getElementById('overlay-container').style.display = 'flex';
-      document.getElementById('popup-title').innerText = `${dateStr} 미팅`;
-      
-      if(hasMeeting) {
-        document.getElementById('popup-who').innerText = "정프로, 김대리";
-        document.getElementById('popup-where').innerText = "인하대점";
-        document.getElementById('popup-what').innerText = "아메리카노 3잔";
-        document.getElementById('popup-payer').innerText = "내가 쏜다! (주선자)";
-      } else {
-        document.getElementById('popup-who').innerText = "-";
-        document.getElementById('popup-where').innerText = "-";
-        document.getElementById('popup-what').innerText = "일정이 없습니다.";
-        document.getElementById('popup-payer').innerText = "-";
-      }
-    }
+for (let i = 0; i < 14; i++) {
+const d = new Date(); d.setDate(now.getDate() + i);
+const item = document.createElement('div');
+item.className = 'date-item' + (i === 0 ? ' today' : '');
 
-    function closePopup() {
-      document.getElementById('pull-wrapper').classList.remove('blur-bg');
-      document.getElementById('overlay-container').style.display = 'none';
-    }
+const dateStr = `${d.getMonth() + 1}.${d.getDate()}(${days[d.getDay()]})`;
+const hasMeeting = i < 2; 
 
-    function triggerHapticRefresh() {
-      if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-      location.reload(true);
-    }
+item.innerHTML = `<div class="date-label">${dateStr}</div><div class="meeting-info">${hasMeeting ? '(1: 13:00)' : '-'}</div>`;
 
-    function initPullToRefresh() {
-      const wrapper = document.getElementById('pull-wrapper');
-      const text = document.getElementById('pull-text');
-      const spinner = document.getElementById('pull-spinner');
-      const scrollArea = document.getElementById('main-scroll');
-      
-      let startY = 0;
-      let pulling = false;
-      let readyToRefresh = false;
-      const resistance = 0.4; 
+let pressTimer;
+let isScrolling = false;
 
-      wrapper.addEventListener('touchstart', e => {
-        if (scrollArea.scrollTop === 0) {
-          startY = e.touches[0].pageY;
-          pulling = true;
-          readyToRefresh = false;
-          wrapper.style.transition = 'none'; 
-          text.innerText = "↓ 아래로 당겨서 업데이트";
-          spinner.style.display = 'none';
-        }
-      }, {passive: true});
+item.addEventListener('touchstart', (e) => {
+isScrolling = false;
+pressTimer = setTimeout(() => {
+if (!isScrolling) {
+if (navigator.vibrate) navigator.vibrate(50);
+openPopup(dateStr, hasMeeting);
+}
+}, 500); 
+}, {passive: true});
 
-      wrapper.addEventListener('touchmove', e => {
-        if (!pulling) return;
-        const currentY = e.touches[0].pageY;
-        let d
+item.addEventListener('touchmove', () => { isScrolling = true; clearTimeout(pressTimer); }, {passive: true});
+item.addEventListener('touchend', () => clearTimeout(pressTimer));
+item.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+
+strip.appendChild(item);
+}
+}
+
+function openPopup(dateStr, hasMeeting) {
+document.getElementById('pull-wrapper').classList.add('blur-bg'); 
+document.getElementById('overlay-container').style.display = 'flex';
+document.getElementById('popup-title').innerText = `${dateStr} 미팅`;
+
+if(hasMeeting) {
+document.getElementById('popup-who').innerText = "정프로, 김대리";
+document.getElementById('popup-where').innerText = "인하대점";
+document.getElementById('popup-what').innerText = "아메리카노 3잔";
+document.getElementById('popup-payer').innerText = "내가 쏜다! (주선자)";
+} else {
+document.getElementById('popup-who').innerText = "-";
+document.getElementById('popup-where').innerText = "-";
+document.getElementById('popup-what').innerText = "일정이 없습니다.";
+document.getElementById('popup-payer').innerText = "-";
+}
+}
+
+function closePopup() {
+document.getElementById('pull-wrapper').classList.remove('blur-bg');
+document.getElementById('overlay-container').style.display = 'none';
+}
+
+function triggerHapticRefresh() {
+if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+location.reload(true);
+}
+
+function initPullToRefresh() {
+const wrapper = document.getElementById('pull-wrapper');
+const text = document.getElementById('pull-text');
+const spinner = document.getElementById('pull-spinner');
+const scrollArea = document.getElementById('main-scroll');
+
+let startY = 0;
+let pulling = false;
+let readyToRefresh = false;
+const resistance = 0.4; 
+
+wrapper.addEventListener('touchstart', e => {
+if (scrollArea.scrollTop === 0) {
+startY = e.touches[0].pageY;
+pulling = true;
+readyToRefresh = false;
+wrapper.style.transition = 'none'; 
+text.innerText = "↓ 아래로 당겨서 업데이트";
+spinner.style.display = 'none';
+}
+}, {passive: true});
+
+wrapper.addEventListener('touchmove', e => {
+if (!pulling) return;
+const currentY = e.touches[0].pageY;
+let diff = (currentY - startY) * resistance; 
+
+if (diff > 0) {
+if (diff > 120) {
+diff = 120 + (diff - 120) * 0.2; 
+if (!readyToRefresh && diff > 130) {
+readyToRefresh = true;
+text.innerText = "손을 놓으면 업데이트 됩니다";
+if (navigator.vibrate) navigator.vibrate(30);
+}
+} else {
+readyToRefresh = false;
+text.innerText = "↓ 아래로 당겨서 업데이트";
+}
+wrapper.style.transform = `translateY(${diff}px)`;
+}
+}, {passive: false});
+
+wrapper.addEventListener('touchend', e => {
+if (!pulling) return;
+pulling = false;
+const diff = (e.changedTouches[0].pageY - startY) * resistance;
+
+wrapper.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)'; 
+wrapper.style.transform = `translateY(0)`; 
+
+if (diff > 60) {
+text.innerText = "업데이트 중...";
+spinner.style.display = 'block';
+if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+
+setTimeout(() => {
+location.reload(true);
+}, 350); 
+}
+});
+}
+</script>
+</body>
+</html>
