@@ -199,27 +199,14 @@ export default function App() {
         <section className="calendar-section">
           <div className="calendar-strip">
             {calendarItems.map((item) => {
-              let isScrolling = false;
-              let pressTimer;
-
-              const tsStart = () => {
-                isScrolling = false;
-                pressTimer = setTimeout(() => {
-                  if (!isScrolling) {
-                    if (navigator.vibrate) navigator.vibrate(50);
-                    setSelectedMeeting({ dateStr: item.dateStr, data: item.meeting });
-                  }
-                }, 400); 
-              };
-
               return (
                 <div 
                   key={item.i} 
                   className={`date-item ${item.isToday ? 'today' : ''}`}
-                  onTouchStart={tsStart}
-                  onTouchMove={() => { isScrolling = true; clearTimeout(pressTimer); }}
-                  onTouchEnd={() => clearTimeout(pressTimer)}
-                  onTouchCancel={() => clearTimeout(pressTimer)}
+                  onClick={() => {
+                     if (navigator.vibrate) navigator.vibrate(30);
+                     setSelectedMeeting({ dateStr: item.dateStr, data: item.meeting });
+                  }}
                 >
                   <div className="date-label">{item.dateStr}</div>
                   <div className="meeting-info">{item.meeting ? '(1: 13:00)' : '-'}</div>

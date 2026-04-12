@@ -146,6 +146,7 @@ header {
 
 main {
   flex: 1;
+  min-height: 0;
   padding: 0 20px calc(80px + env(safe-area-inset-bottom)) 20px;
   display: flex; flex-direction: column; gap: 20px;
   overflow-y: auto;
@@ -203,7 +204,7 @@ main::-webkit-scrollbar {
   justify-content: space-around;
   align-items: flex-end;
   padding-top: 40px; 
-  padding-bottom: max(15px, env(safe-area-inset-bottom));
+  padding-bottom: max(5px, env(safe-area-inset-bottom));
   z-index: 9999;
   pointer-events: none;
 }
