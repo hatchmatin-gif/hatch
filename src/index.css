@@ -81,6 +81,7 @@ header {
   padding: max(60px, env(safe-area-inset-top)) 20px 15px 20px;
   display: flex; justify-content: space-between; align-items: center;
   position: relative; z-index: 2;
+  flex-shrink: 0;
 }
 
 .profile-area { display: flex; align-items: center; gap: 12px; }
@@ -106,7 +107,7 @@ header {
   border: 2px solid var(--main-orange);
 }
 
-.calendar-section { padding: 5px 0 5px 0; position: relative; z-index: 2; }
+.calendar-section { padding: 5px 0 5px 0; position: relative; z-index: 2; flex-shrink: 0; }
 
 .calendar-strip {
   display: flex; overflow-x: auto; gap: 12px; 
