@@ -3,6 +3,8 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase.js';
 import Login from './Login.jsx';
 import Home from './Home.jsx';
+import PointLauncher from './PointLauncher.jsx';
+import PosTest from './PosTest.jsx';
 
 export default function App() {
   const navigate = useNavigate();
@@ -234,16 +236,8 @@ export default function App() {
                 <h2>MOIZA 모이자 화면</h2><p>기능 준비 중입니다.</p>
               </div>
             } />
-            <Route path="/point" element={
-              <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
-                <h2>POINT Launcher</h2><p>기능 준비 중입니다.</p>
-              </div>
-            } />
-            <Route path="/pos" element={
-              <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
-                <h2>POS System</h2><p>포스 시스템 연동 준비 중입니다.</p>
-              </div>
-            } />
+            <Route path="/point" element={<PointLauncher session={session} profile={profile} fetchData={fetchData} />} />
+            <Route path="/pos" element={<PosTest />} />
           </Routes>
         </main>
       </div>
