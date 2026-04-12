@@ -108,6 +108,12 @@ export default function App() {
     const currentY = e.touches[0].pageY;
     let diff = (currentY - startYRef.current) * 0.4;
     
+    // 사용자가 위로 밀어 올리는(실제로는 아래로 스크롤) 행동일 경우 당기기 취소
+    if (diff < 0) {
+      setPulling(false);
+      return;
+    }
+
     if (diff > 0) {
       if (diff > 120) {
         diff = 120 + (diff - 120) * 0.2;
@@ -247,6 +253,8 @@ export default function App() {
             <div className="action-card" onClick={handleTestOrder} style={{backgroundColor: '#ff3b3b', cursor: 'pointer'}}>
               <div className="card-title" style={{color: '#fff'}}>POS<br/>테스트 주문</div>
             </div>
+            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
+            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
             <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
           </section>
         </main>
