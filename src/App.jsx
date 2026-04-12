@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabase.js';
+import Login from './Login.jsx';
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
+
   const [profile, setProfile] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const [stores, setStores] = useState([]);
@@ -20,10 +24,26 @@ export default function App() {
     filter: selectedMeeting ? 'blur(15px)' : 'none'
   };
 
+  useEffect(() => {
+    // 1. 현재 세션 로드 (로그인 되어있는지 체크)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsSessionLoading(false);
+    });
+
+    // 2. 로그인/로그아웃 이벤트 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const fetchData = async () => {
+    if (!session?.user?.id) return;
     try {
       const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.all([
-        supabase.from('profiles').select('*').limit(1).single(),
+        supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
         supabase.from('meetings').select('*'),
         supabase.from('stores').select('*')
       ]);
@@ -35,9 +55,41 @@ export default function App() {
     }
   };
 
+  // 로그인 상태일 때만 데이터 조회
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (session) fetchData();
+  }, [session]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // 임시 주문 생성 함수 (POS 테스트용)
+  const handleTestOrder = async () => {
+    if (!session?.user?.id || stores.length === 0) {
+      alert("매장 데이터를 아직 불러오지 못했습니다.");
+      return;
+    }
+    try {
+      const orderData = {
+        store_id: stores[0].id,
+        user_id: session.user.id,
+        items: [
+          { name: "아메리카노 (HOT)", qty: 2, price: 4500 },
+          { name: "초코 무스 케이크", qty: 1, price: 6500 }
+        ],
+        total_price: 15500, // 4500*2 + 6500
+        status: '대기중'
+      };
+
+      const { error } = await supabase.from('orders').insert([orderData]);
+      if (error) throw error;
+      alert("테스트 주문이 매장으로 전송되었습니다!");
+    } catch (err) {
+      console.error(err);
+      alert("주문 실패: " + err.message);
+    }
+  };
 
   // Format currency
   const formatPoints = (p) => p ? p.toLocaleString() : 0;
@@ -91,13 +143,23 @@ export default function App() {
     const d = new Date(now);
     d.setDate(now.getDate() + i);
     
-    // Find meeting matching this offset
     const meeting = meetings?.find(m => m.date_offset === i);
     const dateStr = `${d.getMonth() + 1}.${d.getDate()}(${days[d.getDay()]})`;
 
     return { i, dateStr, meeting, isToday: i === 0 };
   });
 
+  // 로딩 화면
+  if (isSessionLoading) {
+    return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
+  }
+
+  // 로그인되지 않은 상태면 Login 화면 렌더링
+  if (!session) {
+    return <Login />;
+  }
+
+  // 로그인 상태면 메인 WURI 앱 렌더링
   return (
     <div id="app-container">
       <div 
@@ -115,14 +177,14 @@ export default function App() {
         </div>
 
         <header>
-          <div className="profile-area">
+          <div className="profile-area" onClick={handleLogout} style={{cursor:'pointer'}}>
             <div className="dog-silhouette">
               <svg viewBox="0 0 24 24" width="28" height="28">
                 <path fill="#000000" d="M19,5.5c0-0.83-0.67-1.5-1.5-1.5S16,4.67,16,5.5c0,0.83,0.67,1.5,1.5,1.5S19,6.33,19,5.5z M22,10.5c0-1.38-1.12-2.5-2.5-2.5h-1.35c-0.34-1.16-1.41-2-2.65-2h-7c-1.38,0-2.5,1.12-2.5,2.5v1.35c-1.16,0.34-2,1.41-2,2.65v7c0,1.38,1.12,2.5,2.5,2.5h1.35c0.34,1.16,1.41,2,2.65,2h7c1.38,0,2.5-1.12,2.5-2.5v-1.35c1.16-0.34,2-1.41,2-2.65V10.5z M10,13.5L10,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C11.5,12.83,10.83,13.5,10,13.5z M16,13.5L16,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C17.5,12.83,16.83,13.5,16,13.5z"/>
               </svg>
             </div>
             <div className="user-info">
-              <div className="sub-text">{profile?.sub_text || '로딩중...'}</div>
+              <div className="sub-text" style={{fontSize: '0.6rem'}}>{profile?.sub_text || '로딩중...'} (누르면 로그아웃)</div>
               <div className="main-text">{profile?.name || '...'}</div>
             </div>
           </div>
@@ -195,7 +257,9 @@ export default function App() {
               <div className="point-display">{formatPoints(profile?.points)} (CUP)</div>
               <div className="card-title">MY<br/>USUAL</div>
             </div>
-            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
+            <div className="action-card" onClick={handleTestOrder} style={{backgroundColor: '#ff3b3b', cursor: 'pointer'}}>
+              <div className="card-title" style={{color: '#fff'}}>POS<br/>테스트 주문</div>
+            </div>
             <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
           </section>
         </main>
