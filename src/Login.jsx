@@ -47,7 +47,7 @@ export default function Login() {
       </button>
 
       <div style={{ marginTop: '40px', fontSize: '0.8rem', color: '#666', textAlign: 'center' }}>
-        가입 시 이용약관 및 개인정보처리방침에 동의하게 됩니다.
+        가입 시 <a href="#" style={{color: '#888', textDecoration: 'underline'}}>이용약관</a> 및 <a href="#" style={{color: '#888', textDecoration: 'underline'}}>개인정보처리방침</a>에 동의하게 됩니다.
       </div>
     </div>
   );

@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase.js';
 import Login from './Login.jsx';
+import Home from './Home.jsx';
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
 
@@ -223,48 +227,32 @@ export default function App() {
         </section>
 
         <main id="main-scroll" ref={scrollRef}>
-          {stores.slice(0, 1).map(store => (
-            <section key={store.id} className="near-card">
-              <div className="near-header">{store.store_name} - {store.item}</div>
-              <div style={{flex:1, border:'1px dashed rgba(0,0,0,0.3)', borderRadius:'18px', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'0.85rem', fontWeight:'bold', color:'rgba(0,0,0,0.4)', zIndex: 2}}>
-                [ 이미지 / 영상 노출 영역 ]
+          <Routes>
+            <Route path="/" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} />} />
+            <Route path="/moiza" element={
+              <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
+                <h2>MOIZA 모이자 화면</h2><p>기능 준비 중입니다.</p>
               </div>
-              <div className="near-bg-text">NEAR!</div>
-              <div className="near-badge">{store.badge_text}</div>
-            </section>
-          ))}
-          {!stores?.length && <section className="near-card"><div className="near-header">매장 정보 로딩중...</div></section>}
-
-          <section className="grid-container">
-            <div className="action-card"><div className="card-title">POINT<br/>Launcher</div></div>
-            <div className="action-card filled">
-              <div className="card-title">MOIZA</div>
-              <div className="card-subtitle">모이자</div>
-              <ul>
-                <li>- 주선자 포인트 결제</li>
-                <li>- 메뉴/결제 미리하기</li>
-                <li>- 실시간 위치 공유</li>
-              </ul>
-            </div>
-            <div className="action-card my-usual">
-              <div className="point-display">{formatPoints(profile?.points)} (CUP)</div>
-              <div className="card-title">MY<br/>USUAL</div>
-            </div>
-            <div className="action-card" onClick={handleTestOrder} style={{backgroundColor: '#ff3b3b', cursor: 'pointer'}}>
-              <div className="card-title" style={{color: '#fff'}}>POS<br/>테스트 주문</div>
-            </div>
-            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
-            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
-            <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
-          </section>
+            } />
+            <Route path="/point" element={
+              <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
+                <h2>POINT Launcher</h2><p>기능 준비 중입니다.</p>
+              </div>
+            } />
+            <Route path="/pos" element={
+              <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
+                <h2>POS System</h2><p>포스 시스템 연동 준비 중입니다.</p>
+              </div>
+            } />
+          </Routes>
         </main>
       </div>
 
       <nav id="main-nav">
-        <div className="nav-item active"><div className="nav-icon"></div></div>
-        <div className="nav-item"><div className="nav-icon"></div></div>
-        <div className="nav-item"><div className="nav-icon"></div></div>
-        <div className="nav-item"><div className="nav-icon"></div></div>
+        <div className={`nav-item ${location.pathname === '/' ? 'active' : ''}`} onClick={() => navigate('/')}><div className="nav-icon"></div></div>
+        <div className={`nav-item ${location.pathname === '/point' ? 'active' : ''}`} onClick={() => navigate('/point')}><div className="nav-icon"></div></div>
+        <div className={`nav-item ${location.pathname === '/moiza' ? 'active' : ''}`} onClick={() => navigate('/moiza')}><div className="nav-icon"></div></div>
+        <div className={`nav-item ${location.pathname === '/pos' ? 'active' : ''}`} onClick={() => navigate('/pos')}><div className="nav-icon"></div></div>
       </nav>
 
       {selectedMeeting && (
