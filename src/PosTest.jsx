@@ -19,6 +19,31 @@ export default function PosTest() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // OKPOS 로컬 데스크탑 이벤트 리스너 (Tauri 전용)
+  useEffect(() => {
+    if (window.__TAURI__) {
+      let unlistenFn;
+      import('@tauri-apps/api/event').then(({ listen }) => {
+        listen('okpos-sale', (event) => {
+          const { product, qty } = event.payload;
+          const newOrder = {
+            id: `OKPOS-${Date.now().toString().slice(-6)}`,
+            created_at: new Date().toISOString(),
+            status: '대기중',
+            items: [{ name: product, qty: parseInt(qty, 10) || 1 }]
+          };
+          setOrders(prev => [...prev, newOrder]);
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        }).then(unlisten => {
+          unlistenFn = unlisten;
+        });
+      });
+      return () => {
+        if (unlistenFn) unlistenFn();
+      };
+    }
+  }, []);
+
   // 주문 데이터 로드 및 Realtime 구독
   useEffect(() => {
     if (!isPC) return;
