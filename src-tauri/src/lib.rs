@@ -1,3 +1,5 @@
+mod okpos_watcher;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
@@ -9,6 +11,13 @@ pub fn run() {
             .build(),
         )?;
       }
+      
+      // 스폰: OKPOS 백그라운드 파일 감시
+      let app_handle = app.handle().clone();
+      tauri::async_runtime::spawn(async move {
+          okpos_watcher::start_watcher(app_handle).await;
+      });
+
       Ok(())
     })
     .run(tauri::generate_context!())
