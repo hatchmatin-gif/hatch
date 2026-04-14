@@ -1,0 +1,26 @@
+[package]
+name = "wuri-agent"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "wuri-agent"
+path = "src/main.rs"
+
+[dependencies]
+notify   = "6.1"
+regex    = "1"
+serde    = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio    = { version = "1", features = ["full"] }
+reqwest  = { version = "0.12", default-features = false, features = ["json", "native-tls", "blocking"] }
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = [
+  "winspool",
+  "winnt",
+  "minwindef",
+  "shellapi",
+  "stringapiset",
+  "processthreadsapi"
+] }

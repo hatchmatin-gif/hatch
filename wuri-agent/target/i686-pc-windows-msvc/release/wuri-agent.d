@@ -1,0 +1,1 @@
+C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\wuri-agent.exe: C:\Users\youme\hatch\wuri-agent\src\main.rs C:\Users\youme\hatch\wuri-agent\src\printer.rs C:\Users\youme\hatch\wuri-agent\src\watcher.rs

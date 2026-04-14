@@ -1,0 +1,14 @@
+C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\deps\serde-82d4f9a036839595.d: C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\build\serde-41b6851fd074e500\out/private.rs
+
+C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\deps\libserde-82d4f9a036839595.rlib: C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\build\serde-41b6851fd074e500\out/private.rs
+
+C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\deps\libserde-82d4f9a036839595.rmeta: C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\build\serde-41b6851fd074e500\out/private.rs
+
+C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\youme\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\youme\hatch\wuri-agent\target\i686-pc-windows-msvc\release\build\serde-41b6851fd074e500\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\youme\\hatch\\wuri-agent\\target\\i686-pc-windows-msvc\\release\\build\\serde-41b6851fd074e500\\out
