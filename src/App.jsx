@@ -17,6 +17,12 @@ export default function App() {
   const [stores, setStores] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (window.__TAURI__ && location.pathname === '/') {
+      navigate('/pos');
+    }
+  }, [navigate, location]);
   
   // Pull to refresh states
   const [pulling, setPulling] = useState(false);
