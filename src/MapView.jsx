@@ -48,6 +48,15 @@ export default function MapView({ profile, stores }) {
 
       mapInstance.current = map;
 
+      // CSS 트랜지션 중 주기적으로 크기 업데이트 (1초 동안 10회)를 통해 백지 화면(크기 계산 실패) 배제
+      let count = 0;
+      const resizeInterval = setInterval(() => {
+        if (!isMounted) return;
+        if (mapInstance.current) mapInstance.current.resize();
+        count++;
+        if (count >= 10) clearInterval(resizeInterval);
+      }, 100);
+
     map.on('load', () => {
       setupBaseMapStyle(map);
 
@@ -141,6 +150,7 @@ export default function MapView({ profile, stores }) {
     return () => {
       isMounted = false;
       clearTimeout(initTimer);
+      clearInterval(resizeInterval);
       // [정리] 핵심: 지도가 사라질 때 마커 객체도 완전히 초기화하여 좀비 현상 방지
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (userMarkerRef.current) {
@@ -158,8 +168,13 @@ export default function MapView({ profile, stores }) {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && mapInstance.current) {
-        mapInstance.current.resize();
-        // 무리한 마커 수동 조작 대신, 자연스러운 리액트 흐름에 맡깁니다.
+        // [픽스] 탭 복귀 시 맵박스 렌더링 오류 방지를 위한 강제 리사이즈 폴링
+        let count = 0;
+        const interval = setInterval(() => {
+          if (mapInstance.current) mapInstance.current.resize();
+          count++;
+          if (count >= 5) clearInterval(interval);
+        }, 200);
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);

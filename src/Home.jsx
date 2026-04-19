@@ -4,28 +4,20 @@ import MapView from './MapView';
 
 export default function Home({ stores, profile, formatPoints, handleTestOrder }) {
   const navigate = useNavigate();
-  const [expandedCafe, setExpandedCafe] = useState(false);
-  const [expandedBeans, setExpandedBeans] = useState(false);
+  const [activeCard, setActiveCard] = useState(null); // 'store' | 'cafe' | 'beans' | null
   const [isMapMode, setIsMapMode] = useState(false);
 
   const toggleMapMode = () => {
     if (navigator.vibrate) navigator.vibrate(15);
     setIsMapMode(prev => !prev);
-    // 맵 모드 진입 시 모든 섹션 닫기(콤팩트 강제 아님, 상태만 리셋)
-    setExpandedCafe(false);
-    setExpandedBeans(false);
+    setActiveCard(null); // 맵 모드 진입 시 모든 카드 노멀 화
   };
 
-  const toggleCafe = () => {
+  const toggleCard = (cardName) => {
     if (navigator.vibrate) navigator.vibrate(15);
-    setExpandedCafe(prev => !prev);
-    setExpandedBeans(false); // 카페 열 때 원두는 닫음
+    setActiveCard(prev => prev === cardName ? null : cardName);
   };
 
-  const toggleBeans = () => {
-    if (navigator.vibrate) navigator.vibrate(15);
-    setExpandedBeans(prev => !prev); // 카페는 닫지 않음(콤팩트로 처리)
-  };
 
   // 최근 방문 카페 데이터 (향후 DB 연동)
   const recentCafes = [
@@ -77,14 +69,16 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
             stores={stores} 
             onMapClick={toggleMapMode} 
             isSidebar={isMapMode} 
+            forceCompact={activeCard !== null && activeCard !== 'store'}
+            onClickHeader={() => toggleCard('store')}
           />
 
           {/* 3. 우리카페 */}
           <CafeSection 
-            expandedCafe={expandedCafe} 
-            toggleCafe={toggleCafe} 
-            expandedBeans={expandedBeans}
-            onRestoreCafe={() => setExpandedBeans(false)}
+            isExpanded={activeCard === 'cafe'}
+            isCompact={activeCard !== null && activeCard !== 'cafe'}
+            toggleCafe={() => toggleCard('cafe')}
+            onRestoreCafe={() => setActiveCard(null)}
             recentCafes={recentCafes} 
             handleTestOrder={handleTestOrder} 
             isSidebar={isMapMode}
@@ -92,12 +86,12 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
 
           {/* 4. 원두주문 버튼 */}
           <div 
-            className={`beans-order-card ${isMapMode ? 'sidebar-mode' : ''} ${expandedBeans ? 'expanded' : ''}`}
+            className={`beans-order-card ${isMapMode ? 'sidebar-mode' : ''} ${activeCard === 'beans' ? 'expanded' : ''} ${activeCard !== null && activeCard !== 'beans' ? 'compact' : ''}`}
             onClick={() => {
               if (isMapMode) {
                 toggleMapMode(); // 사이드바 클릭 시 맵 종료 (홈 복귀)
               } else {
-                toggleBeans();
+                toggleCard('beans');
               }
             }}
           >
@@ -150,8 +144,9 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
 /* ==========================================
    StoreCarousel - 피크 캐러셀 (좌우 카드 보임)
    ========================================== */
-function StoreCarousel({ stores, onMapClick, isSidebar }) {
-  const [isCompact, setIsCompact] = useState(false);
+function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHeader }) {
+  const [internalCompact, setInternalCompact] = useState(false);
+  const isCompact = forceCompact || internalCompact;
   const [current, setCurrent] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const touchStartX = useRef(0);
@@ -213,10 +208,10 @@ function StoreCarousel({ stores, onMapClick, isSidebar }) {
 
     // Y축(위쪽)으로 크고, 상하 각도가 좌우보다 클 때 콤팩트 모드 스위치
     if (touchDeltaY.current < thresholdY && Math.abs(touchDeltaY.current) > Math.abs(touchDeltaX.current)) {
-      setIsCompact(true); // 위로 스와이프: 콤팩트 모드 켬
+      setInternalCompact(true); // 위로 스와이프: 콤팩트 모드 켬
       setIsAutoPlay(true); // 상단 이동 시 로테이션 즉시 재개
     } else if (touchDeltaY.current > -thresholdY && Math.abs(touchDeltaY.current) > Math.abs(touchDeltaX.current)) {
-      setIsCompact(false); // 아래로 스와이프: 콤팩트 모드 끔
+      setInternalCompact(false); // 아래로 스와이프: 콤팩트 모드 끔
     } else {
       // 일반적인 좌우 로테이션 동작
       if (touchDeltaX.current < -thresholdX) {
@@ -276,8 +271,9 @@ function StoreCarousel({ stores, onMapClick, isSidebar }) {
            onMapClick(); // 사이드바 상태에서 클릭 시 맵 종료
            return;
         }
-        // 내부 요소들(예: 지도에서 보기) 클릭 시에는 무시할 수 있도록
-        if (isCompact) setIsCompact(false);
+        // 헤더 빈 공간이나 카드 여백을 터치하면 이 카드를 메인(Normal/Expanded)으로 포커싱합니다.
+        if (onClickHeader) onClickHeader();
+        if (internalCompact) setInternalCompact(false);
       }}
     >
       <div className="section-header store-header">
@@ -358,38 +354,29 @@ function StoreCarousel({ stores, onMapClick, isSidebar }) {
 /* ==========================================
    CafeSection - 우리카페 콤팩트 & 확장 가능 섹션
    ========================================== */
-function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
-  const [isCompact, setIsCompact] = useState(false);
-  const isShrunk = !isCompact && expandedBeans;
-
-  // 원두 주문하기가 열리면 우리카페는 자동으로 콤팩트(최소화) 처리됨
-  useEffect(() => {
-    if (expandedBeans && expandedCafe) {
-      setIsCompact(true);
-    }
-  }, [expandedBeans, expandedCafe]);
+function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
+  // 내부의 독립적인 isCompact 스테이트를 제거하고 부모(Home)에서 통제받습니다.
 
   return (
     <div 
-      className={`cafe-wrapper ${isCompact ? 'compact' : ''} ${expandedCafe && !isCompact ? 'expanded-mode' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
+      className={`cafe-wrapper ${isCompact ? 'compact' : ''} ${isExpanded ? 'expanded-mode' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
       onClick={() => {
         if (isSidebar) {
           onRestoreCafe(); // 맵 모드 종료 연동
           return;
         }
         if (isCompact) {
-          setIsCompact(false); // 콤팩트 모드일 때 탭하면 원래 상태(확장됨 유지)로 복구
-          onRestoreCafe(); 
+          onRestoreCafe(); // 콤팩트 상태에서 클릭하면 전체 보기 모드로 복원 (포커스 획득)
         }
       }}
     >
       <div className="section-header store-header">
         <span className="section-title">우리카페</span>
-        <span className="section-link" onClick={(e) => { e.stopPropagation(); }}>전체보기</span>
+        <span className="section-link" onClick={(e) => { e.stopPropagation(); toggleCafe(); }}>전체보기</span>
       </div>
       
       <div 
-        className={`elastic-card ${expandedCafe && !isCompact ? 'expanded' : ''} ${isShrunk ? 'shrunk' : ''}`}
+        className={`elastic-card ${isExpanded ? 'expanded' : ''}`}
         onClick={() => {
           if (!isCompact) toggleCafe();
         }}
@@ -409,7 +396,7 @@ function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, r
         </div>
 
         {/* 확장 영역: 최근 방문 카페 목록 (사이드바일때는 완전 수납) */}
-        <div className={`cafe-expand-list hide-in-sidebar ${expandedCafe && !isCompact ? 'open' : ''}`}>
+        <div className={`cafe-expand-list hide-in-sidebar ${isExpanded ? 'open' : ''}`}>
           <div className="cafe-expand-divider" />
           <div className="cafe-expand-title">최근 방문한 매장</div>
           {recentCafes.map((cafe, idx) => (
