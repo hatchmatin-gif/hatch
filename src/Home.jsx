@@ -355,9 +355,13 @@ function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHea
    CafeSection - 우리카페 콤팩트 & 확장 가능 섹션
    ========================================== */
 function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
+  const [internalCompact, setInternalCompact] = useState(false);
   const touchStartY = useRef(0);
   const touchDeltaY = useRef(0);
   const wasDragged = useRef(false);
+
+  // 부모가 콤팩트를 요구할 땐 강제 적용, 아닐 땐 스스로 숨긴 상태인지 확인
+  const effectiveCompact = isCompact || internalCompact;
 
   const handleDragStart = (clientY) => {
     touchStartY.current = clientY;
@@ -373,14 +377,19 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
   };
 
   const handleDragEnd = () => {
-    if (touchDeltaY.current < -15) {
-      if (isExpanded) onRestoreCafe();
-    } else if (touchDeltaY.current > 15) {
-      if (!isExpanded && !isCompact) toggleCafe();
+    // 제스처가 헤더 영역에서만 작동하므로 다시 조금 더 직관적인 -25px 임계값 적용
+    if (touchDeltaY.current < -25) {
+      if (isExpanded) {
+        onRestoreCafe();
+      } else {
+        setInternalCompact(true); // 수동으로 축소(Compact) 상태로 만듦
+      }
+    } else if (touchDeltaY.current > 25) {
+      if (!isExpanded && !effectiveCompact) toggleCafe();
     }
     touchDeltaY.current = 0;
     
-    // click 이벤트가 연달아 발생하는 것을 막기 위해 매우 짧은 지연 후 플래그 해제
+    // 유령 클릭 방지
     setTimeout(() => {
       wasDragged.current = false;
     }, 50);
@@ -388,14 +397,15 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
 
   return (
     <div 
-      className={`cafe-wrapper ${isCompact ? 'compact' : ''} ${isExpanded ? 'expanded-mode' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
+      className={`cafe-wrapper ${effectiveCompact ? 'compact' : ''} ${isExpanded ? 'expanded-mode' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
       onClick={() => {
         if (isSidebar) {
           onRestoreCafe(); // 맵 모드 종료 연동
           return;
         }
-        if (isCompact) {
-          onRestoreCafe(); // 콤팩트 상태에서 클릭하면 전체 보기 모드로 복원 (포커스 획득)
+        if (effectiveCompact) {
+          setInternalCompact(false); // 수동 콤팩트 상태 해제
+          onRestoreCafe(); 
         }
       }}
     >
@@ -410,20 +420,23 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
           if (wasDragged.current) {
             e.preventDefault();
             e.stopPropagation();
-            return; // 드래그(스와이프) 직후에 발생하는 클릭 무시
+            return;
           }
-          if (!isCompact) toggleCafe();
+          if (!effectiveCompact) toggleCafe();
         }}
-        onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
-        onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
-        onTouchEnd={handleDragEnd}
-        onTouchCancel={handleDragEnd}
-        onMouseDown={(e) => handleDragStart(e.clientY)}
-        onMouseMove={(e) => { if (e.buttons > 0) handleDragMove(e.clientY); }}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
       >
-        <div className="cafe-main-row">
+        {/* 상단 라벨(cafe-main-row)에만 스와이프 제스처를 달아, 하단 리스트 스크롤 시 오작동하는 치명적 쾌적함 저하를 완전히 뿌리뽑습니다. */}
+        <div 
+          className="cafe-main-row"
+          onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
+          onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
+          onTouchEnd={handleDragEnd}
+          onTouchCancel={handleDragEnd}
+          onMouseDown={(e) => handleDragStart(e.clientY)}
+          onMouseMove={(e) => { if (e.buttons > 0) handleDragMove(e.clientY); }}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+        >
           <div className="activity-icon cafe-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
           </div>
@@ -431,7 +444,7 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
             <div className="activity-main compact-flex">주문하기</div>
             <div className="activity-sub">원하는 곳으로 배송 · 선물하기</div>
           </div>
-          <div className={`expand-arrow hide-in-sidebar ${isExpanded && !isCompact ? 'rotated' : ''}`}>
+          <div className={`expand-arrow hide-in-sidebar ${isExpanded && !effectiveCompact ? 'rotated' : ''}`}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
         </div>
