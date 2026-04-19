@@ -92,7 +92,7 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
 
           {/* 4. 원두주문 버튼 */}
           <div 
-            className={`beans-order-card ${isMapMode ? 'sidebar-mode' : ''} ${expandedBeans ? 'expanded' : ''} ${!expandedBeans && expandedCafe ? 'shrunk' : ''}`}
+            className={`beans-order-card ${isMapMode ? 'sidebar-mode' : ''} ${expandedBeans ? 'expanded' : ''}`}
             onClick={() => {
               if (isMapMode) {
                 toggleMapMode(); // 사이드바 클릭 시 맵 종료 (홈 복귀)
@@ -360,8 +360,6 @@ function StoreCarousel({ stores, onMapClick, isSidebar }) {
    ========================================== */
 function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
   const [isCompact, setIsCompact] = useState(false);
-  const touchStartY = useRef(0);
-  const touchDeltaY = useRef(0);
   const isShrunk = !isCompact && expandedBeans;
 
   // 원두 주문하기가 열리면 우리카페는 자동으로 콤팩트(최소화) 처리됨
@@ -370,27 +368,6 @@ function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, r
       setIsCompact(true);
     }
   }, [expandedBeans, expandedCafe]);
-
-  const handleDragStart = (clientY) => {
-    touchStartY.current = clientY;
-    touchDeltaY.current = 0;
-  };
-
-  const handleDragMove = (clientY) => {
-    touchDeltaY.current = clientY - touchStartY.current;
-  };
-
-  const handleDragEnd = () => {
-    const thresholdY = -15; 
-    if (touchDeltaY.current < thresholdY) {
-      setIsCompact(true);
-      // 기존: 위로 올리면 목록 강제수납 -> 현재: 상태 유지하여 탭 시 복구 기능 살림
-    } else if (touchDeltaY.current > -thresholdY) {
-      setIsCompact(false);
-      onRestoreCafe(); // 쓸어내릴때도 원두 닫고 메인으로 복구
-    }
-    touchDeltaY.current = 0;
-  };
 
   return (
     <div 
@@ -416,15 +393,7 @@ function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, r
         onClick={() => {
           if (!isCompact) toggleCafe();
         }}
-        // 메인 영역 위에서만 제스처 감지
-        onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
-        onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
-        onTouchEnd={handleDragEnd}
-        onTouchCancel={handleDragEnd}
-        onMouseDown={(e) => handleDragStart(e.clientY)}
-        onMouseMove={(e) => { if (e.buttons > 0) handleDragMove(e.clientY); }}
-        onMouseUp={handleDragEnd}
-        onMouseLeave={handleDragEnd}
+        // 제스처 기반 축소(드래그) 기능이 스크롤과 충돌하여 오류를 유발하므로 제거됨.
       >
         <div className="cafe-main-row">
           <div className="activity-icon cafe-icon">

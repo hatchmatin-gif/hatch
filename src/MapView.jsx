@@ -19,6 +19,7 @@ export default function MapView({ profile, stores }) {
   const TARGET_ZOOM = 16.7;
 
   useEffect(() => {
+    let isMounted = true;
     if (mapInstance.current || !profile) return;
     
     // 기본 위치: 동네 설정이 없으면 서울 시청
@@ -29,19 +30,23 @@ export default function MapView({ profile, stores }) {
     const initialLng = lastLocationRef.current ? lastLocationRef.current[0] : (profile.home_zone_lng ? Number(profile.home_zone_lng) : defaultLng);
     const initialLat = lastLocationRef.current ? lastLocationRef.current[1] : (profile.home_zone_lat ? Number(profile.home_zone_lat) : defaultLat);
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [initialLng, initialLat],
-      zoom: TARGET_ZOOM,
-      pitch: CURVE_PITCH,
-      padding: CURVE_PADDING,
-      bearing: 0,
-      antialias: true,
-      attributionControl: false
-    });
+    // CSS 트랜지션 도중(너비가 0일 때) 맵박스 WebGL 엔진이 초기화되며 충돌하는 것을 방지하기 위해 딜레이 추가
+    const initTimer = setTimeout(() => {
+      if (!isMounted || !mapContainerRef.current) return;
 
-    mapInstance.current = map;
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [initialLng, initialLat],
+        zoom: TARGET_ZOOM,
+        pitch: CURVE_PITCH,
+        padding: CURVE_PADDING,
+        bearing: 0,
+        antialias: true,
+        attributionControl: false
+      });
+
+      mapInstance.current = map;
 
     map.on('load', () => {
       setupBaseMapStyle(map);
@@ -130,8 +135,12 @@ export default function MapView({ profile, stores }) {
 
       map.flyTo({ center: [initialLng, initialLat], zoom: TARGET_ZOOM, pitch: CURVE_PITCH });
     });
+    
+    }, 500); // 500ms 지연: CSS 애니메이션(0.9s) 시작 후 컨테이너 너비가 확보될 시간을 줍니다.
 
     return () => {
+      isMounted = false;
+      clearTimeout(initTimer);
       // [정리] 핵심: 지도가 사라질 때 마커 객체도 완전히 초기화하여 좀비 현상 방지
       if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
       if (userMarkerRef.current) {
