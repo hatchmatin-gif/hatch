@@ -106,13 +106,13 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
                 <div className="beans-order-title">원두주문하기</div>
                 <div className="beans-order-subtitle text-truncate">원하는곳으로 배송</div>
               </div>
-              <div className={`expand-arrow beans-arrow hide-in-sidebar ${expandedBeans ? 'rotated' : ''}`}>
+              <div className={`expand-arrow beans-arrow hide-in-sidebar ${activeCard === 'beans' ? 'rotated' : ''}`}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </div>
             </div>
 
             {/* 확장 영역: 추가 버튼 (사이드바일때는 완전 숨김) */}
-            <div className={`beans-expand hide-in-sidebar ${expandedBeans ? 'open' : ''}`}>
+            <div className={`beans-expand hide-in-sidebar ${activeCard === 'beans' ? 'open' : ''}`}>
               <div className="beans-expand-divider" />
               <div className="beans-expand-subtitle">최근 먹었던 커피 원두 구매</div>
               <div className="beans-expand-grid">
@@ -390,7 +390,7 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
             <div className="activity-main compact-flex">주문하기</div>
             <div className="activity-sub">원하는 곳으로 배송 · 선물하기</div>
           </div>
-          <div className={`expand-arrow hide-in-sidebar ${expandedCafe && !isCompact ? 'rotated' : ''}`}>
+          <div className={`expand-arrow hide-in-sidebar ${isExpanded && !isCompact ? 'rotated' : ''}`}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
         </div>
