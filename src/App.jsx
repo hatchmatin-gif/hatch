@@ -5,6 +5,9 @@ import Login from './Login.jsx';
 import Home from './Home.jsx';
 import PointLauncher from './PointLauncher.jsx';
 import PosTest from './PosTest.jsx';
+import MapView from './MapView.jsx';
+import Settings from './Settings.jsx';
+import ZoneSetup from './ZoneSetup.jsx';
 
 export default function App() {
   const navigate = useNavigate();
@@ -17,6 +20,7 @@ export default function App() {
   const [stores, setStores] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [needsZoneSetup, setNeedsZoneSetup] = useState(false);
 
   useEffect(() => {
     if (window.__TAURI__ && location.pathname === '/') {
@@ -59,7 +63,11 @@ export default function App() {
         supabase.from('meetings').select('*'),
         supabase.from('stores').select('*')
       ]);
-      if (userRes) setProfile(userRes);
+      if (userRes) {
+        setProfile(userRes);
+        // 동네 미설정 체크
+        setNeedsZoneSetup(!userRes.home_zone_name);
+      }
       if (meetRes) setMeetings(meetRes);
       if (storeRes) setStores(storeRes);
     } catch (error) {
@@ -67,7 +75,9 @@ export default function App() {
     }
   };
 
-  // 로그인 상태일 때만 데이터 조회
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+
+  // 현재 로그인 상태면 데이터 조회
   useEffect(() => {
     if (session) fetchData();
   }, [session]);
@@ -177,6 +187,19 @@ export default function App() {
     return <Login />;
   }
 
+  // 동네 미설정 시 ZoneSetup 강제 표시
+  if (needsZoneSetup && !window.__TAURI__) {
+    return (
+      <ZoneSetup
+        session={session}
+        onComplete={() => {
+          setNeedsZoneSetup(false);
+          fetchData();
+        }}
+      />
+    );
+  }
+
   // 로그인 상태면 메인 WURI 앱 렌더링
   return (
     <div id="app-container">
@@ -195,42 +218,51 @@ export default function App() {
         </div>
 
         <header>
-          <div className="profile-area" onClick={handleLogout} style={{cursor:'pointer'}}>
-            <div className="dog-silhouette">
-              <svg viewBox="0 0 24 24" width="28" height="28">
-                <path fill="#000000" d="M19,5.5c0-0.83-0.67-1.5-1.5-1.5S16,4.67,16,5.5c0,0.83,0.67,1.5,1.5,1.5S19,6.33,19,5.5z M22,10.5c0-1.38-1.12-2.5-2.5-2.5h-1.35c-0.34-1.16-1.41-2-2.65-2h-7c-1.38,0-2.5,1.12-2.5,2.5v1.35c-1.16,0.34-2,1.41-2,2.65v7c0,1.38,1.12,2.5,2.5,2.5h1.35c0.34,1.16,1.41,2,2.65,2h7c1.38,0,2.5-1.12,2.5-2.5v-1.35c1.16-0.34,2-1.41,2-2.65V10.5z M10,13.5L10,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C11.5,12.83,10.83,13.5,10,13.5z M16,13.5L16,13.5c-0.83,0-1.5-0.67-1.5-1.5c0-0.83,0.67-1.5,1.5-1.5s1.5,0.67,1.5,1.5C17.5,12.83,16.83,13.5,16,13.5z"/>
+          <div className="profile-area" onClick={() => navigate('/settings')} style={{cursor:'pointer'}}>
+            <div className="user-avatar">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
               </svg>
             </div>
             <div className="user-info">
-              <div className="sub-text" style={{fontSize: '0.6rem'}}>{profile?.sub_text || '로딩중...'} (누르면 로그아웃)</div>
-              <div className="main-text">{profile?.name || '...'}</div>
+              <div className="sub-text">
+                {profile?.home_zone_name && (
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style={{marginRight:'3px', opacity:0.5}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3" fill="#fff"/></svg>
+                )}
+                {profile?.home_zone_name || profile?.sub_text || 'WURI Member'}
+              </div>
+              <div className="main-text">Hello, {profile?.name || 'Guest'}</div>
             </div>
           </div>
-          <div className="notification-bell">
+          <div 
+            className={`notification-bell ${meetings.length > 0 ? 'active' : ''}`}
+            onClick={() => {
+              if (navigator.vibrate) navigator.vibrate(30);
+              setIsNotifOpen(true);
+            }}
+          >
             <svg className="bell-icon" viewBox="0 0 24 24">
-              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <div className="notification-badge">3</div>
           </div>
         </header>
 
         <section className="calendar-section">
-          <div className="calendar-strip">
-            {calendarItems.map((item) => {
-              return (
-                <div 
-                  key={item.i} 
-                  className={`date-item ${item.isToday ? 'today' : ''}`}
-                  onClick={() => {
-                     if (navigator.vibrate) navigator.vibrate(30);
-                     setSelectedMeeting({ dateStr: item.dateStr, data: item.meeting });
-                  }}
-                >
-                  <div className="date-label">{item.dateStr}</div>
-                  <div className="meeting-info">{item.meeting ? '(1: 13:00)' : '-'}</div>
-                </div>
-              );
-            })}
+          <div className="calendar-pill">
+            {calendarItems.map((item) => (
+              <div 
+                key={item.i} 
+                className={`date-dot ${item.isToday ? 'active' : ''}`}
+                onClick={() => {
+                   if (navigator.vibrate) navigator.vibrate(30);
+                   setSelectedMeeting({ dateStr: item.dateStr, data: item.meeting });
+                }}
+              >
+                {item.dateStr.split('(')[0]}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -243,17 +275,77 @@ export default function App() {
               </div>
             } />
             <Route path="/point" element={<PointLauncher session={session} profile={profile} fetchData={fetchData} />} />
+            <Route path="/map" element={<MapView profile={profile} stores={stores} />} />
+            <Route path="/settings" element={
+              <Settings session={session} profile={profile} onProfileUpdate={fetchData} />
+            } />
             <Route path="/pos" element={<PosTest />} />
           </Routes>
         </main>
       </div>
 
       <nav id="main-nav">
-        <div className={`nav-item ${location.pathname === '/' ? 'active' : ''}`} onClick={() => navigate('/')}><div className="nav-icon"></div></div>
-        <div className={`nav-item ${location.pathname === '/point' ? 'active' : ''}`} onClick={() => navigate('/point')}><div className="nav-icon"></div></div>
-        <div className={`nav-item ${location.pathname === '/moiza' ? 'active' : ''}`} onClick={() => navigate('/moiza')}><div className="nav-icon"></div></div>
-        <div className={`nav-item ${location.pathname === '/pos' ? 'active' : ''}`} onClick={() => navigate('/pos')}><div className="nav-icon"></div></div>
+        <div className={`nav-item ${location.pathname === '/' ? 'active' : ''}`} onClick={() => navigate('/')}>
+          <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span className="nav-label">홈</span>
+        </div>
+        <div className={`nav-item ${location.pathname === '/map' ? 'active' : ''}`} onClick={() => navigate('/map')}>
+          <svg className="nav-icon" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span className="nav-label">비즈</span>
+        </div>
+        <div className={`nav-item ${location.pathname === '/moiza' ? 'active' : ''}`} onClick={() => navigate('/moiza')}>
+          <svg className="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span className="nav-label">모임생성</span>
+        </div>
+        <div className={`nav-item ${location.pathname === '/point' ? 'active' : ''}`} onClick={() => navigate('/point')}>
+          <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22 6 12 13 2 6"></polyline></svg>
+          <span className="nav-label">초대</span>
+        </div>
       </nav>
+
+      {/* 알림 팝업 */}
+      {isNotifOpen && (
+        <div id="overlay-container" onClick={() => setIsNotifOpen(false)} style={{backdropFilter: 'blur(20px)'}}>
+          <div className="detail-popup" onClick={e => e.stopPropagation()}>
+            <h3 style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <span>새로운 알림</span>
+              <span style={{fontSize: '0.7rem', color:'#aaa', fontWeight:'normal'}}>{meetings.length}건</span>
+            </h3>
+            
+            <div style={{ maxHeight: '380px', overflowY: 'auto', margin: '0 -25px' }}>
+              {meetings.length > 0 ? (
+                meetings.map((m, idx) => (
+                  <div key={idx} className="notif-item" style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                    <div style={{ padding: '15px' }}>
+                      <div className="notif-time">오늘</div>
+                      <div className="notif-title">{m.who}님과의 미팅 제안</div>
+                      <div className="notif-desc">{m.what} 장소: {m.where_location}</div>
+                      
+                      <MeetingActionSlider 
+                        onAccept={() => {
+                          if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+                          alert(`${m.who}님의 미팅을 승인했습니다.`);
+                        }}
+                        onDecline={() => {
+                          if (navigator.vibrate) navigator.vibrate(50);
+                          alert(`${m.who}님의 미팅을 거절했습니다.`);
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#ccc' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:'15px'}}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                  <p style={{fontSize:'0.9rem'}}>새로운 알림이 없습니다.</p>
+                </div>
+              )}
+            </div>
+
+            <button className="close-btn" onClick={() => setIsNotifOpen(false)} style={{marginTop: '20px'}}>확인</button>
+          </div>
+        </div>
+      )}
 
       {selectedMeeting && (
         <div id="overlay-container" onClick={() => setSelectedMeeting(null)}>
@@ -273,6 +365,81 @@ export default function App() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+function MeetingActionSlider({ onAccept, onDecline }) {
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const trackRef = useRef(null);
+
+  const handleStart = (e) => {
+    setIsDragging(true);
+    setStartX(e.type === 'touchstart' ? e.touches[0].clientX : e.clientX);
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const x = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const walk = x - startX;
+    
+    const trackWidth = trackRef.current.offsetWidth;
+    const halfTrack = (trackWidth - 40) / 2; // Knob is 40px
+    setRelativeX(Math.max(-halfTrack, Math.min(walk, halfTrack)));
+  };
+
+  const [relativeX, setRelativeX] = useState(0);
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const trackWidth = trackRef.current.offsetWidth;
+    const threshold = (trackWidth / 2) * 0.7; // 70% threshold
+
+    if (relativeX > threshold) {
+      onAccept();
+    } else if (relativeX < -threshold) {
+      onDecline();
+    }
+    setRelativeX(0); // Reset
+  };
+
+  const leftWidth = relativeX < 0 ? Math.abs(relativeX) + 20 : 0;
+  const rightWidth = relativeX > 0 ? relativeX + 20 : 0;
+
+  return (
+    <div 
+      className="pill-slider-track"
+      ref={trackRef}
+      onMouseDown={handleStart}
+      onMouseMove={handleMove}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onTouchStart={handleStart}
+      onTouchMove={handleMove}
+      onTouchEnd={handleEnd}
+    >
+      <div className="pill-slider-bg-left" style={{ width: leftWidth, transition: isDragging ? 'none' : 'width 0.3s' }}></div>
+      <div className="pill-slider-bg-right" style={{ width: rightWidth, transition: isDragging ? 'none' : 'width 0.3s' }}></div>
+      
+      <div className="pill-slider-label" style={{ left: '20px', opacity: relativeX < -20 ? 1 : 0.3 }}>거절</div>
+      <div className="pill-slider-label" style={{ right: '20px', opacity: relativeX > 20 ? 1 : 0.3 }}>승인</div>
+
+      <div 
+        className="pill-slider-knob" 
+        style={{ 
+          transform: `translateX(${relativeX}px)`,
+          transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+        }}
+      >
+        <div style={{ display:'flex', gap:'3px' }}>
+          <div style={{ width:'3px', height:'3px', backgroundColor:'#ddd', borderRadius:'50%' }}></div>
+          <div style={{ width:'3px', height:'3px', backgroundColor:'#ddd', borderRadius:'50%' }}></div>
+          <div style={{ width:'3px', height:'3px', backgroundColor:'#ddd', borderRadius:'50%' }}></div>
+        </div>
+      </div>
     </div>
   );
 }

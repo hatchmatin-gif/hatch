@@ -9,17 +9,9 @@ const RECIPES = {
 };
 
 export default function PosTest() {
-  const [isPC, setIsPC] = useState(window.innerWidth >= 768);
   const [orders, setOrders] = useState([]);
+  const [fadingOrderIds, setFadingOrderIds] = useState(new Set());
 
-  // 화면 크기 체크
-  useEffect(() => {
-    const handleResize = () => setIsPC(window.innerWidth >= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // OKPOS 로컬 데스크탑 이벤트 리스너 (Tauri 전용)
   useEffect(() => {
     if (window.__TAURI__) {
       let unlistenFn;
@@ -44,12 +36,9 @@ export default function PosTest() {
     }
   }, []);
 
-  // 주문 데이터 로드 및 Realtime 구독
   useEffect(() => {
-    if (!isPC) return;
-
     const fetchOrders = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('orders')
         .select('*')
         .in('status', ['대기중', '수락됨'])
@@ -61,14 +50,18 @@ export default function PosTest() {
 
     const channel = supabase.channel('public:orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        // CUD 이벤트 처리
         if (payload.eventType === 'INSERT') {
           setOrders(prev => [...prev, payload.new]);
-          if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // 소리/진동 임시
+          if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } else if (payload.eventType === 'UPDATE') {
-          setOrders(prev => prev.map(o => o.id === payload.new.id ? payload.new : o));
+          if (payload.new.status === '완료됨') {
+            // 외부(다른 기기)에서 완료된 경우에도 애니메이션 효과 적용
+            triggerFadeOut(payload.new.id);
+          } else {
+            setOrders(prev => prev.map(o => String(o.id) === String(payload.new.id) ? payload.new : o));
+          }
         } else if (payload.eventType === 'DELETE') {
-          setOrders(prev => prev.filter(o => o.id !== payload.old.id));
+          setOrders(prev => prev.filter(o => String(o.id) !== String(payload.old.id)));
         }
       })
       .subscribe();
@@ -76,73 +69,130 @@ export default function PosTest() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isPC]);
+  }, []);
 
-  const updateStatus = async (id, newStatus) => {
-    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
-    if (error) alert('상태 변경 실패: ' + error.message);
+  const triggerFadeOut = (id) => {
+    const stringId = String(id);
+    setFadingOrderIds(prev => new Set(prev).add(stringId));
+    setTimeout(() => {
+      setOrders(prev => prev.filter(o => String(o.id) !== stringId));
+      setFadingOrderIds(prev => {
+        const next = new Set(prev);
+        next.delete(stringId);
+        return next;
+      });
+    }, 1200);
   };
 
-  if (!isPC) {
-    return (
-      <div style={{ padding: '40px 20px', textAlign: 'center', color: '#fff' }}>
-        <h2 style={{ color: '#ff6a11', fontSize: '1.5rem' }}>접근 제한</h2>
-        <p style={{ marginTop: '20px', color: '#aaa', lineHeight: 1.5 }}>POS 모니터링 기능은<br/>태블릿/PC 환경(가로 768px 이상)에서만<br/>접근할 수 있습니다.</p>
-      </div>
-    );
-  }
+  const updateStatus = async (id, newStatus) => {
+    if (navigator.vibrate) navigator.vibrate(40);
 
-  // POS 모니터용 가로 레이아웃
+    const stringId = String(id);
+
+    // 1. 로컬 주문 처리 (OKPOS)
+    if (stringId.startsWith('OKPOS-')) {
+      if (newStatus === '완료됨') {
+        triggerFadeOut(id);
+      } else {
+        setOrders(prev => prev.map(o => String(o.id) === stringId ? { ...o, status: newStatus } : o));
+      }
+      return;
+    }
+
+    // 2. Optimistic UI
+    if (newStatus === '완료됨') {
+      triggerFadeOut(id);
+    } else {
+      setOrders(prev => prev.map(o => String(o.id) === stringId ? { ...o, status: newStatus } : o));
+    }
+
+    // 3. DB 주문 처리
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
+    if (error) {
+      alert('상태 변경 실패: ' + error.message);
+      // Rollback or refetch
+      const { data } = await supabase.from('orders').select('*').in('status', ['대기중', '수락됨']).order('created_at', { ascending: true });
+      if (data) setOrders(data);
+    }
+  };
+
   return (
-    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000', color: '#fff', overflow: 'hidden', zIndex: 99999 }}>
-      {/* 헤더 */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 30px', backgroundColor: '#111', borderBottom: '2px solid var(--main-orange)' }}>
-        <h1 style={{ color: 'var(--main-orange)', fontSize: '1.8rem', margin: 0 }}>WURI POS MONITOR (KDS)</h1>
-        <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>대기 주문: <span style={{color:'#ff3b30'}}>{orders.filter(o => o.status === '대기중').length}</span>건</div>
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'var(--bg-light)', color: '#000', overflow: 'hidden', zIndex: 9999 }}>
+      {/* Header */}
+      <header style={{ 
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+        padding: 'calc(max(20px, env(safe-area-inset-top)) + 15px) 24px 15px', 
+        backgroundColor: 'var(--accent-black)', color: '#fff',
+        flexShrink: 0
+      }}>
+        <h1 style={{ fontSize: '1.1rem', fontWeight: '900', margin: 0 }}>WURI KONTROL DISPLAY</h1>
+        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4caf50' }}>{orders.length} Active</div>
       </header>
 
-      {/* 주문 그리드 */}
-      <main style={{ padding: '20px 30px', height: 'calc(100vh - 70px)', overflowY: 'auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', alignContent: 'start' }}>
+      {/* List Area */}
+      <main style={{ 
+        padding: '20px 20px 140px 20px', 
+        height: '100%',
+        overflowY: 'auto', 
+        display: 'flex', flexDirection: 'column', gap: '20px' 
+      }}>
         {orders.map(order => (
-          <div key={order.id} style={{ backgroundColor: '#1a1a1c', border: order.status === '대기중' ? '2px solid #ff3b30' : '2px solid var(--main-orange)', borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 25px rgba(0,0,0,0.8)' }}>
+          <div key={order.id} className={fadingOrderIds.has(String(order.id)) ? 'order-card-fade-out' : ''} style={{ 
+            backgroundColor: '#fff', border: '1px solid #eee', 
+            borderRadius: '24px', overflow: 'hidden', 
+            boxShadow: 'var(--card-shadow)', width: '100%',
+            flexShrink: 0
+          }}>
             
-            {/* 카드 헤더 */}
-            <div style={{ backgroundColor: order.status === '대기중' ? '#ff3b30' : 'var(--main-orange)', color: order.status === '대기중' ? '#fff' : '#000', padding: '12px 15px', display: 'flex', justifyContent: 'space-between', fontWeight: 'bold' }}>
-              <span>주문번호: {order.id.split('-')[0]}</span>
-              <span>{new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            <div style={{ 
+              backgroundColor: order.status === '대기중' ? '#000' : (order.status === '수락됨' ? 'var(--main-orange)' : '#f5f5f5'), 
+              color: (order.status === '대기중' || order.status === '수락됨') ? '#fff' : '#000', 
+              padding: '16px 20px', display: 'flex', justifyContent: 'space-between', fontWeight: '800', fontSize: '0.9rem',
+              transition: 'background-color 0.3s ease'
+            }}>
+              <span>ORDER #{order.id.toString().slice(-4).toUpperCase()}</span>
+              <span style={{opacity: 0.7}}>{new Date(order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
 
-            {/* 주문 품목 리스트 */}
-            <div style={{ padding: '15px', flex: 1 }}>
+            <div style={{ padding: '20px' }}>
               {order.items?.map((item, idx) => (
                 <div key={idx} style={{ marginBottom: '15px' }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 'bold', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: '800', display: 'flex', justifyContent: 'space-between' }}>
                     <span>{item.name}</span>
-                    <span style={{ color: 'var(--main-orange)' }}>x {item.qty}</span>
+                    <span style={{ color: '#000' }}>{item.qty}개</span>
                   </div>
-                  {/* 하드코딩된 레시피 출력 */}
-                  <div style={{ marginTop: '5px', fontSize: '0.9rem', color: '#aaa', backgroundColor: '#222', padding: '8px', borderRadius: '8px', borderLeft: '3px solid #666' }}>
-                    📖 {RECIPES[item.name] || "기본 레시피 참조"}
+                  <div style={{ 
+                    marginTop: '8px', fontSize: '0.8rem', color: '#666', 
+                    backgroundColor: '#f9f9f9', padding: '12px', 
+                    borderRadius: '16px', borderLeft: '4px solid #ddd' 
+                  }}>
+                    👨‍🍳 {RECIPES[item.name] || "기본 레시피대로 조리해 주세요."}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 액션 버튼 */}
-            <div style={{ padding: '15px', borderTop: '1px solid #333', display: 'flex', gap: '10px' }}>
+            <div style={{ padding: '0 20px 20px' }}>
               {order.status === '대기중' ? (
-                 <button onClick={() => updateStatus(order.id, '수락됨')} style={{...btnStyle, backgroundColor: '#ff6a11', color: '#000'}}>접수하기</button>
+                 <button 
+                  onClick={() => updateStatus(order.id, '수락됨')} 
+                  style={{...btnStyleActive, backgroundColor: '#000'}}
+                 >
+                  주문접수
+                 </button>
               ) : (
-                 <button onClick={() => updateStatus(order.id, '완료됨')} style={{...btnStyle, backgroundColor: '#4caf50', color: '#fff'}}>제조 완료</button>
+                 <SwipeButton 
+                  onConfirm={() => updateStatus(order.id, '완료됨')} 
+                  text="준비완료"
+                 />
               )}
             </div>
           </div>
         ))}
-
         {orders.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', marginTop: '100px', color: '#888' }}>
-            <h2 style={{fontSize: '2rem'}}>대기 중인 주문이 없습니다.</h2>
-            <p style={{fontSize: '1.2rem'}}>모바일 홈 화면에서 [POS 테스트 주문]을 눌러보세요.</p>
+          <div style={{ textAlign: 'center', marginTop: '80px', color: '#ccc' }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{marginBottom:'15px'}}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+            <h2 style={{fontSize: '1.2rem', fontWeight: '800'}}>대기 중인 주문이 없습니다</h2>
           </div>
         )}
       </main>
@@ -150,7 +200,74 @@ export default function PosTest() {
   );
 }
 
-const btnStyle = {
-  flex: 1, padding: '14px', border: 'none', borderRadius: '10px', 
-  fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer'
+function SwipeButton({ onConfirm, text }) {
+  const [startX, setStartX] = useState(0);
+  const [currentX, setCurrentX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const trackRef = React.useRef(null);
+
+  const handleStart = (e) => {
+    setIsDragging(true);
+    setStartX(e.type === 'touchstart' ? e.touches[0].clientX : e.clientX);
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const x = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const walk = Math.max(0, x - startX);
+    const trackWidth = trackRef.current.offsetWidth - 60; // 60 is knob width
+    setCurrentX(Math.min(walk, trackWidth));
+    
+    // Trigger at 90%
+    if (walk > trackWidth * 0.9) {
+      setIsDragging(false);
+      setCurrentX(trackWidth);
+      onConfirm();
+      if (navigator.vibrate) navigator.vibrate(100);
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    setCurrentX(0); // Reset
+  };
+
+  return (
+    <div 
+      ref={trackRef}
+      onMouseDown={handleStart}
+      onMouseMove={handleMove}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onTouchStart={handleStart}
+      onTouchMove={handleMove}
+      onTouchEnd={handleEnd}
+      style={{
+        position: 'relative', height: '60px', backgroundColor: 'var(--main-orange)', 
+        borderRadius: '30px', overflow: 'hidden', display: 'flex', alignItems: 'center', 
+        justifyContent: 'center', cursor: 'grab', userSelect: 'none'
+      }}
+    >
+      <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '1rem', opacity: 0.8 }}>
+        {currentX > 20 ? "" : `→ ${text}`}
+      </div>
+      <div 
+        style={{
+          position: 'absolute', left: currentX + 5, width: '50px', height: '50px', 
+          backgroundColor: '#fff', borderRadius: '50%', display: 'flex', 
+          justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.2)',
+          transition: isDragging ? 'none' : 'left 0.3s ease'
+        }}
+      >
+        <div style={{ width: '10px', height: '10px', borderRight: '3px solid var(--main-orange)', borderBottom: '3px solid var(--main-orange)', transform: 'rotate(-45deg)', marginLeft: '-3px' }}></div>
+      </div>
+    </div>
+  );
+}
+
+const btnStyleActive = {
+  width: '100%', padding: '16px', border: 'none', borderRadius: '30px', 
+  color: '#fff', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer',
+  transition: 'background-color 0.3s ease'
 };

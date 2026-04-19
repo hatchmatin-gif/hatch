@@ -1,42 +1,462 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import MapView from './MapView';
 
 export default function Home({ stores, profile, formatPoints, handleTestOrder }) {
-  return (
-    <>
-      {stores.slice(0, 1).map(store => (
-        <section key={store.id} className="near-card">
-          <div className="near-header">{store.store_name} - {store.item}</div>
-          <div style={{flex:1, border:'1px dashed rgba(0,0,0,0.3)', borderRadius:'18px', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'0.85rem', fontWeight:'bold', color:'rgba(0,0,0,0.4)', zIndex: 2}}>
-            [ 이미지 / 영상 노출 영역 ]
-          </div>
-          <div className="near-bg-text">NEAR!</div>
-          <div className="near-badge">{store.badge_text}</div>
-        </section>
-      ))}
-      {!stores?.length && <section className="near-card"><div className="near-header">매장 정보 로딩중...</div></section>}
+  const navigate = useNavigate();
+  const [expandedCafe, setExpandedCafe] = useState(false);
+  const [expandedBeans, setExpandedBeans] = useState(false);
+  const [isMapMode, setIsMapMode] = useState(false);
 
-      <section className="grid-container">
-        <div className="action-card"><div className="card-title">POINT<br/>Launcher</div></div>
-        <div className="action-card filled">
-          <div className="card-title">MOIZA</div>
-          <div className="card-subtitle">모이자</div>
-          <ul>
-            <li>- 주선자 포인트 결제</li>
-            <li>- 메뉴/결제 미리하기</li>
-            <li>- 실시간 위치 공유</li>
-          </ul>
+  const toggleMapMode = () => {
+    if (navigator.vibrate) navigator.vibrate(15);
+    setIsMapMode(prev => !prev);
+    // 맵 모드 진입 시 모든 섹션 닫기(콤팩트 강제 아님, 상태만 리셋)
+    setExpandedCafe(false);
+    setExpandedBeans(false);
+  };
+
+  const toggleCafe = () => {
+    if (navigator.vibrate) navigator.vibrate(15);
+    setExpandedCafe(prev => !prev);
+    setExpandedBeans(false); // 카페 열 때 원두는 닫음
+  };
+
+  const toggleBeans = () => {
+    if (navigator.vibrate) navigator.vibrate(15);
+    setExpandedBeans(prev => !prev); // 카페는 닫지 않음(콤팩트로 처리)
+  };
+
+  // 최근 방문 카페 데이터 (향후 DB 연동)
+  const recentCafes = [
+    { name: '인하대점', item: '아이스 아메리카노', date: '오늘' },
+    { name: '종각점', item: '카페라떼', date: '어제' },
+    { name: '을지로점', item: '핸드드립', date: '3일 전' },
+    { name: '성수점', item: '콜드브루', date: '1주 전' },
+  ];
+
+  return (
+    <div className={`home-interactive ${isMapMode ? 'map-active' : ''}`}>
+      {/* 1. Balance Card - 맵 모드 시 콤팩트로 전환 (데이터는 유지하며 레이아웃만 변형) */}
+      <section className={`balance-card ${isMapMode ? 'compact' : ''}`}>
+        <div className="balance-compact-row">
+          <div className="balance-info-mini">
+            <span className="mini-label">My Cup</span>
+            <span className="mini-value">CUP {formatPoints(profile?.points)}</span>
+          </div>
+          <button className="balance-topup mini">Top Up</button>
         </div>
-        <div className="action-card my-usual">
-          <div className="point-display">{formatPoints(profile?.points)} (CUP)</div>
-          <div className="card-title">MY<br/>USUAL</div>
+        
+        <div className="balance-full-content">
+          <div className="balance-header">
+            <span className="balance-label">My Cup</span>
+            <button className="balance-topup">Top Up</button>
+          </div>
+          <div className="balance-amount">
+            CUP {formatPoints(profile?.points)}
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity: 0.5}}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          </div>
+          <div className="balance-actions">
+            <button className="balance-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3L21 7L17 11"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 21L3 17L7 13"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+              Transfer
+            </button>
+            <button className="balance-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+              Receive
+            </button>
+          </div>
         </div>
-        <div className="action-card" onClick={handleTestOrder} style={{backgroundColor: '#ff3b3b', cursor: 'pointer'}}>
-          <div className="card-title" style={{color: '#fff'}}>POS<br/>테스트 주문</div>
-        </div>
-        <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
-        <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
-        <div className="action-card"><div className="card-title" style={{color:'#aaa'}}>추가 기능<br/>준비 중</div></div>
       </section>
-    </>
+
+      <div className="home-layout-container">
+        {/* 왼쪽 섹션 컬럼 (맵 모드 세는 사이드바 아이콘으로 변함) */}
+        <div className="sections-column">
+          {/* 2. 내 주변매장 - 피크 캐러셀 */}
+          <StoreCarousel 
+            stores={stores} 
+            onMapClick={toggleMapMode} 
+            isSidebar={isMapMode} 
+          />
+
+          {/* 3. 우리카페 */}
+          <CafeSection 
+            expandedCafe={expandedCafe} 
+            toggleCafe={toggleCafe} 
+            expandedBeans={expandedBeans}
+            onRestoreCafe={() => setExpandedBeans(false)}
+            recentCafes={recentCafes} 
+            handleTestOrder={handleTestOrder} 
+            isSidebar={isMapMode}
+          />
+
+          {/* 4. 원두주문 버튼 */}
+          <div 
+            className={`beans-order-card ${isMapMode ? 'sidebar-mode' : ''} ${expandedBeans ? 'expanded' : ''} ${!expandedBeans && expandedCafe ? 'shrunk' : ''}`}
+            onClick={() => {
+              if (isMapMode) {
+                toggleMapMode(); // 사이드바 클릭 시 맵 종료 (홈 복귀)
+              } else {
+                toggleBeans();
+              }
+            }}
+          >
+            <div className="beans-order-main">
+              <div className="beans-order-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+                  <path d="M8 12c0-2.5 1.5-4.5 4-4.5s4 2 4 4.5-1.5 4.5-4 4.5-4-2-4-4.5z"></path>
+                </svg>
+              </div>
+              <div className="beans-order-text hide-in-sidebar">
+                <div className="beans-order-title">원두주문하기</div>
+                <div className="beans-order-subtitle text-truncate">원하는곳으로 배송</div>
+              </div>
+              <div className={`expand-arrow beans-arrow hide-in-sidebar ${expandedBeans ? 'rotated' : ''}`}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </div>
+            </div>
+
+            {/* 확장 영역: 추가 버튼 (사이드바일때는 완전 숨김) */}
+            <div className={`beans-expand hide-in-sidebar ${expandedBeans ? 'open' : ''}`}>
+              <div className="beans-expand-divider" />
+              <div className="beans-expand-subtitle">최근 먹었던 커피 원두 구매</div>
+              <div className="beans-expand-grid">
+                {recentCafes.slice(0, 3).map((cafe, idx) => (
+                  <button key={idx} className="beans-expand-btn" onClick={(e) => { e.stopPropagation(); }}>
+                    <span>{cafe.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽 지도 컬럼 (맵 모드 활성화 시 등장) */}
+        <div className={`map-column ${isMapMode ? 'active' : ''}`}>
+          {isMapMode && (
+            <MapView 
+              profile={profile} 
+              stores={stores} 
+              onClose={() => setIsMapMode(false)} 
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ==========================================
+   StoreCarousel - 피크 캐러셀 (좌우 카드 보임)
+   ========================================== */
+function StoreCarousel({ stores, onMapClick, isSidebar }) {
+  const [isCompact, setIsCompact] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchDeltaX = useRef(0);
+  const touchDeltaY = useRef(0);
+  const [dragging, setDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const autoPlayRef = useRef(null);
+
+  // 데모 데이터 (항상 추가하여 캐러셀 동작을 확인할 수 있도록 함)
+  const demoStores = [
+    { id: 'd1', store_name: '해치카페 굴포천점', item: '아이스 아메리카노 T', badge_text: '이벤트' },
+    { id: 'd2', store_name: '해치다방 부평고점', item: '카페라떼', badge_text: null },
+    { id: 'd3', store_name: '종각점', item: '핸드드립 커피', badge_text: '신메뉴' },
+  ];
+
+  // DB에서 불러온 매장이 있든 없든 데모 매장을 합쳐서 캐러셀이 항상 움직이게 설정
+  const allStores = [...stores, ...demoStores];
+  const total = allStores.length;
+
+  // 자동 슬라이딩 (4초마다 왼쪽으로)
+  useEffect(() => {
+    if (!isAutoPlay || total <= 1) return;
+    autoPlayRef.current = setInterval(() => {
+      setCurrent(prev => (prev + 1) % total);
+    }, 4000);
+    return () => clearInterval(autoPlayRef.current);
+  }, [isAutoPlay, total]);
+
+  // 드래그 시작
+  const handleDragStart = (clientX, clientY) => {
+    setIsAutoPlay(false);
+    clearInterval(autoPlayRef.current);
+    touchStartX.current = clientX;
+    touchStartY.current = clientY;
+    setDragging(true);
+  };
+
+  // 드래그 이동
+  const handleDragMove = (clientX, clientY) => {
+    if (!dragging) return;
+    const deltaX = clientX - touchStartX.current;
+    const deltaY = clientY - touchStartY.current;
+    touchDeltaX.current = deltaX;
+    touchDeltaY.current = deltaY;
+    
+    // 수평 이동(좌우)만 카드를 움직이는 오프셋으로 반영합니다.
+    setDragOffset(deltaX);
+  };
+
+  // 드래그 종료
+  const handleDragEnd = () => {
+    if (!dragging) return;
+    setDragging(false);
+    
+    const thresholdX = 40; // 좌우 스와이프 임계값
+    const thresholdY = -15; // 위로 스와이프 임계값 (민감도를 50에서 15로 대폭 낮춰 즉각적으로 반응하게 함)
+
+    // Y축(위쪽)으로 크고, 상하 각도가 좌우보다 클 때 콤팩트 모드 스위치
+    if (touchDeltaY.current < thresholdY && Math.abs(touchDeltaY.current) > Math.abs(touchDeltaX.current)) {
+      setIsCompact(true); // 위로 스와이프: 콤팩트 모드 켬
+      setIsAutoPlay(true); // 상단 이동 시 로테이션 즉시 재개
+    } else if (touchDeltaY.current > -thresholdY && Math.abs(touchDeltaY.current) > Math.abs(touchDeltaX.current)) {
+      setIsCompact(false); // 아래로 스와이프: 콤팩트 모드 끔
+    } else {
+      // 일반적인 좌우 로테이션 동작
+      if (touchDeltaX.current < -thresholdX) {
+        setCurrent(prev => (prev + 1) % total);
+      } else if (touchDeltaX.current > thresholdX) {
+        setCurrent(prev => (prev - 1 + total) % total);
+      }
+    }
+    
+    setDragOffset(0);
+    touchDeltaX.current = 0;
+    touchDeltaY.current = 0;
+    // 5초 후 자동재생 재개
+    setTimeout(() => setIsAutoPlay(true), 5000);
+  };
+
+  // 각 카드의 위치 계산
+  const getCardStyle = (idx) => {
+    const diff = idx - current;
+    // 무한루프 처리
+    let normalizedDiff = diff;
+    if (diff > total / 2) normalizedDiff = diff - total;
+    if (diff < -total / 2) normalizedDiff = diff + total;
+
+    // 콤팩트 모드일 땐 카드가 100% 너비를 차지하여 밖으로 완전히 밀려나게 함
+    const cardWidth = 100; // %
+    const gap = isCompact ? 0 : 16; // px
+
+    let opacity = Math.abs(normalizedDiff) > 1 ? 0 : normalizedDiff === 0 ? 1 : 0.4;
+    if (isCompact && normalizedDiff !== 0) {
+      opacity = 0; // 콤팩트 모드에서는 겹침 방지를 위해 옆 카드는 투명하게
+    }
+
+    return {
+      // 너비 %와 간격 px, 그리고 드래그 옵셋을 calc로 계산
+      transform: `translateX(calc(${normalizedDiff * cardWidth}% + ${normalizedDiff * gap}px + ${dragOffset * 0.4}px))`,
+      opacity,
+      scale: isCompact ? '1' : (normalizedDiff === 0 ? '1' : '0.88'),
+      zIndex: normalizedDiff === 0 ? 2 : 1,
+      // 바운스 효과 대신 천천히 일정한 속도로 부드럽게 이동하게 변경 (1.2s ease-in-out)
+      transition: dragging ? 'none' : 'all 1.2s ease-in-out',
+      pointerEvents: normalizedDiff === 0 ? 'auto' : 'none',
+    };
+  };
+
+  if (total === 0) {
+    return (
+      <div className="store-carousel-empty">주변 매장이 없습니다</div>
+    );
+  }
+
+  return (
+    <div 
+      className={`store-carousel-wrapper ${isCompact ? 'compact' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
+      onClick={(e) => {
+        if (isSidebar) {
+           onMapClick(); // 사이드바 상태에서 클릭 시 맵 종료
+           return;
+        }
+        // 내부 요소들(예: 지도에서 보기) 클릭 시에는 무시할 수 있도록
+        if (isCompact) setIsCompact(false);
+      }}
+    >
+      <div className="section-header store-header">
+        <span className="section-title">내 주변매장</span>
+        <span className="section-link" onClick={(e) => {
+          e.stopPropagation();
+          onMapClick();
+        }}>
+          지도에서 보기
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft:'3px'}}><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </span>
+      </div>
+
+      <div
+        className="store-carousel"
+        // 모바일 터치 이벤트
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+        onTouchEnd={handleDragEnd}
+        onTouchCancel={handleDragEnd}
+        // 데스크탑 마우스 이벤트
+        onMouseDown={(e) => handleDragStart(e.clientX, e.clientY)}
+        onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+      >
+      <div className="store-carousel-track">
+        {allStores.map((store, idx) => (
+          <div
+            key={store.id}
+            className="store-carousel-card"
+            style={getCardStyle(idx)}
+          >
+            <div className="carousel-card-inner">
+              <div className="activity-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              </div>
+              <div className="activity-info hide-in-sidebar">
+                <div className="activity-main">
+                  <span className="store-name">{store.store_name}</span>
+                  <div className="status-tag blue compact-only">영업중</div>
+                </div>
+                <div className="activity-sub">
+                  <span className="item-name">{store.item}</span>
+                  <div className={`store-event-badge compact-only ${store.badge_text ? '' : 'v-hidden'}`}>
+                    <span className="event-dot"></span>
+                    이벤트
+                  </div>
+                </div>
+              </div>
+              <div className={`store-event-badge normal-only hide-in-sidebar ${store.badge_text ? '' : 'v-hidden'}`}>
+                <span className="event-dot"></span>
+                이벤트
+              </div>
+              <div className="status-tag blue normal-only hide-in-sidebar">영업중</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 인디케이터 */}
+      {total > 1 && (
+        <div className="carousel-indicators">
+          {allStores.map((_, idx) => (
+            <div
+              key={idx}
+              className={`carousel-dot ${idx === current ? 'active' : ''}`}
+              onClick={() => { setCurrent(idx); setIsAutoPlay(false); setTimeout(() => setIsAutoPlay(true), 5000); }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+    </div>
+  );
+}
+
+/* ==========================================
+   CafeSection - 우리카페 콤팩트 & 확장 가능 섹션
+   ========================================== */
+function CafeSection({ expandedCafe, toggleCafe, expandedBeans, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
+  const [isCompact, setIsCompact] = useState(false);
+  const touchStartY = useRef(0);
+  const touchDeltaY = useRef(0);
+  const isShrunk = !isCompact && expandedBeans;
+
+  // 원두 주문하기가 열리면 우리카페는 자동으로 콤팩트(최소화) 처리됨
+  useEffect(() => {
+    if (expandedBeans && expandedCafe) {
+      setIsCompact(true);
+    }
+  }, [expandedBeans, expandedCafe]);
+
+  const handleDragStart = (clientY) => {
+    touchStartY.current = clientY;
+    touchDeltaY.current = 0;
+  };
+
+  const handleDragMove = (clientY) => {
+    touchDeltaY.current = clientY - touchStartY.current;
+  };
+
+  const handleDragEnd = () => {
+    const thresholdY = -15; 
+    if (touchDeltaY.current < thresholdY) {
+      setIsCompact(true);
+      // 기존: 위로 올리면 목록 강제수납 -> 현재: 상태 유지하여 탭 시 복구 기능 살림
+    } else if (touchDeltaY.current > -thresholdY) {
+      setIsCompact(false);
+      onRestoreCafe(); // 쓸어내릴때도 원두 닫고 메인으로 복구
+    }
+    touchDeltaY.current = 0;
+  };
+
+  return (
+    <div 
+      className={`cafe-wrapper ${isCompact ? 'compact' : ''} ${expandedCafe && !isCompact ? 'expanded-mode' : ''} ${isSidebar ? 'sidebar-mode' : ''}`}
+      onClick={() => {
+        if (isSidebar) {
+          onRestoreCafe(); // 맵 모드 종료 연동
+          return;
+        }
+        if (isCompact) {
+          setIsCompact(false); // 콤팩트 모드일 때 탭하면 원래 상태(확장됨 유지)로 복구
+          onRestoreCafe(); 
+        }
+      }}
+    >
+      <div className="section-header store-header">
+        <span className="section-title">우리카페</span>
+        <span className="section-link" onClick={(e) => { e.stopPropagation(); }}>전체보기</span>
+      </div>
+      
+      <div 
+        className={`elastic-card ${expandedCafe && !isCompact ? 'expanded' : ''} ${isShrunk ? 'shrunk' : ''}`}
+        onClick={() => {
+          if (!isCompact) toggleCafe();
+        }}
+        // 메인 영역 위에서만 제스처 감지
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
+        onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
+        onTouchEnd={handleDragEnd}
+        onTouchCancel={handleDragEnd}
+        onMouseDown={(e) => handleDragStart(e.clientY)}
+        onMouseMove={(e) => { if (e.buttons > 0) handleDragMove(e.clientY); }}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
+      >
+        <div className="cafe-main-row">
+          <div className="activity-icon cafe-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+          </div>
+          <div className="activity-info hide-in-sidebar">
+            <div className="activity-main compact-flex">주문하기</div>
+            <div className="activity-sub">원하는 곳으로 배송 · 선물하기</div>
+          </div>
+          <div className={`expand-arrow hide-in-sidebar ${expandedCafe && !isCompact ? 'rotated' : ''}`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+        </div>
+
+        {/* 확장 영역: 최근 방문 카페 목록 (사이드바일때는 완전 수납) */}
+        <div className={`cafe-expand-list hide-in-sidebar ${expandedCafe && !isCompact ? 'open' : ''}`}>
+          <div className="cafe-expand-divider" />
+          <div className="cafe-expand-title">최근 방문한 매장</div>
+          {recentCafes.map((cafe, idx) => (
+            <div key={idx} className="cafe-expand-item" onClick={(e) => { e.stopPropagation(); handleTestOrder(); }}>
+              <div className="cafe-expand-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+              <div className="cafe-expand-info">
+                <span className="cafe-expand-name">{cafe.name}</span>
+                <span className="cafe-expand-item-name">{cafe.item}</span>
+              </div>
+              <span className="cafe-expand-date">{cafe.date}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }

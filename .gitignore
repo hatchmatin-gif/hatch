@@ -1,2 +1,7 @@
 node_modules/
 .env
+dist/
+target/
+build_log.txt
+*.log
+src-tauri/target/

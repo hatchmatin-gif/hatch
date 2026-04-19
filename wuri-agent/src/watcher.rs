@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{mpsc, Mutex};
+use std::os::windows::fs::OpenOptionsExt;
 
 const LOG_PATH: &str = "C:\\_OKPOS\\CFG\\LOG";
 
@@ -60,16 +61,27 @@ pub async fn start(
         for path in event.paths {
             if path.extension().and_then(|e| e.to_str()) != Some("log") { continue; }
 
-            let pos = positions.entry(path.clone()).or_insert(0);
-            if let Ok(mut f) = File::open(&path) {
+            let mut options = std::fs::OpenOptions::new();
+            options.read(true);
+            options.share_mode(7); // FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE
+
+            if let Ok(f) = options.open(&path) {
                 let len = f.metadata().map(|m| m.len()).unwrap_or(0);
+                let pos = positions.entry(path.clone()).or_insert(0);
                 if len < *pos { *pos = 0; }
                 if len <= *pos { continue; }
 
+                let mut f = f;
                 f.seek(SeekFrom::Start(*pos)).ok();
-                let reader = BufReader::new(f);
-
-                for line in reader.lines().flatten() {
+                
+                let mut reader = BufReader::new(f);
+                let mut buffer = Vec::new();
+                
+                // 바이트 단위로 한 줄씩 읽어서 CP949 -> UTF8 변환
+                while let Ok(n) = reader.read_until(b'\n', &mut buffer) {
+                    if n == 0 { break; }
+                    let line = decode_cp949(&buffer);
+                    buffer.clear();
                     // 아이템 라인 파싱
                     if let Some(caps) = item_re.captures(&line) {
                         let qty: u32 = caps[1].trim().parse().unwrap_or(1);
@@ -132,4 +144,29 @@ async fn upload_sale(
         Ok(r)  => println!("Supabase 전송 완료 [{}]: {}", bill_no, r.status()),
         Err(e) => eprintln!("Supabase 전송 실패 [{}]: {}", bill_no, e),
     }
+}
+
+/// CP949(EUC-KR) 바이트 배열을 UTF-8 String으로 변환
+fn decode_cp949(bytes: &[u8]) -> String {
+    #[cfg(windows)]
+    {
+        use winapi::um::stringapiset::MultiByteToWideChar;
+        unsafe {
+            let len = MultiByteToWideChar(
+                949, 0,
+                bytes.as_ptr() as *const i8, bytes.len() as i32,
+                std::ptr::null_mut(), 0,
+            );
+            if len > 0 {
+                let mut wide = vec![0u16; len as usize];
+                MultiByteToWideChar(
+                    949, 0,
+                    bytes.as_ptr() as *const i8, bytes.len() as i32,
+                    wide.as_mut_ptr(), len,
+                );
+                return String::from_utf16_lossy(&wide);
+            }
+        }
+    }
+    String::from_utf8_lossy(bytes).to_string()
 }
