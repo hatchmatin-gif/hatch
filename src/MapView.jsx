@@ -20,6 +20,7 @@ export default function MapView({ profile, stores }) {
 
   useEffect(() => {
     let isMounted = true;
+    let resizeInterval; // 선언 범위를 useEffect 전역으로 승격하여 ReferenceError 방지
     if (mapInstance.current || !profile) return;
     
     // 기본 위치: 동네 설정이 없으면 서울 시청
@@ -50,7 +51,7 @@ export default function MapView({ profile, stores }) {
 
       // CSS 트랜지션 중 주기적으로 크기 업데이트 (1초 동안 10회)를 통해 백지 화면(크기 계산 실패) 배제
       let count = 0;
-      const resizeInterval = setInterval(() => {
+      resizeInterval = setInterval(() => {
         if (!isMounted) return;
         if (mapInstance.current) mapInstance.current.resize();
         count++;
@@ -145,7 +146,7 @@ export default function MapView({ profile, stores }) {
       map.flyTo({ center: [initialLng, initialLat], zoom: TARGET_ZOOM, pitch: CURVE_PITCH });
     });
     
-    }, 500); // 500ms 지연: CSS 애니메이션(0.9s) 시작 후 컨테이너 너비가 확보될 시간을 줍니다.
+    }, 950); // 950ms 지연: CSS 애니메이션(0.9s)이 완전히 종료된 후 안정적인 폭을 확보하고 렌더링합니다.
 
     return () => {
       isMounted = false;
