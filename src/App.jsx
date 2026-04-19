@@ -187,19 +187,8 @@ export default function App() {
     return <Login />;
   }
 
-  // 동네 미설정 시 ZoneSetup 강제 표시
-  if (needsZoneSetup && !window.__TAURI__) {
-    return (
-      <ZoneSetup
-        session={session}
-        onComplete={() => {
-          setNeedsZoneSetup(false);
-          fetchData();
-        }}
-      />
-    );
-  }
-
+  // 동네 미설정 시 강제로 설정 창으로 보내는 로직 제거 (메인 화면 우선 진입)
+  // 향후 사용자가 팝업이나 설정 탭을 통해 자발적으로 동네를 설정할 수 있도록 유도합니다.
   // 로그인 상태면 메인 WURI 앱 렌더링
   return (
     <div id="app-container">
