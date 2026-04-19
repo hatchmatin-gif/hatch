@@ -355,7 +355,29 @@ function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHea
    CafeSection - 우리카페 콤팩트 & 확장 가능 섹션
    ========================================== */
 function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
-  // 내부의 독립적인 isCompact 스테이트를 제거하고 부모(Home)에서 통제받습니다.
+  const touchStartY = useRef(0);
+  const touchDeltaY = useRef(0);
+
+  const handleDragStart = (clientY) => {
+    touchStartY.current = clientY;
+    touchDeltaY.current = 0;
+  };
+
+  const handleDragMove = (clientY) => {
+    touchDeltaY.current = clientY - touchStartY.current;
+  };
+
+  const handleDragEnd = () => {
+    // 민감도를 -60으로 낮추어 실수로 스크롤할 때 축소되지 않도록 강도 조절
+    if (touchDeltaY.current < -60) {
+      // 강하게 위로 쓸어올리면 확장 해제 (Normal 복구/최소화)
+      if (isExpanded) onRestoreCafe();
+    } else if (touchDeltaY.current > 60) {
+      // 강하게 아래로 쓸어내리면 최대화
+      if (!isExpanded && !isCompact) toggleCafe();
+    }
+    touchDeltaY.current = 0;
+  };
 
   return (
     <div 
@@ -380,7 +402,14 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
         onClick={() => {
           if (!isCompact) toggleCafe();
         }}
-        // 제스처 기반 축소(드래그) 기능이 스크롤과 충돌하여 오류를 유발하므로 제거됨.
+        onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
+        onTouchMove={(e) => handleDragMove(e.touches[0].clientY)}
+        onTouchEnd={handleDragEnd}
+        onTouchCancel={handleDragEnd}
+        onMouseDown={(e) => handleDragStart(e.clientY)}
+        onMouseMove={(e) => { if (e.buttons > 0) handleDragMove(e.clientY); }}
+        onMouseUp={handleDragEnd}
+        onMouseLeave={handleDragEnd}
       >
         <div className="cafe-main-row">
           <div className="activity-icon cafe-icon">
