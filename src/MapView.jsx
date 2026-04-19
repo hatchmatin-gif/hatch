@@ -19,11 +19,15 @@ export default function MapView({ profile, stores }) {
   const TARGET_ZOOM = 16.7;
 
   useEffect(() => {
-    if (mapInstance.current || !profile || !profile.home_zone_lat) return;
+    if (mapInstance.current || !profile) return;
     
+    // 기본 위치: 동네 설정이 없으면 서울 시청
+    const defaultLng = 126.9780;
+    const defaultLat = 37.5665;
+
     // 초기 중심점 결정 (마지막 위치가 있다면 우선 사용)
-    const initialLng = lastLocationRef.current ? lastLocationRef.current[0] : Number(profile.home_zone_lng);
-    const initialLat = lastLocationRef.current ? lastLocationRef.current[1] : Number(profile.home_zone_lat);
+    const initialLng = lastLocationRef.current ? lastLocationRef.current[0] : (profile.home_zone_lng ? Number(profile.home_zone_lng) : defaultLng);
+    const initialLat = lastLocationRef.current ? lastLocationRef.current[1] : (profile.home_zone_lat ? Number(profile.home_zone_lat) : defaultLat);
 
     const map = new mapboxgl.Map({
       container: mapContainerRef.current,
