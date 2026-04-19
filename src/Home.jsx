@@ -368,12 +368,10 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
   };
 
   const handleDragEnd = () => {
-    // 민감도를 -60으로 낮추어 실수로 스크롤할 때 축소되지 않도록 강도 조절
-    if (touchDeltaY.current < -60) {
-      // 강하게 위로 쓸어올리면 확장 해제 (Normal 복구/최소화)
+    // 민감도 복원: 15px 임계값으로 설정하여 즉각 반응하도록 함
+    if (touchDeltaY.current < -15) {
       if (isExpanded) onRestoreCafe();
-    } else if (touchDeltaY.current > 60) {
-      // 강하게 아래로 쓸어내리면 최대화
+    } else if (touchDeltaY.current > 15) {
       if (!isExpanded && !isCompact) toggleCafe();
     }
     touchDeltaY.current = 0;
