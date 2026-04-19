@@ -223,6 +223,8 @@ export default function MapView({ profile, stores }) {
   const renderStoreMarkers = (map) => {
     if (!stores) return;
     stores.forEach((store) => {
+      // lat/lng 데이터가 없는 경우 마커 생성을 건너뜀 (NaN 오류 방지)
+      if (!store.lat || !store.lng) return;
       const el = document.createElement('div');
       el.className = 'store-marker-dot';
       new mapboxgl.Marker(el).setLngLat([Number(store.lng), Number(store.lat)]).addTo(map);
