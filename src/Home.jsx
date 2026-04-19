@@ -357,24 +357,33 @@ function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHea
 function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
   const touchStartY = useRef(0);
   const touchDeltaY = useRef(0);
+  const wasDragged = useRef(false);
 
   const handleDragStart = (clientY) => {
     touchStartY.current = clientY;
     touchDeltaY.current = 0;
+    wasDragged.current = false;
   };
 
   const handleDragMove = (clientY) => {
     touchDeltaY.current = clientY - touchStartY.current;
+    if (Math.abs(touchDeltaY.current) > 10) {
+      wasDragged.current = true;
+    }
   };
 
   const handleDragEnd = () => {
-    // 민감도 복원: 15px 임계값으로 설정하여 즉각 반응하도록 함
     if (touchDeltaY.current < -15) {
       if (isExpanded) onRestoreCafe();
     } else if (touchDeltaY.current > 15) {
       if (!isExpanded && !isCompact) toggleCafe();
     }
     touchDeltaY.current = 0;
+    
+    // click 이벤트가 연달아 발생하는 것을 막기 위해 매우 짧은 지연 후 플래그 해제
+    setTimeout(() => {
+      wasDragged.current = false;
+    }, 50);
   };
 
   return (
@@ -397,7 +406,12 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
       
       <div 
         className={`elastic-card ${isExpanded ? 'expanded' : ''}`}
-        onClick={() => {
+        onClick={(e) => {
+          if (wasDragged.current) {
+            e.preventDefault();
+            e.stopPropagation();
+            return; // 드래그(스와이프) 직후에 발생하는 클릭 무시
+          }
           if (!isCompact) toggleCafe();
         }}
         onTouchStart={(e) => handleDragStart(e.touches[0].clientY)}
