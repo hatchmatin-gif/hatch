@@ -145,7 +145,7 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
    StoreCarousel - 피크 캐러셀 (좌우 카드 보임)
    ========================================== */
 function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHeader }) {
-  const [internalCompact, setInternalCompact] = useState(false);
+  const [internalCompact, setInternalCompact] = useState(true); // 앱 구동 시 기본적으로 최소화(Compact) 상태
   const isCompact = forceCompact || internalCompact;
   const [current, setCurrent] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
@@ -355,7 +355,7 @@ function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHea
    CafeSection - 우리카페 콤팩트 & 확장 가능 섹션
    ========================================== */
 function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentCafes, handleTestOrder, isSidebar }) {
-  const [internalCompact, setInternalCompact] = useState(false);
+  const [internalCompact, setInternalCompact] = useState(true); // 앱 구동 시 기본적으로 최소화(Compact) 상태
   const touchStartY = useRef(0);
   const touchDeltaY = useRef(0);
   const wasDragged = useRef(false);
