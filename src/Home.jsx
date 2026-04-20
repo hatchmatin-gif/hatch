@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from './MapView';
 
-export default function Home({ stores, profile, formatPoints, handleTestOrder }) {
+export default function Home({ stores, profile, formatPoints, handleTestOrder, handleBeanOrder }) {
   const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState(null); // 'store' | 'cafe' | 'beans' | null
   const [isMapMode, setIsMapMode] = useState(false);
@@ -134,10 +134,19 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
               </div>
               
               <div className={`beans-sub-list ${showBeansList ? 'open' : ''}`}>
-                {['해치너트', '해치프룻', '디카페인', '해치너트2', '해치너트3'].map((bean, idx) => (
-                  <button key={idx} className="beans-sub-item-btn" onClick={(e) => { e.stopPropagation(); handleTestOrder(); }}>
-                    <span>{bean}</span>
-                    <span className="order-plus">+</span>
+                {[
+                  { name: '해치너트', price: 22000 }, 
+                  { name: '해치프룻', price: 28000 }, 
+                  { name: '디카페인', price: 36000 }, 
+                  { name: '해치너트2', price: 24000 }, 
+                  { name: '해치너트3', price: 24000 }
+                ].map((bean, idx) => (
+                  <button key={idx} className="beans-sub-item-btn" onClick={(e) => { e.stopPropagation(); handleBeanOrder(bean.name, bean.price); }}>
+                    <span>{bean.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{formatPoints(bean.price)}P</span>
+                      <span className="order-plus">+</span>
+                    </div>
                   </button>
                 ))}
               </div>

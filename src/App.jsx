@@ -113,6 +113,55 @@ export default function App() {
     }
   };
 
+  // 실제 원두 주문 및 포인트 차감 로직
+  const handleBeanOrder = async (beanName, price) => {
+    if (!session?.user?.id || stores.length === 0) {
+      alert("데이터를 아직 불러오지 못했습니다.");
+      return;
+    }
+    
+    if (profile.points < price) {
+      alert(`잔여 포인트가 부족합니다.\n(현재: ${formatPoints(profile.points)}P / 필요: ${formatPoints(price)}P)`);
+      return;
+    }
+
+    if (!window.confirm(`${beanName}을(를) 주문하시겠습니까?\n${formatPoints(price)} CUP이 차감됩니다.`)) return;
+
+    try {
+      const newPoints = profile.points - price;
+      
+      // 1. 포인트 차감 업데이트
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', session.user.id);
+        
+      if (profileError) throw profileError;
+
+      // 로컬 프로필 상태 즉시 업데이트
+      setProfile(prev => ({ ...prev, points: newPoints }));
+
+      // 2. 주문 내역 기록
+      const orderData = {
+        store_id: stores[0].id,
+        user_id: session.user.id,
+        items: [
+          { name: beanName, qty: 1, price: price }
+        ],
+        total_price: price, // 주문 총액 추가
+        status: '주문완료' // 매장 테스트할 땐 대기중이겠지만 원두 발주는 주문완료
+      };
+
+      const { error: orderError } = await supabase.from('orders').insert([orderData]);
+      if (orderError) throw orderError;
+      
+      alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
+    } catch (err) {
+      console.error(err);
+      alert("결제 실패: " + err.message);
+    }
+  };
+
   // Format currency
   const formatPoints = (p) => p ? p.toLocaleString() : 0;
 
@@ -257,7 +306,7 @@ export default function App() {
 
         <main id="main-scroll" ref={scrollRef}>
           <Routes>
-            <Route path="/" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} />} />
+            <Route path="/" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} />} />
             <Route path="/moiza" element={
               <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
                 <h2>MOIZA 모이자 화면</h2><p>기능 준비 중입니다.</p>
