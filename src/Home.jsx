@@ -6,6 +6,7 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
   const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState(null); // 'store' | 'cafe' | 'beans' | null
   const [isMapMode, setIsMapMode] = useState(false);
+  const [showBeansList, setShowBeansList] = useState(false);
 
   const toggleMapMode = () => {
     if (navigator.vibrate) navigator.vibrate(15);
@@ -15,7 +16,11 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
 
   const toggleCard = (cardName) => {
     if (navigator.vibrate) navigator.vibrate(15);
-    setActiveCard(prev => prev === cardName ? null : cardName);
+    setActiveCard(prev => {
+      const nextState = prev === cardName ? null : cardName;
+      if (nextState !== 'beans') setShowBeansList(false);
+      return nextState;
+    });
   };
 
 
@@ -114,11 +119,25 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder })
             {/* 확장 영역: 추가 버튼 (사이드바일때는 완전 숨김) */}
             <div className={`beans-expand hide-in-sidebar ${activeCard === 'beans' ? 'open' : ''}`}>
               <div className="beans-expand-divider" />
-              <div className="beans-expand-subtitle">최근 먹었던 커피 원두 구매</div>
               <div className="beans-expand-grid">
-                {recentCafes.slice(0, 3).map((cafe, idx) => (
-                  <button key={idx} className="beans-expand-btn" onClick={(e) => { e.stopPropagation(); }}>
-                    <span>{cafe.name}</span>
+                <button 
+                  className="beans-expand-btn w-100" 
+                  style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', padding: '14px 20px', background: 'rgba(255,255,255,0.15)' }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setShowBeansList(prev => !prev);
+                  }}
+                >
+                  <span style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>해치커피로스터리</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showBeansList ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </div>
+              
+              <div className={`beans-sub-list ${showBeansList ? 'open' : ''}`}>
+                {['해치너트', '해치프룻', '디카페인', '해치너트2', '해치너트3'].map((bean, idx) => (
+                  <button key={idx} className="beans-sub-item-btn" onClick={(e) => { e.stopPropagation(); handleTestOrder(); }}>
+                    <span>{bean}</span>
+                    <span className="order-plus">+</span>
                   </button>
                 ))}
               </div>
