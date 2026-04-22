@@ -165,15 +165,20 @@ export default function AdminLogin() {
           to { opacity: 1; }
         }
         .login-card {
-          background: rgba(255, 255, 255, 0.85);
+          background: rgba(255, 255, 255, 0.9);
           border: 1px solid rgba(255, 255, 255, 1);
           backdrop-filter: blur(40px);
-          border-radius: 32px;
-          padding: 48px;
-          width: 100%;
-          maxWidth: 420px;
+          border-radius: 40px;
+          padding: 60px;
+          width: 90%;
+          max-width: 480px;
           box-shadow: 0 40px 100px rgba(0,0,0,0.1);
           text-align: center;
+          animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .login-input {
           width: 100%;
