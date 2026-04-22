@@ -1,10 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  // 스크롤 시 등장 애니메이션을 위한 Observer
+  // Handle global mouse move for subtle interactive spotlight effects
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({
+        x: e.clientX,
+        y: e.clientY
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Intersection Observer for scroll animations
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -17,7 +30,6 @@ export default function LandingPage() {
     const hiddenElements = document.querySelectorAll('.hide-animate');
     hiddenElements.forEach((el) => observer.observe(el));
 
-    // 최상위 wrapper 크기 강제 조정을 위해 (index.css의 #root flex 제약 우회)
     document.body.style.overflow = 'auto'; // 스크롤 허용
     return () => {
       document.body.style.overflow = 'hidden'; // 모바일 앱을 위해 원상복구
@@ -27,159 +39,417 @@ export default function LandingPage() {
   return (
     <div style={styles.container}>
       <style>{`
-        /* 전용 애니메이션 CSS */
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Noto+Sans+KR:wght@300;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
         
+        * {
+          box-sizing: border-box;
+        }
+
         .landing-wrapper {
-          font-family: 'Outfit', 'Noto Sans KR', sans-serif;
-          background-color: #050505;
-          color: #fff;
+          font-family: 'Inter', 'Noto Sans KR', sans-serif;
+          background-color: #000000;
+          color: #ffffff;
           width: 100vw;
           min-height: 100vh;
           overflow-x: hidden;
+          position: relative;
+        }
+
+        /* --- Animations --- */
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes aurora-1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(10vw, 10vh) scale(1.2); }
+        }
+        @keyframes aurora-2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-10vw, -10vh) scale(0.8); }
+        }
+        @keyframes aurora-3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(5vw, -15vh) scale(1.1); }
         }
 
         .hide-animate {
           opacity: 0;
-          transform: translateY(40px);
-          transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transform: translateY(30px);
+          transition: all 0.9s cubic-bezier(0.25, 0.46, 0.15, 1);
         }
-
         .show-animate {
           opacity: 1;
           transform: translateY(0);
         }
 
-        .gradient-text {
-          background: linear-gradient(135deg, #FF6A00 0%, #FFB020 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .hero-glow {
-          position: absolute;
-          width: 600px;
-          height: 600px;
-          background: radial-gradient(circle, rgba(255,106,0,0.15) 0%, rgba(0,0,0,0) 70%);
-          top: -200px;
-          right: -200px;
-          border-radius: 50%;
+        /* --- Dynamic Background --- */
+        .aurora-bg {
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
           z-index: 0;
           pointer-events: none;
+          overflow: hidden;
+        }
+        .aurora-blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: 0.15;
+          mix-blend-mode: screen;
+        }
+        .blob-1 {
+          top: -10%; right: -10%; width: 80vw; height: 80vw;
+          background: #FF6A00;
+          animation: aurora-1 20s ease-in-out infinite alternate;
+        }
+        .blob-2 {
+          bottom: -20%; left: -10%; width: 70vw; height: 70vw;
+          background: #FFB020;
+          animation: aurora-2 25s ease-in-out infinite alternate;
+        }
+        .blob-3 {
+          top: 30%; left: 20%; width: 50vw; height: 50vw;
+          background: #7C3AED;
+          animation: aurora-3 22s ease-in-out infinite alternate;
+          opacity: 0.1;
+        }
+        .bg-grid {
+          position: fixed;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background-image: 
+            linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+          background-size: 80px 80px;
+          mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+          -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
+          z-index: 0;
         }
 
-        .glass-card {
-          background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          border-radius: 24px;
-          padding: 40px;
-          transition: transform 0.3s ease, background 0.3s ease;
-        }
-        .glass-card:hover {
-          transform: translateY(-10px);
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 106, 0, 0.3);
-        }
-
-        .nav-header {
+        /* --- Components --- */
+        .glass-nav {
           position: fixed;
           top: 0; left: 0; right: 0;
-          height: 80px;
+          height: 70px;
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 0 5%;
-          background: rgba(5,5,5,0.8);
-          backdrop-filter: blur(10px);
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
           z-index: 100;
           border-bottom: 1px solid rgba(255,255,255,0.05);
         }
+
+        .gradient-text {
+          background: linear-gradient(110deg, #ffffff 30%, #888888 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .accent-text {
+          background: linear-gradient(110deg, #FF6A00 0%, #FFB020 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 0 40px rgba(255,106,0,0.3);
+        }
+
+        /* --- Buttons --- */
+        .btn-primary {
+          padding: 16px 32px;
+          background: linear-gradient(135deg, rgba(255,106,0,0.9), rgba(255,61,0,0.9));
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 1.05rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 0 20px rgba(255,106,0,0.2), inset 0 1px 1px rgba(255,255,255,0.4);
+          position: relative;
+          overflow: hidden;
+        }
+        .btn-primary::after {
+          content: '';
+          position: absolute;
+          top: 0; left: -100%; width: 100%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          transition: left 0.5s ease;
+        }
+        .btn-primary:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 0 10px 30px rgba(255,106,0,0.4), inset 0 1px 1px rgba(255,255,255,0.5);
+        }
+        .btn-primary:hover::after {
+          left: 100%;
+        }
+
+        .btn-secondary {
+          padding: 16px 32px;
+          background: rgba(255,255,255,0.03);
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 100px;
+          font-weight: 600;
+          font-size: 1.05rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.3);
+          transform: translateY(-2px);
+        }
+
+        /* --- Bento Box Glass Cards --- */
+        .bento-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        @media (max-width: 900px) {
+          .bento-grid { grid-template-columns: 1fr; }
+        }
+        
+        .glass-card {
+          position: relative;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border-radius: 32px;
+          padding: 40px;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: inset 0 0 20px rgba(255,255,255,0.01), 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .glass-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; width: 100%; height: 100%;
+          background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);
+          z-index: 0;
+          opacity: 0;
+          transition: opacity 0.5s ease;
+          pointer-events: none;
+        }
+        .glass-card:hover {
+          transform: translateY(-8px);
+          border-color: rgba(255, 106, 0, 0.3);
+          box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255, 106, 0, 0.05);
+        }
+        .glass-card:hover::before {
+          opacity: 1;
+        }
+        .card-content {
+          position: relative;
+          z-index: 1;
+        }
+        .span-2 { grid-column: span 2; }
+        @media (max-width: 900px) {
+          .span-2 { grid-column: span 1; }
+        }
+
+        /* --- Floating UI --- */
+        .mockup-container {
+          position: relative;
+          width: 100%;
+          height: 500px;
+          perspective: 1000px;
+        }
+        .floating-layer {
+          position: absolute;
+          border-radius: 24px;
+          background: rgba(20,20,20,0.8);
+          border: 1px solid rgba(255,255,255,0.1);
+          backdrop-filter: blur(10px);
+          box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.1);
+          animation: float 6s ease-in-out infinite;
+        }
+        .layer-1 {
+          width: 80%; height: 350px;
+          top: 50px; right: 0;
+          transform-origin: right center;
+          transform: rotateY(-15deg) translateZ(0px);
+        }
+        .layer-2 {
+          width: 50%; height: 200px;
+          bottom: 20px; left: 0;
+          background: rgba(255,106,0,0.15);
+          border: 1px solid rgba(255,106,0,0.3);
+          animation-delay: -3s;
+        }
+        .layer-3 {
+          width: 250px; height: 100px;
+          top: -20px; left: 10%;
+          background: rgba(255,255,255,0.05);
+          animation-delay: -1.5s;
+        }
       `}</style>
 
-      <div className="landing-wrapper">
-        <div className="hero-glow"></div>
+      <div className="landing-wrapper" 
+        onMouseMove={(e) => {
+          const cards = document.querySelectorAll('.glass-card');
+          cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            card.style.setProperty('--mouse-x', \`\${x}px\`);
+            card.style.setProperty('--mouse-y', \`\${y}px\`);
+          });
+        }}
+      >
+        {/* Animated Background */}
+        <div className="bg-grid"></div>
+        <div className="aurora-bg">
+          <div className="aurora-blob blob-1"></div>
+          <div className="aurora-blob blob-2"></div>
+          <div className="aurora-blob blob-3"></div>
+        </div>
 
-        {/* 네비게이션 바 */}
-        <header className="nav-header">
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', letterSpacing: '-1px' }}>WURI</div>
-          <div>
-            <button style={styles.loginBtn} onClick={() => alert('앱을 설치하여 로그인해주세요.')}>앱 다운로드</button>
-            <button style={{...styles.loginBtn, background:'transparent', border:'1px solid #333', marginLeft:'10px'}} onClick={() => navigate('/admin/login')}>Admin</button>
+        {/* Navigation */}
+        <header className="glass-nav">
+          <div style={{ fontSize: '1.6rem', fontWeight: '900', letterSpacing: '-1.5px' }}>WURI.</div>
+          <div style={{display:'flex', gap:'12px'}}>
+            <button className="btn-secondary" style={{padding:'8px 20px', fontSize:'0.9rem'}} onClick={() => alert('앱 다운로드 연결 예정')}>App</button>
+            <button className="btn-secondary" style={{padding:'8px 20px', fontSize:'0.9rem', borderColor:'rgba(255,106,0,0.3)', color:'#FFB020'}} onClick={() => navigate('/admin/login')}>Admin</button>
           </div>
         </header>
 
         {/* 1. Hero Section */}
-        <section style={{...styles.section, marginTop: '80px', minHeight: '85vh', justifyContent: 'center'}}>
-          <div className="hide-animate" style={{ zIndex: 1, textAlign: 'center' }}>
-            <div style={{ display: 'inline-block', padding: '8px 16px', background: 'rgba(255,106,0,0.1)', color: '#FF6A00', borderRadius: '100px', fontWeight: 'bold', fontSize:'0.9rem', marginBottom:'24px' }}>
-              커피 산업의 새로운 표준
+        <section style={{ position:'relative', zIndex:1, minHeight: '100vh', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding: '120px 5% 60px', textAlign: 'center' }}>
+          <div className="hide-animate">
+            <div style={{ display: 'inline-flex', alignItems:'center', gap:'8px', padding: '8px 16px', background: 'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius: '100px', fontWeight: '600', fontSize:'0.85rem', marginBottom:'32px', letterSpacing:'1px', textTransform:'uppercase' }}>
+              <span style={{width:'8px', height:'8px', borderRadius:'50%', background:'#FF6A00', boxShadow:'0 0 10px #FF6A00'}}></span>
+              WURI Platform 2.0
             </div>
-            <h1 style={{ fontSize: 'clamp(3rem, 6vw, 5rem)', fontWeight: '800', lineHeight: '1.1', marginBottom: '20px', letterSpacing: '-2px' }}>
-              로스터리와 카페, <br />그리고 소비자를 <span className="gradient-text">하나로 연결하다</span>
+            
+            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', fontWeight: '900', lineHeight: '1.05', marginBottom: '24px', letterSpacing: '-0.04em' }}>
+              <span className="gradient-text">커피의 모든 순간을</span><br />
+              <span className="accent-text">하나로 연결하다</span>
             </h1>
-            <p style={{ fontSize: '1.2rem', color: '#aaa', margin: '0 auto 40px', maxWidth: '600px', lineHeight: '1.6' }}>
-              단순한 오더 앱이 아닙니다. 매장 관리부터 원두 유통, 고객 데이터 융합까지 WURI 플랫폼 하나로 커피 비즈니스의 모든 것을 통제하세요.
+            
+            <p style={{ fontSize: '1.25rem', color: '#999', margin: '0 auto 48px', maxWidth: '650px', lineHeight: '1.7', fontWeight: '400' }}>
+              더 이상 분산된 시스템에 얽매이지 마세요. B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 우아한 하나의 플랫폼.
             </p>
-            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center' }}>
-              <button style={styles.primaryBtn} onClick={() => alert('모바일 기기에서 앱을 설치해주세요.')}>무료로 시작하기</button>
-              <button style={styles.secondaryBtn}>도입 문의</button>
+            
+            <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap:'wrap' }}>
+              <button className="btn-primary" onClick={() => alert('무료 시작하기')}>Get Started</button>
+              <button className="btn-secondary">Request Demo</button>
             </div>
           </div>
         </section>
 
-        {/* 2. 6-Tier Architecture Section */}
-        <section style={{...styles.section, background: '#0a0a0a'}}>
-          <div className="hide-animate" style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <h2 style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '15px' }}>하나의 플랫폼, 6개의 완벽한 권한</h2>
-            <p style={{ color: '#888', fontSize: '1.1rem' }}>참여하는 모든 이들에게 최적화된 인터페이스와 기능을 제공합니다.</p>
+        {/* 2. Bento Grid Section */}
+        <section style={{ position:'relative', zIndex:1, padding: '100px 5%' }}>
+          <div className="hide-animate" style={{ textAlign: 'center', marginBottom: '80px' }}>
+            <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: '800', letterSpacing:'-1px', marginBottom:'16px' }}>
+              6개의 완벽한 <span style={{color:'#FF6A00'}}>권한 생태계</span>
+            </h2>
+            <p style={{ color: '#888', fontSize: '1.1rem', maxWidth:'600px', margin:'0 auto' }}>역할에 맞춰 완벽하게 재구성되는 지능형 인터페이스</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px', maxWidth: '1200px', margin: '0 auto' }}>
-            {/* B2B / Partners */}
-            <div className="glass-card hide-animate" style={{ transitionDelay: '0.1s' }}>
-              <div style={styles.iconCircle}>☕</div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>로스터리 (A등급)</h3>
-              <p style={{ color: '#aaa', lineHeight: '1.5' }}>산하 카페들의 원두 재고를 실시간 모니터링하고 발주를 자동화합니다. 커핑 프로파일 설정 기능 제공.</p>
+          <div className="bento-grid">
+            {/* Card 1: Roastery (Large) */}
+            <div className="glass-card span-2 hide-animate" style={{ transitionDelay: '0.1s' }}>
+              <div className="card-content">
+                <div style={{ width:'50px', height:'50px', borderRadius:'16px', background:'rgba(255,106,0,0.1)', border:'1px solid rgba(255,106,0,0.2)', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.5rem', marginBottom:'24px' }}>🔥</div>
+                <h3 style={{ fontSize: '2rem', fontWeight:'800', marginBottom: '12px' }}>로스터리 (A등급)</h3>
+                <p style={{ color: '#aaa', fontSize:'1.1rem', lineHeight: '1.6', maxWidth:'80%' }}>
+                  산하 가맹 카페들의 원두 재고를 실시간으로 모니터링하고, AI 기반 발주 자동화 및 정밀한 커핑 프로파일을 원격으로 배포하세요.
+                </p>
+              </div>
             </div>
-            <div className="glass-card hide-animate" style={{ transitionDelay: '0.2s' }}>
-              <div style={styles.iconCircle}>🏪</div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>카페 (B, C등급)</h3>
-              <p style={{ color: '#aaa', lineHeight: '1.5' }}>기존 POS와 완벽 연동됩니다. 원격주문 수신, 마이레시피 관리, 1 click 원두 발주 시스템을 경험하세요.</p>
+
+            {/* Card 2: Partners (Small) */}
+            <div className="glass-card hide-animate" style={{ transitionDelay: '0.2s', background:'rgba(255,255,255,0.01)' }}>
+              <div className="card-content">
+                <div style={{ width:'50px', height:'50px', borderRadius:'16px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.5rem', marginBottom:'24px' }}>🤖</div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight:'700', marginBottom: '12px' }}>협력사 파트너</h3>
+                <p style={{ color: '#aaa', lineHeight: '1.6' }}>오토 탬퍼 및 브루잉 로봇 등 IoT 하드웨어 API 직접 연동 지원.</p>
+              </div>
             </div>
+
+            {/* Card 3: Users (Small) */}
             <div className="glass-card hide-animate" style={{ transitionDelay: '0.3s' }}>
-              <div style={styles.iconCircle}>🤝</div>
-              <h3 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>협력사 파트너</h3>
-              <p style={{ color: '#aaa', lineHeight: '1.5' }}>오토 탬퍼, 브루잉 로봇 등 하드웨어 기기들과의 API 연동 및 셀프 주문 관리 통계화면을 지원합니다.</p>
+              <div className="card-content">
+                <div style={{ width:'50px', height:'50px', borderRadius:'16px', background:'rgba(124,58,237,0.1)', border:'1px solid rgba(124,58,237,0.2)', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.5rem', marginBottom:'24px' }}>✨</div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight:'700', marginBottom: '12px' }}>마이 레시피</h3>
+                <p style={{ color: '#aaa', lineHeight: '1.6' }}>유료 구독 회원의 커피 성향을 반영한 맞춤형 제조 데이터.</p>
+              </div>
+            </div>
+
+            {/* Card 4: Cafe (Large) */}
+            <div className="glass-card span-2 hide-animate" style={{ transitionDelay: '0.4s' }}>
+              <div className="card-content">
+                <div style={{ width:'50px', height:'50px', borderRadius:'16px', background:'rgba(255,255,255,0.1)', border:'1px solid rgba(255,255,255,0.2)', display:'flex', justifyContent:'center', alignItems:'center', fontSize:'1.5rem', marginBottom:'24px' }}>☕</div>
+                <h3 style={{ fontSize: '2rem', fontWeight:'800', marginBottom: '12px' }}>카페 (B, C등급)</h3>
+                <p style={{ color: '#aaa', fontSize:'1.1rem', lineHeight: '1.6', maxWidth:'80%' }}>
+                  기존 Windows 포스기(OKPOS 등)와의 완벽한 융합. 브라우저 창 하나만 열어두면 모바일 원격 주문 수신부터 영수증 출력까지 자동으로 처리됩니다.
+                </p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* 3. Consumer Insight Section */}
-        <section style={{...styles.section}}>
+        {/* 3. Showcase Section */}
+        <section style={{ position:'relative', zIndex:1, padding: '100px 5%' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '60px', maxWidth: '1200px', margin: '0 auto' }}>
             <div className="hide-animate" style={{ flex: '1 1 400px' }}>
-              <h2 style={{ fontSize: '3rem', fontWeight: '800', marginBottom: '20px', lineHeight:'1.2' }}>고객의 발걸음을<br/>당신의 <span className="gradient-text">매장으로</span></h2>
-              <p style={{ color: '#aaa', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '30px' }}>
-                <strong>유료구독 (프리미엄)</strong> 회원들은 자신만의 '마이 레시피'를 들고 가맹점을 찾습니다. <br/><br/>
-                <strong>일반 입문 (Beginner)</strong> 회원들에게는 반경 1km 이내의 스마트 원격주문을 통해 대기시간 없는 완벽한 픽업 경험을 선사합니다.
+              <div style={{ display: 'inline-block', padding: '6px 12px', background: 'rgba(255,106,0,0.1)', color: '#FF6A00', borderRadius: '8px', fontWeight: 'bold', fontSize:'0.8rem', marginBottom:'16px' }}>
+                Distance API
+              </div>
+              <h2 style={{ fontSize: 'clamp(2.5rem, 4vw, 3.5rem)', fontWeight: '900', marginBottom: '24px', lineHeight:'1.1', letterSpacing:'-1px' }}>
+                발걸음이 닿는 곳, <br/><span style={{color:'#aaa'}}>곧 당신의 매장.</span>
+              </h2>
+              <p style={{ color: '#888', fontSize: '1.15rem', lineHeight: '1.7', marginBottom: '32px' }}>
+                반경 1km 이내의 스마트 오더 시스템을 통해 대기 시간 없는 완벽한 픽업 경험을 선사합니다. 브랜드 통합 멤버십 포인트(CUP)로 고객의 재방문을 유도하세요.
               </p>
-              <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <li style={styles.listItem}>✓ 거리 기반 스마트 오더 제한</li>
-                <li style={styles.listItem}>✓ 브랜드 통합 멤버십 포인트 (CUP)</li>
-                <li style={styles.listItem}>✓ 고객의 커피 성향 데이터화 분석</li>
-              </ul>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{display:'flex', alignItems:'center', gap:'12px', color:'#ccc', fontWeight:'500'}}>
+                  <span style={{display:'flex', justifyContent:'center', alignItems:'center', width:'24px', height:'24px', borderRadius:'50%', background:'rgba(255,106,0,0.2)', color:'#FF6A00', fontSize:'12px'}}>✓</span>
+                  거리 기반 실시간 주문 제한
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:'12px', color:'#ccc', fontWeight:'500'}}>
+                  <span style={{display:'flex', justifyContent:'center', alignItems:'center', width:'24px', height:'24px', borderRadius:'50%', background:'rgba(255,106,0,0.2)', color:'#FF6A00', fontSize:'12px'}}>✓</span>
+                  원클릭 포인트(CUP) 결제망
+                </div>
+                <div style={{display:'flex', alignItems:'center', gap:'12px', color:'#ccc', fontWeight:'500'}}>
+                  <span style={{display:'flex', justifyContent:'center', alignItems:'center', width:'24px', height:'24px', borderRadius:'50%', background:'rgba(255,106,0,0.2)', color:'#FF6A00', fontSize:'12px'}}>✓</span>
+                  고객 성향 빅데이터 분석
+                </div>
+              </div>
             </div>
-            <div className="hide-animate" style={{ flex: '1 1 400px', position: 'relative' }}>
-              {/* Fake UI Mockup */}
-              <div style={{ width: '100%', height: '500px', background: 'linear-gradient(to bottom right, #222, #111)', borderRadius: '30px', border: '8px solid #333', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', overflow: 'hidden', position: 'relative' }}>
-                <div style={{ padding: '30px', display:'flex', flexDirection:'column', gap:'20px' }}>
-                  <div style={{ width: '100%', height: '120px', background: '#333', borderRadius: '20px' }}></div>
-                  <div style={{ width: '70%', height: '40px', background: '#333', borderRadius: '10px' }}></div>
-                  <div style={{ display: 'flex', gap: '15px' }}>
-                    <div style={{ width: '50%', height: '150px', background: '#FF6A00', borderRadius: '20px', opacity:'0.8' }}></div>
-                    <div style={{ width: '50%', height: '150px', background: '#222', borderRadius: '20px', border:'1px solid #444' }}></div>
+            
+            {/* Floating Abstract UI */}
+            <div className="hide-animate" style={{ flex: '1 1 500px', position: 'relative' }}>
+              <div className="mockup-container">
+                <div className="floating-layer layer-1">
+                  <div style={{padding:'30px'}}>
+                    <div style={{width:'40px', height:'40px', borderRadius:'50%', background:'rgba(255,255,255,0.1)', marginBottom:'20px'}}></div>
+                    <div style={{width:'60%', height:'20px', borderRadius:'4px', background:'rgba(255,255,255,0.05)', marginBottom:'12px'}}></div>
+                    <div style={{width:'40%', height:'14px', borderRadius:'4px', background:'rgba(255,255,255,0.03)', marginBottom:'40px'}}></div>
+                    <div style={{display:'flex', gap:'15px'}}>
+                      <div style={{flex:1, height:'100px', borderRadius:'12px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)'}}></div>
+                      <div style={{flex:1, height:'100px', borderRadius:'12px', background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)'}}></div>
+                    </div>
+                  </div>
+                </div>
+                <div className="floating-layer layer-2">
+                  <div style={{padding:'20px'}}>
+                    <div style={{width:'100%', height:'40px', borderRadius:'8px', background:'linear-gradient(90deg, #FF6A00, transparent)', opacity:'0.5'}}></div>
+                  </div>
+                </div>
+                <div className="floating-layer layer-3">
+                  <div style={{padding:'15px', display:'flex', alignItems:'center', gap:'15px'}}>
+                    <div style={{width:'30px', height:'30px', borderRadius:'8px', background:'#22c55e'}}></div>
+                    <div>
+                      <div style={{width:'80px', height:'10px', borderRadius:'4px', background:'rgba(255,255,255,0.2)', marginBottom:'6px'}}></div>
+                      <div style={{width:'50px', height:'8px', borderRadius:'4px', background:'rgba(255,255,255,0.1)'}}></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -187,13 +457,17 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. CTA Footer */}
-        <footer style={{ padding: '100px 5%', textAlign: 'center', background: '#050505', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <h2 className="hide-animate" style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '30px' }}>지금 바로 커피 혁신에 동참하세요</h2>
-          <button className="hide-animate" style={styles.primaryBtn}>서비스 데모 신청</button>
-          <div style={{ marginTop: '80px', color: '#555', fontSize: '0.9rem' }}>
-            © 2026 WURI Platform. All rights reserved. <br/>
-            Designed for Roasteries & Cafes.
+        {/* 4. Footer CTA */}
+        <footer style={{ position:'relative', zIndex:1, padding: '120px 5% 80px', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop:'100px' }}>
+          <div className="hide-animate">
+            <h2 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: '900', marginBottom: '32px', letterSpacing:'-1px' }}>
+              미래의 커피 비즈니스를 <br/>지금 경험하세요.
+            </h2>
+            <button className="btn-primary" style={{padding:'20px 48px', fontSize:'1.2rem'}}>시스템 도입 문의</button>
+            <div style={{ marginTop: '100px', color: '#444', fontSize: '0.9rem', fontWeight:'500' }}>
+              © 2026 WURI Platform. All rights reserved. <br/>
+              Engineered for Roasteries & Cafes.
+            </div>
           </div>
         </footer>
       </div>
@@ -201,70 +475,3 @@ export default function LandingPage() {
   );
 }
 
-const styles = {
-  container: {
-    width: '100vw',
-    position: 'absolute', // To break out of App.jsx center flex if any
-    top: 0, left: 0,
-    backgroundColor: '#000',
-    overflowY: 'auto' // 자체 스크롤
-  },
-  section: {
-    padding: '100px 5%',
-    position: 'relative',
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  loginBtn: {
-    padding: '10px 20px',
-    backgroundColor: '#fff',
-    color: '#000',
-    border: 'none',
-    borderRadius: '100px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    fontSize: '0.9rem'
-  },
-  primaryBtn: {
-    padding: '18px 36px',
-    backgroundColor: '#FF6A00',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '100px',
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-    cursor: 'pointer',
-    boxShadow: '0 10px 20px rgba(255,106,0,0.3)',
-    transition: 'transform 0.2s'
-  },
-  secondaryBtn: {
-    padding: '18px 36px',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.2)',
-    borderRadius: '100px',
-    fontWeight: 'bold',
-    fontSize: '1.1rem',
-    cursor: 'pointer',
-    transition: 'background 0.2s'
-  },
-  iconCircle: {
-    width: '60px',
-    height: '60px',
-    borderRadius: '50%',
-    backgroundColor: 'rgba(255,106,0,0.1)',
-    color: '#FF6A00',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    fontSize: '1.8rem',
-    marginBottom: '20px'
-  },
-  listItem: {
-    fontSize: '1.1rem',
-    color: '#ccc',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px'
-  }
-};
