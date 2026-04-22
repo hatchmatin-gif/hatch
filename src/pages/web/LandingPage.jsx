@@ -50,7 +50,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div style={{ width:'100vw', minHeight:'100vh', backgroundColor:'#FAFAFA', overflowX:'hidden' }}>
+    <div style={{ width:'100vw', minHeight:'100vh', backgroundColor:'#FFFFFF', overflowX:'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         
@@ -60,7 +60,7 @@ export default function LandingPage() {
 
         .landing-wrapper {
           font-family: 'Inter', 'Noto Sans KR', sans-serif;
-          background-color: #FAFAFA;
+          background-color: #FFFFFF;
           color: #111111;
           width: 100vw;
           min-height: 100vh;
@@ -95,12 +95,12 @@ export default function LandingPage() {
           justify-content: space-between;
           align-items: center;
           padding: 0 5%;
-          background: rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.95);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           z-index: 100;
-          border-bottom: 1px solid rgba(255,255,255,0.8);
-          box-shadow: 0 4px 30px rgba(0,0,0,0.02);
+          border-bottom: 1px solid rgba(0,0,0,0.04);
+          box-shadow: none;
         }
 
         .gradient-text {
