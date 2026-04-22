@@ -4,6 +4,30 @@ import { useNavigate } from 'react-router-dom';
 export default function LandingPage() {
   const navigate = useNavigate();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const secretBuffer = React.useRef('');
+  const secretTimer = React.useRef(null);
+
+  // 히든 어드민 접근: WURI. 로고 클릭 후 5초 내에 'wuri' 타이핑
+  const activateSecretListener = () => {
+    secretBuffer.current = '';
+    if (secretTimer.current) clearTimeout(secretTimer.current);
+
+    const handler = (e) => {
+      secretBuffer.current += e.key.toLowerCase();
+      if (secretBuffer.current.includes('wuri')) {
+        window.removeEventListener('keydown', handler);
+        clearTimeout(secretTimer.current);
+        navigate('/admin/login');
+      }
+    };
+    window.addEventListener('keydown', handler);
+
+    // 5초 후 자동 해제
+    secretTimer.current = setTimeout(() => {
+      window.removeEventListener('keydown', handler);
+      secretBuffer.current = '';
+    }, 5000);
+  };
 
   // Handle global mouse move for subtle interactive spotlight effects
   useEffect(() => {
@@ -254,7 +278,7 @@ export default function LandingPage() {
       >
         {/* Navigation */}
         <header className="glass-nav">
-          <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', color:'#111' }}>WURI.</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', color:'#111', cursor:'default' }} onClick={activateSecretListener}>WURI.</div>
         </header>
 
         {/* 1. Hero Section */}
