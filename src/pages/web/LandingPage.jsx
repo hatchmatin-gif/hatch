@@ -31,43 +31,21 @@ export default function LandingPage() {
     hiddenElements.forEach((el) => observer.observe(el));
 
     // 모바일 앱용 CSS 제약을 모두 풀고, 랜딩 페이지용 풀스크린으로 전환
-    const root = document.getElementById('root');
-    const body = document.body;
-    const html = document.documentElement;
-
-    const prevBodyOverflow = body.style.overflow;
-    const prevBodyDisplay = body.style.display;
-    const prevBodyHeight = body.style.height;
-    const prevBodyAlignItems = body.style.alignItems;
-    const prevRootDisplay = root ? root.style.display : '';
-    const prevRootWidth = root ? root.style.width : '';
-    const prevRootHeight = root ? root.style.height : '';
-
-    body.style.overflow = 'auto';
-    body.style.display = 'block';
-    body.style.height = 'auto';
-    body.style.alignItems = 'initial';
-    html.style.overflow = 'auto';
-    html.style.height = 'auto';
-    if (root) {
-      root.style.display = 'block';
-      root.style.width = '100%';
-      root.style.height = 'auto';
-    }
+    // style 속성 대신 CSS class로 !important 강제 적용
+    const overrideStyle = document.createElement('style');
+    overrideStyle.id = 'landing-override';
+    overrideStyle.textContent = `
+      html, body { overflow: auto !important; height: auto !important; overflow-y: auto !important; overscroll-behavior-y: auto !important; }
+      body { display: block !important; align-items: initial !important; }
+      #root { display: block !important; width: 100% !important; height: auto !important; max-width: none !important; }
+      #app-container { display: none !important; }
+    `;
+    document.head.appendChild(overrideStyle);
 
     return () => {
       // 모바일 앱을 위해 원상복구
-      body.style.overflow = prevBodyOverflow;
-      body.style.display = prevBodyDisplay;
-      body.style.height = prevBodyHeight;
-      body.style.alignItems = prevBodyAlignItems;
-      html.style.overflow = '';
-      html.style.height = '';
-      if (root) {
-        root.style.display = prevRootDisplay;
-        root.style.width = prevRootWidth;
-        root.style.height = prevRootHeight;
-      }
+      const el = document.getElementById('landing-override');
+      if (el) el.remove();
     };
   }, []);
 
@@ -95,18 +73,6 @@ export default function LandingPage() {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-15px); }
         }
-        @keyframes aurora-1 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(8vw, 8vh) scale(1.1); }
-        }
-        @keyframes aurora-2 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(-8vw, -8vh) scale(0.9); }
-        }
-        @keyframes aurora-3 {
-          0%, 100% { transform: translate(0, 0) scale(1); }
-          50% { transform: translate(4vw, -12vh) scale(1.05); }
-        }
 
         .hide-animate {
           opacity: 0;
@@ -118,46 +84,7 @@ export default function LandingPage() {
           transform: translateY(0);
         }
 
-        /* --- Dynamic Background (Light Theme) --- */
-        .aurora-bg {
-          position: fixed;
-          top: 0; left: 0; width: 100%; height: 100%;
-          z-index: 0;
-          pointer-events: none;
-          overflow: hidden;
-        }
-        .aurora-blob {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(120px);
-          opacity: 0.4;
-          mix-blend-mode: multiply;
-        }
-        .blob-1 {
-          top: -10%; right: -5%; width: 70vw; height: 70vw;
-          background: #FFE2C7; /* Soft Orange/Peach */
-          animation: aurora-1 25s ease-in-out infinite alternate;
-        }
-        .blob-2 {
-          bottom: -15%; left: -10%; width: 60vw; height: 60vw;
-          background: #E0E7FF; /* Soft Blue */
-          animation: aurora-2 30s ease-in-out infinite alternate;
-        }
-        .blob-3 {
-          top: 20%; left: 30%; width: 50vw; height: 50vw;
-          background: #F3E8FF; /* Soft Lilac/Purple */
-          animation: aurora-3 28s ease-in-out infinite alternate;
-        }
-        .bg-grid {
-          position: fixed;
-          top: 0; left: 0; width: 100%; height: 100%;
-          background-image: 
-            radial-gradient(circle at 1px 1px, rgba(0,0,0,0.05) 1px, transparent 0);
-          background-size: 40px 40px;
-          mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
-          -webkit-mask-image: radial-gradient(circle at 50% 50%, black, transparent 80%);
-          z-index: 0;
-        }
+        /* Background is pure clean white - no blobs */
 
         /* --- Components --- */
         .glass-nav {
@@ -325,21 +252,9 @@ export default function LandingPage() {
           });
         }}
       >
-        {/* Animated Background */}
-        <div className="bg-grid"></div>
-        <div className="aurora-bg">
-          <div className="aurora-blob blob-1"></div>
-          <div className="aurora-blob blob-2"></div>
-          <div className="aurora-blob blob-3"></div>
-        </div>
-
         {/* Navigation */}
         <header className="glass-nav">
           <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', color:'#111' }}>WURI.</div>
-          <div style={{display:'flex', gap:'12px'}}>
-            <button className="btn-secondary" style={{padding:'8px 20px', fontSize:'0.9rem', boxShadow:'none'}} onClick={() => alert('앱 다운로드 연결 예정')}>App</button>
-            <button className="btn-secondary" style={{padding:'8px 20px', fontSize:'0.9rem', borderColor:'rgba(0,0,0,0.1)', color:'#FF6A00', boxShadow:'none'}} onClick={() => navigate('/admin/login')}>Admin</button>
-          </div>
         </header>
 
         {/* 1. Hero Section */}
