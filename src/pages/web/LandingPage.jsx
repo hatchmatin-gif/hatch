@@ -3,31 +3,30 @@ import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  // 히든 어드민 접근: 페이지에서 'gocl' 타이핑 시 관리자 페이지로 이동
-  useEffect(() => {
-    let buffer = '';
-    let resetTimer = null;
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const secretBuffer = React.useRef('');
+  const secretTimer = React.useRef(null);
+
+  // 히든 어드민 접근: 특정 글자 클릭 후 5초 내에 'gocl' 타이핑
+  const activateSecretListener = () => {
+    secretBuffer.current = '';
+    if (secretTimer.current) clearTimeout(secretTimer.current);
 
     const handler = (e) => {
-      // input/textarea 등 입력 필드에서는 무시
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      buffer += e.key.toLowerCase();
-      // 버퍼가 너무 길어지면 뒤쪽만 유지
-      if (buffer.length > 10) buffer = buffer.slice(-10);
-
-      if (buffer.includes('gocl')) {
-        buffer = '';
+      secretBuffer.current += e.key.toLowerCase();
+      if (secretBuffer.current.includes('gocl')) {
+        window.removeEventListener('keydown', handler);
+        clearTimeout(secretTimer.current);
         navigate('/admin/login');
       }
-
-      // 3초간 입력 없으면 버퍼 리셋
-      if (resetTimer) clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => { buffer = ''; }, 3000);
     };
-
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [navigate]);
+
+    secretTimer.current = setTimeout(() => {
+      window.removeEventListener('keydown', handler);
+      secretBuffer.current = '';
+    }, 5000);
+  };
 
   // Handle global mouse move for subtle interactive spotlight effects
   useEffect(() => {
@@ -55,7 +54,6 @@ export default function LandingPage() {
     hiddenElements.forEach((el) => observer.observe(el));
 
     // 모바일 앱용 CSS 제약을 모두 풀고, 랜딩 페이지용 풀스크린으로 전환
-    // style 속성 대신 CSS class로 !important 강제 적용
     const overrideStyle = document.createElement('style');
     overrideStyle.id = 'landing-override';
     overrideStyle.textContent = `
@@ -67,7 +65,6 @@ export default function LandingPage() {
     document.head.appendChild(overrideStyle);
 
     return () => {
-      // 모바일 앱을 위해 원상복구
       const el = document.getElementById('landing-override');
       if (el) el.remove();
     };
@@ -290,8 +287,22 @@ export default function LandingPage() {
             </div>
             
             <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', fontWeight: '900', lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-0.04em' }}>
-              <span className="gradient-text">커피의 모든 순간을</span><br />
-              <span className="accent-text">하나로 연결하다</span>
+              <span className="gradient-text">
+                {"커피의 모든 순간을".split("").map((char, idx) => (
+                  <span key={idx} style={{ cursor: 'default' }}>{char}</span>
+                ))}
+              </span><br />
+              <span className="accent-text">
+                {"하나로 연결하다".split("").map((char, idx) => (
+                  <span 
+                    key={idx} 
+                    style={{ cursor: 'default' }} 
+                    onClick={char === '하' ? activateSecretListener : undefined}
+                  >
+                    {char}
+                  </span>
+                ))}
+              </span>
             </h1>
             
             <p style={{ fontSize: '1.25rem', color: '#666', margin: '0 auto 48px', maxWidth: '650px', lineHeight: '1.7', fontWeight: '400' }}>
