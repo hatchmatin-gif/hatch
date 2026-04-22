@@ -72,7 +72,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div style={styles.container}>
+    <div style={{ width:'100vw', minHeight:'100vh', backgroundColor:'#FAFAFA', overflowX:'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         
@@ -497,4 +497,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
