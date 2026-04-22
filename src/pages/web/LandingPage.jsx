@@ -30,9 +30,44 @@ export default function LandingPage() {
     const hiddenElements = document.querySelectorAll('.hide-animate');
     hiddenElements.forEach((el) => observer.observe(el));
 
-    document.body.style.overflow = 'auto'; // 스크롤 허용
+    // 모바일 앱용 CSS 제약을 모두 풀고, 랜딩 페이지용 풀스크린으로 전환
+    const root = document.getElementById('root');
+    const body = document.body;
+    const html = document.documentElement;
+
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyDisplay = body.style.display;
+    const prevBodyHeight = body.style.height;
+    const prevBodyAlignItems = body.style.alignItems;
+    const prevRootDisplay = root ? root.style.display : '';
+    const prevRootWidth = root ? root.style.width : '';
+    const prevRootHeight = root ? root.style.height : '';
+
+    body.style.overflow = 'auto';
+    body.style.display = 'block';
+    body.style.height = 'auto';
+    body.style.alignItems = 'initial';
+    html.style.overflow = 'auto';
+    html.style.height = 'auto';
+    if (root) {
+      root.style.display = 'block';
+      root.style.width = '100%';
+      root.style.height = 'auto';
+    }
+
     return () => {
-      document.body.style.overflow = 'hidden'; // 모바일 앱을 위해 원상복구
+      // 모바일 앱을 위해 원상복구
+      body.style.overflow = prevBodyOverflow;
+      body.style.display = prevBodyDisplay;
+      body.style.height = prevBodyHeight;
+      body.style.alignItems = prevBodyAlignItems;
+      html.style.overflow = '';
+      html.style.height = '';
+      if (root) {
+        root.style.display = prevRootDisplay;
+        root.style.width = prevRootWidth;
+        root.style.height = prevRootHeight;
+      }
     };
   }, []);
 
