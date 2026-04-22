@@ -14,7 +14,7 @@ export default function LandingPage() {
 
     const handler = (e) => {
       secretBuffer.current += e.key.toLowerCase();
-      if (secretBuffer.current.includes('wuri')) {
+      if (secretBuffer.current.includes('gocl')) {
         window.removeEventListener('keydown', handler);
         clearTimeout(secretTimer.current);
         navigate('/admin/login');
@@ -278,7 +278,7 @@ export default function LandingPage() {
       >
         {/* Navigation */}
         <header className="glass-nav">
-          <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', color:'#111', cursor:'default' }} onClick={activateSecretListener}>WURI.</div>
+          <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', color:'#111' }}>WURI.</div>
         </header>
 
         {/* 1. Hero Section */}
@@ -291,7 +291,7 @@ export default function LandingPage() {
             
             <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', fontWeight: '900', lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-0.04em' }}>
               <span className="gradient-text">커피의 모든 순간을</span><br />
-              <span className="accent-text">하나로 연결하다</span>
+              <span className="accent-text">하나로 연결<span style={{cursor:'default'}} onClick={activateSecretListener}>하</span>다</span>
             </h1>
             
             <p style={{ fontSize: '1.25rem', color: '#666', margin: '0 auto 48px', maxWidth: '650px', lineHeight: '1.7', fontWeight: '400' }}>
