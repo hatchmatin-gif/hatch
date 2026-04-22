@@ -8,6 +8,9 @@ import PosTest from './PosTest.jsx';
 import MapView from './MapView.jsx';
 import Settings from './Settings.jsx';
 import ZoneSetup from './ZoneSetup.jsx';
+import LandingPage from './pages/web/LandingPage.jsx';
+import AdminLogin from './pages/admin/AdminLogin.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 
 export default function App() {
   const navigate = useNavigate();
@@ -22,10 +25,16 @@ export default function App() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [needsZoneSetup, setNeedsZoneSetup] = useState(false);
 
+  // Desktop detection for separating web vs mobile UI
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+
   useEffect(() => {
     if (window.__TAURI__ && location.pathname === '/') {
       navigate('/pos');
     }
+    const handleResize = () => setIsDesktop(window.innerWidth > 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [navigate, location]);
   
   // Pull to refresh states
@@ -231,7 +240,24 @@ export default function App() {
     return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
   }
 
-  // 로그인되지 않은 상태면 Login 화면 렌더링
+  // --- 1) 최고 관리자 숨겨진 라우팅 (모바일 UI 래퍼를 씌우지 않음) ---
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  if (isAdminRoute) {
+    return (
+      <Routes>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      </Routes>
+    );
+  }
+
+  // --- 2) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__;
+  if (isWebLanding) {
+    return <LandingPage />;
+  }
+
+  // --- 3) 로그인되지 않은 일반 모바일(또는 기타 경로) 사용자 ---
   if (!session) {
     return <Login />;
   }
@@ -318,6 +344,7 @@ export default function App() {
               <Settings session={session} profile={profile} onProfileUpdate={fetchData} />
             } />
             <Route path="/pos" element={<PosTest />} />
+            <Route path="*" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} />} />
           </Routes>
         </main>
       </div>
