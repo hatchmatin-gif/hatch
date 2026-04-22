@@ -99,7 +99,7 @@ export default function LandingPage() {
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           z-index: 100;
-          border-bottom: 1px solid rgba(0,0,0,0.04);
+          border-bottom: none;
           box-shadow: none;
         }
 
