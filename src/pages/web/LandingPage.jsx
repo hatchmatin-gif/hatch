@@ -3,31 +3,31 @@ import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const secretBuffer = React.useRef('');
-  const secretTimer = React.useRef(null);
-
-  // 히든 어드민 접근: WURI. 로고 클릭 후 5초 내에 'wuri' 타이핑
-  const activateSecretListener = () => {
-    secretBuffer.current = '';
-    if (secretTimer.current) clearTimeout(secretTimer.current);
+  // 히든 어드민 접근: 페이지에서 'gocl' 타이핑 시 관리자 페이지로 이동
+  useEffect(() => {
+    let buffer = '';
+    let resetTimer = null;
 
     const handler = (e) => {
-      secretBuffer.current += e.key.toLowerCase();
-      if (secretBuffer.current.includes('gocl')) {
-        window.removeEventListener('keydown', handler);
-        clearTimeout(secretTimer.current);
+      // input/textarea 등 입력 필드에서는 무시
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      buffer += e.key.toLowerCase();
+      // 버퍼가 너무 길어지면 뒤쪽만 유지
+      if (buffer.length > 10) buffer = buffer.slice(-10);
+
+      if (buffer.includes('gocl')) {
+        buffer = '';
         navigate('/admin/login');
       }
-    };
-    window.addEventListener('keydown', handler);
 
-    // 5초 후 자동 해제
-    secretTimer.current = setTimeout(() => {
-      window.removeEventListener('keydown', handler);
-      secretBuffer.current = '';
-    }, 5000);
-  };
+      // 3초간 입력 없으면 버퍼 리셋
+      if (resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { buffer = ''; }, 3000);
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [navigate]);
 
   // Handle global mouse move for subtle interactive spotlight effects
   useEffect(() => {
@@ -291,7 +291,7 @@ export default function LandingPage() {
             
             <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', fontWeight: '900', lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-0.04em' }}>
               <span className="gradient-text">커피의 모든 순간을</span><br />
-              <span className="accent-text">하나로 연결<span style={{cursor:'default'}} onClick={activateSecretListener}>하</span>다</span>
+              <span className="accent-text">하나로 연결하다</span>
             </h1>
             
             <p style={{ fontSize: '1.25rem', color: '#666', margin: '0 auto 48px', maxWidth: '650px', lineHeight: '1.7', fontWeight: '400' }}>
