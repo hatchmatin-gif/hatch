@@ -252,29 +252,40 @@ export default function App() {
   }
 
   // --- 2) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
-  // OAuth 리다이렉트(code, access_token 등) 중일 때는 랜딩 페이지가 가로채지 않도록 함
+  // 로그인 세션이 이미 있거나 OAuth 리다이렉트 중일 때는 랜딩 페이지가 가로채지 않도록 함
   const hasAuthParams = window.location.href.includes('code=') || 
                         window.location.href.includes('access_token=') || 
                         window.location.href.includes('refresh_token=');
   
-  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams;
+  // 로그인된 세션이 있으면 랜딩 페이지를 보여주지 않음
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams && !session;
   
-  // 디버깅용 로그 (나중에 삭제)
-  console.log("isWebLanding Check:", { 
-    isDesktop, 
-    pathname: location.pathname, 
-    hasAuthParams, 
-    href: window.location.href.substring(0, 50) + "..." 
-  });
-
   if (isWebLanding) {
     return <LandingPage />;
   }
 
   // --- 3) 로그인되지 않은 일반 모바일(또는 기타 경로) 사용자 ---
-  if (!session) {
+  if (!session && !isAdminRoute) {
     return <Login />;
   }
+
+  // --- 4) 관리자가 루트('/')로 들어왔을 때 대시보드로 자동 리다이렉트 ---
+  useEffect(() => {
+    if (session && location.pathname === '/' && isDesktop) {
+      const checkAdminAndRedirect = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile?.role === 'super_admin') {
+          navigate('/admin/dashboard');
+        }
+      };
+      checkAdminAndRedirect();
+    }
+  }, [session, location.pathname, isDesktop, navigate]);
 
   // 동네 미설정 시 강제로 설정 창으로 보내는 로직 제거 (메인 화면 우선 진입)
   // 향후 사용자가 팝업이나 설정 탭을 통해 자발적으로 동네를 설정할 수 있도록 유도합니다.
