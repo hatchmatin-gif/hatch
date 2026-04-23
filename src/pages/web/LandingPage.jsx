@@ -6,15 +6,10 @@ export default function LandingPage() {
   const [showConsent, setShowConsent] = useState(false);
 
   useEffect(() => {
-    // 페이지 로드 후 2초 뒤에 자연스럽게 동의 배너 표시
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
-      console.log("Consent Check - isAgreed in localStorage:", isAgreed);
-      if (!isAgreed) {
-        setShowConsent(true);
-      }
+      if (!isAgreed) setShowConsent(true);
     }, 2000);
-    
     return () => clearTimeout(timer);
   }, []);
 
@@ -33,113 +28,146 @@ export default function LandingPage() {
       <style>{`
         .landing-container {
           min-height: 100vh;
-          background: #fbfbfb;
+          background: #ffffff;
           color: #1d1d1f;
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif;
           overflow-x: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        header {
+          padding: 30px 60px;
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+        }
+        .logo {
+          font-size: 1.8rem;
+          font-weight: 900;
+          letter-spacing: -1.5px;
+          color: #000;
         }
         .hero-section {
-          padding: 160px 20px 100px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 40px 120px;
           text-align: center;
-          max-width: 1000px;
-          margin: 0 auto;
         }
         .hero-badge {
           display: inline-block;
-          padding: 8px 16px;
+          padding: 8px 18px;
           background: #fff;
           border-radius: 100px;
           font-size: 0.85rem;
           font-weight: 700;
           color: #FF6A00;
-          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-          margin-bottom: 32px;
-          letter-spacing: 1px;
+          box-shadow: 0 4px 15px rgba(255,106,0,0.1);
+          margin-bottom: 40px;
+          border: 1px solid rgba(255,106,0,0.1);
         }
         .hero-title {
-          font-size: 4.5rem;
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -3px;
-          margin-bottom: 32px;
+          font-size: 6rem;
+          font-weight: 900;
+          line-height: 1.05;
+          letter-spacing: -4px;
+          margin-bottom: 40px;
+          color: #222;
         }
         .gradient-text {
           background: linear-gradient(to right, #FF6A00, #FFB800);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          display: block;
+          margin-top: 10px;
         }
         .hero-desc {
-          font-size: 1.4rem;
-          color: #86868b;
-          line-height: 1.5;
-          margin-bottom: 48px;
+          font-size: 1.5rem;
+          color: #888;
+          line-height: 1.6;
+          margin-bottom: 60px;
           font-weight: 500;
+          max-width: 800px;
         }
         .hero-btns {
           display: flex;
           justify-content: center;
-          gap: 20px;
+          gap: 24px;
         }
         .primary-btn {
-          padding: 20px 48px;
-          font-size: 1.1rem;
-          font-weight: 700;
+          padding: 22px 60px;
+          font-size: 1.2rem;
+          font-weight: 800;
           border-radius: 100px;
           border: none;
-          background: #1d1d1f;
+          background: #111;
           color: #fff;
           cursor: pointer;
-          transition: all 0.3s;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .secondary-btn {
-          padding: 20px 48px;
-          font-size: 1.1rem;
-          font-weight: 700;
+          padding: 22px 60px;
+          font-size: 1.2rem;
+          font-weight: 800;
           border-radius: 100px;
-          border: 1px solid #d2d2d7;
+          border: 1px solid #eee;
           background: #fff;
-          color: #1d1d1f;
+          color: #111;
           cursor: pointer;
           transition: all 0.3s;
         }
-        .primary-btn:hover { transform: scale(1.05); background: #000; }
-        .secondary-btn:hover { background: #f5f5f7; }
+        .primary-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.2); background: #000; }
+        .secondary-btn:hover { background: #f9f9f9; transform: translateY(-3px); }
 
-        /* Consent Banner Styles */
+        /* Consent Banner (Natural & Glassmorphic) */
         .consent-banner {
           position: fixed;
-          bottom: 30px;
+          bottom: 40px;
           left: 50%;
           transform: translateX(-50%);
           width: 90%;
-          max-width: 650px;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(30px);
-          -webkit-backdrop-filter: blur(30px);
+          max-width: 800px;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(40px);
+          -webkit-backdrop-filter: blur(40px);
           border: 1px solid rgba(255, 255, 255, 0.5);
-          padding: 24px;
-          border-radius: 30px;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+          padding: 30px 40px;
+          border-radius: 40px;
+          box-shadow: 0 40px 80px rgba(0,0,0,0.15);
           z-index: 9999;
-          animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes slideUp { from { transform: translate(-50%, 120%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-        .consent-content { display: flex; align-items: center; gap: 24px; }
-        .consent-icon { font-size: 2.2rem; background: #fff; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .consent-text h4 { margin: 0 0 6px 0; font-size: 1.2rem; font-weight: 800; }
-        .consent-text p { margin: 0; font-size: 0.95rem; color: #555; line-height: 1.5; }
-        .consent-buttons { display: flex; gap: 15px; margin-left: auto; align-items: center; }
-        .btn-agree { background: #111; color: #fff; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.3s; }
-        .btn-deny { background: transparent; color: #999; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        @keyframes slideUp { from { transform: translate(-50%, 150%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .consent-content { display: flex; align-items: center; gap: 30px; }
+        .consent-icon { font-size: 2.5rem; background: #fff; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; border-radius: 24px; box-shadow: 0 15px 30px rgba(0,0,0,0.05); }
+        .consent-text { flex: 1; }
+        .consent-text h4 { margin: 0 0 8px 0; font-size: 1.3rem; font-weight: 900; color: #111; }
+        .consent-text p { margin: 0; font-size: 1rem; color: #666; line-height: 1.6; }
+        .consent-buttons { display: flex; gap: 20px; align-items: center; }
+        .btn-agree { background: #111; color: #fff; border: none; padding: 18px 32px; border-radius: 18px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.3s; font-size: 1rem; }
+        .btn-deny { background: transparent; color: #aaa; border: none; cursor: pointer; font-weight: 700; font-size: 1rem; transition: 0.3s; }
+        .btn-deny:hover { color: #666; }
         
+        @media (max-width: 1024px) {
+          .hero-title { font-size: 4rem; }
+          header { padding: 30px 40px; }
+        }
         @media (max-width: 768px) {
-          .hero-title { font-size: 2.8rem; letter-spacing: -1.5px; }
+          .hero-title { font-size: 3rem; letter-spacing: -2px; }
           .hero-desc { font-size: 1.1rem; }
-          .hero-btns { flex-direction: column; }
-          .consent-content { flex-direction: column; text-align: center; gap: 15px; }
-          .consent-buttons { margin: 0; width: 100%; justify-content: center; }
+          .hero-btns { flex-direction: column; width: 100%; max-width: 300px; }
+          .consent-content { flex-direction: column; text-align: center; gap: 20px; }
+          .consent-buttons { width: 100%; flex-direction: column-reverse; gap: 10px; }
+          .btn-agree { width: 100%; }
         }
       `}</style>
+
+      <header>
+        <div className="logo">WURI.</div>
+      </header>
 
       {/* Consent Banner */}
       {showConsent && (
@@ -162,12 +190,11 @@ export default function LandingPage() {
       <section className="hero-section">
         <div className="hero-badge">● WURI PLATFORM 2.0</div>
         <h1 className="hero-title">
-          커피의 모든 순간을<br />
+          커피의 모든 순간을
           <span className="gradient-text">하나로 연결하다</span>
         </h1>
         <p className="hero-desc">
-          더 이상 분산된 시스템에 얽매이지 마세요. B2B 원두 발주부터 매장 POS 연동,<br />
-          그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 하나의 플랫폼.
+          더 이상 분산된 시스템에 얽매이지 마세요. B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 하나의 플랫폼.
         </p>
         <div className="hero-btns">
           <button className="primary-btn" onClick={() => navigate('/app')}>Get Started</button>
