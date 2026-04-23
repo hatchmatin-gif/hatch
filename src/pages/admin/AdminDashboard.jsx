@@ -15,7 +15,10 @@ export default function AdminDashboard() {
   const checkAdminRole = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Current Session:", session);
+      
       if (!session) {
+        console.warn("No session found, redirecting to login...");
         navigate('/admin/login');
         return;
       }
@@ -26,8 +29,17 @@ export default function AdminDashboard() {
         .eq('id', session.user.id)
         .single();
         
-      if (error || profile?.role !== 'super_admin') {
-        alert("접근 권한이 없습니다. (최고 관리자 전용)");
+      console.log("Fetched Profile:", profile);
+      if (error) console.error("Profile Fetch Error:", error);
+        
+      if (error || !profile) {
+        alert("프로필 정보를 찾을 수 없습니다. (DB 오류 또는 RLS 차단)");
+        navigate('/');
+        return;
+      }
+
+      if (profile.role !== 'super_admin') {
+        alert(`접근 권한이 부족합니다. (현재 권한: ${profile.role})`);
         await supabase.auth.signOut();
         navigate('/');
         return;
@@ -35,7 +47,8 @@ export default function AdminDashboard() {
       
       setIsAdmin(true);
     } catch (err) {
-      console.error(err);
+      console.error("Critical Admin Check Error:", err);
+      alert("보안 검증 중 치명적인 오류가 발생했습니다.");
       navigate('/');
     } finally {
       setLoading(false);
