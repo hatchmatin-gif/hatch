@@ -252,8 +252,10 @@ export default function App() {
   }
 
   // --- 2) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
-  // /app 주소로 접속 시 PC라도 모바일 화면을 보여주기 위해 조건 추가
-  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__;
+  // OAuth 리다이렉트(code, access_token 등) 중일 때는 랜딩 페이지가 가로채지 않도록 함
+  const hasAuthParams = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams;
+  
   if (isWebLanding) {
     return <LandingPage />;
   }
