@@ -9,6 +9,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+  const [isSocialLoading, setIsSocialLoading] = useState(false);
 
   // 1. Inactivity Redirect (1.62s) when modal is NOT open
   useEffect(() => {
@@ -34,11 +35,16 @@ export default function AdminLogin() {
   }, [isModalOpen, navigate]);
 
   // 2. Randomized Inactivity Redirect (1.77s - 2.92s) when modal IS open
+  // IF Social Login is clicked, extended to (4.15s - 5.67s)
   useEffect(() => {
     if (!isModalOpen) return;
 
     let timeout;
-    const getRandomTime = () => Math.floor(Math.random() * (2920 - 1770 + 1)) + 1770;
+    const getRandomTime = () => {
+      const min = isSocialLoading ? 4150 : 1770;
+      const max = isSocialLoading ? 5670 : 2920;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
 
     const resetTimer = () => {
       if (timeout) clearTimeout(timeout);
@@ -56,7 +62,7 @@ export default function AdminLogin() {
       window.removeEventListener('keydown', resetTimer);
       if (timeout) clearTimeout(timeout);
     };
-  }, [isModalOpen, navigate]);
+  }, [isModalOpen, isSocialLoading, navigate]);
 
   // Reusing the same CSS and Layout logic from LandingPage for visual consistency
   useEffect(() => {
@@ -89,6 +95,7 @@ export default function AdminLogin() {
 
   const handleAdminOAuthLogin = async (provider) => {
     setLoadingProvider(provider);
+    setIsSocialLoading(true); // Extend security timer
     try {
       const { error } = await supabase.auth.signInWithOAuth({ 
         provider,
