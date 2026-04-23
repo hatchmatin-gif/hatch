@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
       if (error || profile?.role !== 'super_admin') {
         alert("접근 권한이 없습니다. (최고 관리자 전용)");
         await supabase.auth.signOut();
-        navigate('/'); // Landing or Mobile Home
+        navigate('/');
         return;
       }
       
@@ -46,76 +47,177 @@ export default function AdminDashboard() {
     navigate('/');
   };
 
-  if (loading) return <div style={{height: '100vh', backgroundColor:'#000', color:'#fff', display:'flex', justifyContent:'center', alignItems:'center'}}>보안 키 검증 중...</div>;
+  if (loading) return (
+    <div style={{height: '100vh', backgroundColor:'#FFFFFF', color:'#111', display:'flex', justifyContent:'center', alignItems:'center', fontFamily:'Inter'}}>
+      <div className="loader"></div>
+      <style>{`
+        .loader { width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #FF6A00; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
 
   if (!isAdmin) return null;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#f0f2f5', color: '#111' }}>
-      <aside style={{ width: '250px', backgroundColor: '#1e2432', color: '#fff', padding: '20px', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '40px', color: '#4a90e2' }}>WURI Admin</h2>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1 }}>
-          <div style={{ cursor: 'pointer', padding: '10px', borderRadius: '6px', backgroundColor: 'rgba(255,255,255,0.1)' }}>전체 대시보드</div>
-          <div style={{ cursor: 'pointer', padding: '10px', borderRadius: '6px' }}>가입자 (6등급) 관리</div>
-          <div style={{ cursor: 'pointer', padding: '10px', borderRadius: '6px' }}>결제 및 수수료 내역</div>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#F8F9FA', color: '#111', fontFamily: "'Inter', 'Noto Sans KR', sans-serif" }}>
+      <style>{`
+        .sidebar-item {
+          padding: 14px 20px;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: all 0.3s;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          color: #666;
+          font-weight: 500;
+        }
+        .sidebar-item:hover {
+          background: rgba(0,0,0,0.03);
+          color: #111;
+        }
+        .sidebar-item.active {
+          background: #111;
+          color: #fff;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .stat-card {
+          background: #fff;
+          padding: 30px;
+          border-radius: 24px;
+          border: 1px solid rgba(0,0,0,0.03);
+          box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+          transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .role-pill {
+          padding: 6px 12px;
+          border-radius: 100px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+        .chart-bar {
+          flex: 1;
+          background: #f0f0f0;
+          border-radius: 4px;
+          position: relative;
+          min-height: 100px;
+        }
+        .chart-fill {
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          background: linear-gradient(to top, #FF6A00, #FFA000);
+          border-radius: 4px;
+          transition: height 1s ease-out;
+        }
+      `}</style>
+
+      {/* Sidebar */}
+      <aside style={{ width: '280px', backgroundColor: '#fff', borderRight: '1px solid rgba(0,0,0,0.05)', padding: '40px 24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '48px', display:'flex', alignItems:'center', gap:'10px' }}>
+          <div style={{width:'32px', height:'32px', borderRadius:'8px', background:'#FF6A00'}}></div>
+          WURI. Admin
+        </div>
+
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+          <div className={`sidebar-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+            📊 Overview
+          </div>
+          <div className={`sidebar-item ${activeTab === 'stores' ? 'active' : ''}`} onClick={() => setActiveTab('stores')}>
+            ☕ Stores & Roasteries
+          </div>
+          <div className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>
+            👥 User Permissions
+          </div>
+          <div className={`sidebar-item ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+            📦 Global Orders
+          </div>
         </nav>
-        <button onClick={handleLogout} style={{ padding: '10px', backgroundColor: 'transparent', border: '1px solid #4a90e2', color: '#4a90e2', borderRadius: '6px', cursor: 'pointer' }}>시스템 로그아웃</button>
+
+        <div style={{ paddingTop: '20px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+          <button onClick={handleLogout} style={{ width:'100%', padding: '14px', backgroundColor: 'transparent', border: '1px solid #ddd', color: '#666', borderRadius: '12px', cursor: 'pointer', fontWeight:'600' }}>
+            Logout
+          </button>
+        </div>
       </aside>
-      
-      <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-        <h1 style={{ fontSize: '2rem', marginBottom: '20px' }}>Dashboard Overview</h1>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-          <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>총 활성 로스터리/카페</h3>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>124 <span style={{fontSize:'1rem', color:'#aaa', fontWeight:'normal'}}>매장</span></div>
+
+      {/* Main Content */}
+      <main style={{ flex: 1, padding: '60px', overflowY: 'auto' }}>
+        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '48px' }}>
+          <div>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-1px' }}>Control Center</h1>
+            <p style={{ color: '#888', marginTop: '4px' }}>Welcome back, System Admin.</p>
           </div>
-          <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>오늘 원두 발주량</h3>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>42 <span style={{fontSize:'1rem', color:'#aaa', fontWeight:'normal'}}>건</span></div>
+          <div style={{ display:'flex', gap:'12px' }}>
+            <div style={{ padding:'10px 20px', background:'#fff', borderRadius:'12px', border:'1px solid #eee', fontWeight:'600', fontSize:'0.9rem' }}>
+              System Status: <span style={{color:'#10b981'}}>Healthy</span>
+            </div>
           </div>
-          <div style={{ backgroundColor: '#fff', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#666', fontSize: '1rem', marginBottom: '10px' }}>이번주 누적 커피챗</h3>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>3,192 <span style={{fontSize:'1rem', color:'#aaa', fontWeight:'normal'}}>회</span></div>
+        </header>
+
+        {/* Stats Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px', marginBottom: '48px' }}>
+          <div className="stat-card">
+            <div style={{ color: '#888', fontSize: '0.9rem', fontWeight: '600', marginBottom: '16px' }}>TOTAL REVENUE</div>
+            <div style={{ fontSize: '2.2rem', fontWeight: '800' }}>₩14,290,000</div>
+            <div style={{ color: '#10b981', fontSize: '0.85rem', marginTop: '8px', fontWeight:'700' }}>↑ 12.5% from last week</div>
+          </div>
+          <div className="stat-card">
+            <div style={{ color: '#888', fontSize: '0.9rem', fontWeight: '600', marginBottom: '16px' }}>ACTIVE STORES</div>
+            <div style={{ fontSize: '2.2rem', fontWeight: '800' }}>124 <span style={{fontSize:'1rem', color:'#aaa'}}>Units</span></div>
+            <div style={{ color: '#10b981', fontSize: '0.85rem', marginTop: '8px', fontWeight:'700' }}>5 New stores today</div>
+          </div>
+          <div className="stat-card">
+            <div style={{ color: '#888', fontSize: '0.9rem', fontWeight: '600', marginBottom: '16px' }}>AVG. CUP USAGE</div>
+            <div style={{ fontSize: '2.2rem', fontWeight: '800' }}>3,192 <span style={{fontSize:'1rem', color:'#aaa'}}>Points</span></div>
+            <div style={{ color: '#FF6A00', fontSize: '0.85rem', marginTop: '8px', fontWeight:'700' }}>Daily peak at 2 PM</div>
           </div>
         </div>
 
-        <h2 style={{ fontSize: '1.5rem', marginBottom: '20px' }}>역할별 사용자 현황 (6등급)</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-          {/* 가맹점 그룹 */}
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #4a90e2', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>로스터리A</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>원두 공급 및 커핑 세팅</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>12 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>명</span></div>
-          </div>
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #4a90e2', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>카페B</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>원두 자동주문 (포스 3인)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>78 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>명</span></div>
-          </div>
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #4a90e2', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>카페C</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>일반 매장 (포스 1인)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>34 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>명</span></div>
-          </div>
-          
-          {/* 파트너 그룹 */}
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #f5a623', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>협력사</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>셀프 주문 관리 및 기기연동</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>8 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>사</span></div>
+        {/* Chart & Roles Section */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px' }}>
+          {/* Mock Chart Area */}
+          <div className="stat-card">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '32px' }}>Weekly Activity Trend</h3>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '15px', height: '200px' }}>
+              {[40, 70, 45, 90, 65, 80, 50].map((h, i) => (
+                <div key={i} className="chart-bar">
+                  <div className="chart-fill" style={{ height: `${h}%` }}></div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px', color: '#aaa', fontSize: '0.8rem', fontWeight: '600' }}>
+              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
           </div>
 
-          {/* 일반 유저 그룹 */}
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #7ed321', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>유료구독 (프리미엄)</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>마이레시피 및 픽업 기반</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>1,430 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>명</span></div>
-          </div>
-          <div style={{ backgroundColor: '#fff', borderLeft: '4px solid #7ed321', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h3 style={{ color: '#333', fontSize: '1.1rem', marginBottom: '5px' }}>입문 (일반)</h3>
-            <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '15px' }}>원격주문 1km 이내</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>12,840 <span style={{fontSize:'0.9rem', color:'#aaa', fontWeight:'normal'}}>명</span></div>
+          {/* Role Distribution */}
+          <div className="stat-card">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', marginBottom: '24px' }}>Permissions</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{fontWeight:'600'}}>Roastery (A)</span>
+                <span className="role-pill" style={{background:'#FF6A00', color:'#fff'}}>12</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{fontWeight:'600'}}>Cafe (B)</span>
+                <span className="role-pill" style={{background:'#eee', color:'#666'}}>78</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{fontWeight:'600'}}>Cafe (C)</span>
+                <span className="role-pill" style={{background:'#eee', color:'#666'}}>34</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{fontWeight:'600'}}>Partners</span>
+                <span className="role-pill" style={{background:'#eee', color:'#666'}}>8</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{fontWeight:'600'}}>Subscribers</span>
+                <span className="role-pill" style={{background:'#eee', color:'#666'}}>1.4K</span>
+              </div>
+            </div>
           </div>
         </div>
       </main>
