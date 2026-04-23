@@ -253,9 +253,20 @@ export default function App() {
 
   // --- 2) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
   // OAuth 리다이렉트(code, access_token 등) 중일 때는 랜딩 페이지가 가로채지 않도록 함
-  const hasAuthParams = window.location.search.includes('code=') || window.location.hash.includes('access_token=');
+  const hasAuthParams = window.location.href.includes('code=') || 
+                        window.location.href.includes('access_token=') || 
+                        window.location.href.includes('refresh_token=');
+  
   const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams;
   
+  // 디버깅용 로그 (나중에 삭제)
+  console.log("isWebLanding Check:", { 
+    isDesktop, 
+    pathname: location.pathname, 
+    hasAuthParams, 
+    href: window.location.href.substring(0, 50) + "..." 
+  });
+
   if (isWebLanding) {
     return <LandingPage />;
   }
