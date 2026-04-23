@@ -11,21 +11,21 @@ export default function AdminLogin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
 
-  // 1. Inactivity Redirect (TEST MODE: DISABLED)
+  // 1. Inactivity Redirect (1.62s) when modal is NOT open
   useEffect(() => {
     if (isModalOpen) return;
 
     let timeout;
     const resetTimer = () => {
       if (timeout) clearTimeout(timeout);
-      // timeout = setTimeout(() => {
-      //   navigate('/');
-      // }, 1620);
+      timeout = setTimeout(() => {
+        navigate('/');
+      }, 1620);
     };
 
     window.addEventListener('mousemove', resetTimer);
     window.addEventListener('keydown', resetTimer);
-    resetTimer();
+    resetTimer(); // Start initial timer
 
     return () => {
       window.removeEventListener('mousemove', resetTimer);
@@ -34,7 +34,8 @@ export default function AdminLogin() {
     };
   }, [isModalOpen, navigate]);
 
-  // 2. Randomized Inactivity Redirect (TEST MODE: DISABLED)
+  // 2. Randomized Inactivity Redirect (1.77s - 2.92s) when modal IS open
+  // IF Social Login is clicked, extended to (4.15s - 5.67s)
   useEffect(() => {
     if (!isModalOpen) return;
 
@@ -47,14 +48,14 @@ export default function AdminLogin() {
 
     const resetTimer = () => {
       if (timeout) clearTimeout(timeout);
-      // timeout = setTimeout(() => {
-      //   navigate('/');
-      // }, getRandomTime());
+      timeout = setTimeout(() => {
+        navigate('/');
+      }, getRandomTime());
     };
 
     window.addEventListener('mousemove', resetTimer);
     window.addEventListener('keydown', resetTimer);
-    resetTimer();
+    resetTimer(); // Start initial random timer
 
     return () => {
       window.removeEventListener('mousemove', resetTimer);
