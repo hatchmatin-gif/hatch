@@ -1,13 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [showConsent, setShowConsent] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
+
+    const handleScroll = () => {
+      // 스크롤 시작 시 상태 변경
+      setIsScrolling(true);
+      document.body.classList.add('is-scrolling');
+
+      // 기존 타이머 제거 후 새로운 타이머 설정 (멈춤 감지)
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsScrolling(false);
+        document.body.classList.remove('is-scrolling');
+      }, 500);
+    };
+
+    window.addEventListener('scroll', handleScroll);
 
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
@@ -16,8 +33,11 @@ export default function LandingPage() {
     
     return () => {
       clearTimeout(timer);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      window.removeEventListener('scroll', handleScroll);
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
+      document.body.classList.remove('is-scrolling');
     };
   }, []);
 
@@ -39,6 +59,30 @@ export default function LandingPage() {
           --wuri-black: #1d1d1f;
           --wuri-gray: #86868b;
         }
+        
+        /* Premium Custom Scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.5);
+          border-radius: 100px;
+          border: 2px solid transparent;
+          background-clip: content-box;
+          opacity: 0;
+          transition: opacity 0.3s;
+        }
+        
+        /* Only show scrollbar when scrolling */
+        body.is-scrolling ::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.2);
+          opacity: 1;
+        }
+
         .landing-container {
           position: absolute;
           top: 0; left: 0; width: 100vw;
@@ -49,6 +93,7 @@ export default function LandingPage() {
           overflow-x: hidden;
           z-index: 9999;
         }
+        
         header {
           padding: clamp(20px, 4vw, 40px) clamp(30px, 6vw, 100px);
           display: flex; justify-content: flex-start;
@@ -59,12 +104,6 @@ export default function LandingPage() {
           padding: clamp(60px, 10vw, 120px) 20px;
           text-align: center;
           display: flex; flex-direction: column; align-items: center;
-        }
-        .hero-badge {
-          display: inline-block; padding: 8px 16px; background: #fff; border-radius: 100px;
-          font-size: clamp(0.7rem, 1vw, 0.85rem); font-weight: 700; color: var(--wuri-orange);
-          box-shadow: 0 4px 15px rgba(255,106,0,0.1); margin-bottom: clamp(24px, 4vw, 48px);
-          border: 1px solid rgba(255,106,0,0.1);
         }
         .hero-title {
           font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05;
@@ -84,25 +123,18 @@ export default function LandingPage() {
           padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
           font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px; border: none;
           background: #111; color: #fff; cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+          transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .secondary-btn {
           padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
           font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px;
-          border: 1px solid #eee; background: #fff; color: #111; cursor: pointer; transition: all 0.3s;
+          border: 1px solid #eee; background: #fff; color: #111; cursor: pointer; transition: 0.3s;
         }
-        .primary-btn:hover { transform: translateY(-3px); background: #000; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
 
-        .feature-section { padding: 100px 10%; background: #f9f9f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
-        .feature-card { padding: 48px; background: #fff; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: 0.3s; }
-        .feature-card:hover { transform: translateY(-10px); }
-        .feat-icon { font-size: 2.5rem; margin-bottom: 24px; display: block; }
-        .feat-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; }
-        .feat-desc { font-size: 1.1rem; color: #666; line-height: 1.6; }
-
-        /* Ultra-Slim Single-Line Consent Banner */
+        /* Smart Moving Consent Banner */
         .consent-banner {
-          position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+          position: fixed; bottom: 32px; left: 50%; 
+          transform: translateX(-50%) translateY(${isScrolling ? '150%' : '0'});
           width: fit-content; max-width: 95%;
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
@@ -110,26 +142,25 @@ export default function LandingPage() {
           padding: 8px 12px 8px 32px; border-radius: 100px;
           box-shadow: 0 20px 50px rgba(0,0,0,0.06);
           z-index: 10000;
-          animation: slideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s;
+          opacity: ${isScrolling ? 0 : 1};
         }
-        @keyframes slideUp { from { transform: translate(-50%, 150%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
         .consent-content { display: flex; align-items: center; gap: 32px; white-space: nowrap; }
         .consent-text { font-size: 0.85rem; font-weight: 500; color: #555; display: flex; gap: 10px; align-items: center; }
         .consent-text b { color: #000; font-weight: 800; }
         .consent-buttons { display: flex; gap: 24px; align-items: center; }
         .btn-agree { background: #111; color: #fff; border: none; padding: 10px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
         .btn-deny { background: transparent; color: #aaa; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
-        .btn-deny:hover { color: #111; }
         
-        @media (max-width: 1100px) {
-          .consent-text { font-size: 0.8rem; }
-          .consent-banner { padding-left: 20px; }
-        }
+        .feature-section { padding: 100px 10%; background: #f9f9f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .feature-card { padding: 48px; background: #fff; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: 0.3s; }
+        .feature-card:hover { transform: translateY(-10px); }
+        .feat-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; }
+        .feat-desc { font-size: 1.1rem; color: #666; line-height: 1.6; }
+
         @media (max-width: 850px) {
           .consent-banner { border-radius: 20px; padding: 16px 20px; width: 90%; max-width: 400px; }
           .consent-content { flex-direction: column; white-space: normal; text-align: center; gap: 12px; }
-          .consent-text { flex-direction: column; gap: 2px; }
-          .consent-buttons { width: 100%; justify-content: center; gap: 20px; }
         }
       `}</style>
 
@@ -137,42 +168,30 @@ export default function LandingPage() {
         <div className="logo">WURI.</div>
       </header>
 
-      {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-badge">● WURI PLATFORM 2.0</div>
-        <h1 className="hero-title">
-          커피의 모든 순간을
-          <span className="gradient-text">하나로 연결하다</span>
-        </h1>
-        <p className="hero-desc">
-          더 이상 분산된 시스템에 얽매이지 마세요. B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 하나의 플랫폼.
-        </p>
+        <h1 className="hero-title">커피의 모든 순간을 <span className="gradient-text">하나로 연결하다</span></h1>
+        <p className="hero-desc">B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 플랫폼.</p>
         <div className="hero-btns">
           <button className="primary-btn" onClick={() => navigate('/app')}>Get Started</button>
           <button className="secondary-btn">Request Demo</button>
         </div>
       </section>
 
-      {/* Feature Section */}
       <section className="feature-section">
         <div className="feature-card">
-          <span className="feat-icon">🏢</span>
-          <h3 className="feat-title">B2B 원두 발주</h3>
-          <p className="feat-desc">전국의 로스터리와 카페를 실시간으로 연결합니다. 품질 관리부터 배송 추적까지 한 번에 해결하세요.</p>
+          <h3 className="feat-title">🏢 B2B 원두 발주</h3>
+          <p className="feat-desc">전국의 로스터리와 카페를 실시간으로 연결합니다.</p>
         </div>
         <div className="feature-card">
-          <span className="feat-icon">🖥️</span>
-          <h3 className="feat-title">통합 POS 시스템</h3>
-          <p className="feat-desc">어떤 기기에서도 작동하는 클라우드 POS. 매장 운영 데이터가 실시간으로 분석되어 매출 성장을 돕습니다.</p>
+          <h3 className="feat-title">🖥️ 통합 POS 시스템</h3>
+          <p className="feat-desc">어떤 기기에서도 작동하는 클라우드 POS.</p>
         </div>
         <div className="feature-card">
-          <span className="feat-icon">📱</span>
-          <h3 className="feat-title">스마트 오더</h3>
-          <p className="feat-desc">줄 서지 않는 카페 경험. 고객은 편리하게 주문하고, 점주는 효율적으로 주문을 관리합니다.</p>
+          <h3 className="feat-title">📱 스마트 오더</h3>
+          <p className="feat-desc">줄 서지 않는 편리한 주문 경험.</p>
         </div>
       </section>
 
-      {/* Ultra-Slim Consent Banner */}
       {showConsent && (
         <div className="consent-banner">
           <div className="consent-content">
