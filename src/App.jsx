@@ -236,40 +236,8 @@ export default function App() {
   });
 
   // 로딩 화면
-  if (isSessionLoading) {
-    return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
-  }
-
-  // --- 1) 최고 관리자 숨겨진 라우팅 (모바일 UI 래퍼를 씌우지 않음) ---
-  const isAdminRoute = location.pathname.startsWith('/admin');
-  if (isAdminRoute) {
-    return (
-      <Routes>
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      </Routes>
-    );
-  }
-
-  // --- 2) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
-  // 로그인 세션이 이미 있거나 OAuth 리다이렉트 중일 때는 랜딩 페이지가 가로채지 않도록 함
-  const hasAuthParams = window.location.href.includes('code=') || 
-                        window.location.href.includes('access_token=') || 
-                        window.location.href.includes('refresh_token=');
-  
-  // 로그인된 세션이 있으면 랜딩 페이지를 보여주지 않음
-  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams && !session;
-  
-  if (isWebLanding) {
-    return <LandingPage />;
-  }
-
-  // --- 3) 로그인되지 않은 일반 모바일(또는 기타 경로) 사용자 ---
-  if (!session && !isAdminRoute) {
-    return <Login />;
-  }
-
-  // --- 4) 관리자가 루트('/')로 들어왔을 때 대시보드로 자동 리다이렉트 ---
+  // --- 1) 관리자가 루트('/')로 들어왔을 때 대시보드로 자동 리다이렉트 ---
+  // (Hook은 반드시 최상단에 위치해야 합니다)
   useEffect(() => {
     if (session && location.pathname === '/' && isDesktop) {
       const checkAdminAndRedirect = async () => {
@@ -286,6 +254,39 @@ export default function App() {
       checkAdminAndRedirect();
     }
   }, [session, location.pathname, isDesktop, navigate]);
+
+  if (isSessionLoading) {
+    return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
+  }
+
+  // --- 2) 최고 관리자 숨겨진 라우팅 (모바일 UI 래퍼를 씌우지 않음) ---
+  const isAdminRoute = location.pathname.startsWith('/admin');
+  if (isAdminRoute) {
+    return (
+      <Routes>
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      </Routes>
+    );
+  }
+
+  // --- 3) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
+  // 로그인 세션이 이미 있거나 OAuth 리다이렉트 중일 때는 랜딩 페이지가 가로채지 않도록 함
+  const hasAuthParams = window.location.href.includes('code=') || 
+                        window.location.href.includes('access_token=') || 
+                        window.location.href.includes('refresh_token=');
+  
+  // 로그인된 세션이 있으면 랜딩 페이지를 보여주지 않음
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams && !session;
+  
+  if (isWebLanding) {
+    return <LandingPage />;
+  }
+
+  // --- 4) 로그인되지 않은 일반 모바일(또는 기타 경로) 사용자 ---
+  if (!session && !isAdminRoute) {
+    return <Login />;
+  }
 
   // 동네 미설정 시 강제로 설정 창으로 보내는 로직 제거 (메인 화면 우선 진입)
   // 향후 사용자가 팝업이나 설정 탭을 통해 자발적으로 동네를 설정할 수 있도록 유도합니다.
