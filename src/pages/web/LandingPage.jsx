@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-
 export default function LandingPage() {
   const navigate = useNavigate();
   const [showConsent, setShowConsent] = useState(false);
@@ -11,9 +10,7 @@ export default function LandingPage() {
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
       console.log("Consent Check - isAgreed in localStorage:", isAgreed);
-      
       if (!isAgreed) {
-        console.log("Showing Consent Banner...");
         setShowConsent(true);
       }
     }, 2000);
@@ -24,7 +21,6 @@ export default function LandingPage() {
   const handleConsent = (agreed) => {
     if (agreed) {
       localStorage.setItem('wuri-consent', 'true');
-      // 위치 권한 미리 요청 (자연스럽게)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(() => {}, () => {});
       }
@@ -34,6 +30,117 @@ export default function LandingPage() {
 
   return (
     <div className="landing-container">
+      <style>{`
+        .landing-container {
+          min-height: 100vh;
+          background: #fbfbfb;
+          color: #1d1d1f;
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif;
+          overflow-x: hidden;
+        }
+        .hero-section {
+          padding: 160px 20px 100px;
+          text-align: center;
+          max-width: 1000px;
+          margin: 0 auto;
+        }
+        .hero-badge {
+          display: inline-block;
+          padding: 8px 16px;
+          background: #fff;
+          border-radius: 100px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #FF6A00;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+          margin-bottom: 32px;
+          letter-spacing: 1px;
+        }
+        .hero-title {
+          font-size: 4.5rem;
+          font-weight: 800;
+          line-height: 1.1;
+          letter-spacing: -3px;
+          margin-bottom: 32px;
+        }
+        .gradient-text {
+          background: linear-gradient(to right, #FF6A00, #FFB800);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .hero-desc {
+          font-size: 1.4rem;
+          color: #86868b;
+          line-height: 1.5;
+          margin-bottom: 48px;
+          font-weight: 500;
+        }
+        .hero-btns {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+        }
+        .primary-btn {
+          padding: 20px 48px;
+          font-size: 1.1rem;
+          font-weight: 700;
+          border-radius: 100px;
+          border: none;
+          background: #1d1d1f;
+          color: #fff;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .secondary-btn {
+          padding: 20px 48px;
+          font-size: 1.1rem;
+          font-weight: 700;
+          border-radius: 100px;
+          border: 1px solid #d2d2d7;
+          background: #fff;
+          color: #1d1d1f;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .primary-btn:hover { transform: scale(1.05); background: #000; }
+        .secondary-btn:hover { background: #f5f5f7; }
+
+        /* Consent Banner Styles */
+        .consent-banner {
+          position: fixed;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 90%;
+          max-width: 650px;
+          background: rgba(255, 255, 255, 0.8);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+          padding: 24px;
+          border-radius: 30px;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.12);
+          z-index: 9999;
+          animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { transform: translate(-50%, 120%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        .consent-content { display: flex; align-items: center; gap: 24px; }
+        .consent-icon { font-size: 2.2rem; background: #fff; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .consent-text h4 { margin: 0 0 6px 0; font-size: 1.2rem; font-weight: 800; }
+        .consent-text p { margin: 0; font-size: 0.95rem; color: #555; line-height: 1.5; }
+        .consent-buttons { display: flex; gap: 15px; margin-left: auto; align-items: center; }
+        .btn-agree { background: #111; color: #fff; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: 0.3s; }
+        .btn-deny { background: transparent; color: #999; border: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; }
+        
+        @media (max-width: 768px) {
+          .hero-title { font-size: 2.8rem; letter-spacing: -1.5px; }
+          .hero-desc { font-size: 1.1rem; }
+          .hero-btns { flex-direction: column; }
+          .consent-content { flex-direction: column; text-align: center; gap: 15px; }
+          .consent-buttons { margin: 0; width: 100%; justify-content: center; }
+        }
+      `}</style>
+
       {/* Consent Banner */}
       {showConsent && (
         <div className="consent-banner">
@@ -53,91 +160,20 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="hero-section">
-        <div className="hero-badge hide-animate">● WURI PLATFORM 2.0</div>
-        <h1 className="hero-title hide-animate">
+        <div className="hero-badge">● WURI PLATFORM 2.0</div>
+        <h1 className="hero-title">
           커피의 모든 순간을<br />
           <span className="gradient-text">하나로 연결하다</span>
         </h1>
-        <p className="hero-desc hide-animate">
+        <p className="hero-desc">
           더 이상 분산된 시스템에 얽매이지 마세요. B2B 원두 발주부터 매장 POS 연동,<br />
           그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 하나의 플랫폼.
         </p>
-        <div className="hero-btns hide-animate">
+        <div className="hero-btns">
           <button className="primary-btn" onClick={() => navigate('/app')}>Get Started</button>
           <button className="secondary-btn">Request Demo</button>
         </div>
       </section>
-
-      {/* 추가 섹션들 (기존 내용 유지) */}
-      <style>{`
-        .consent-banner {
-          position: fixed;
-          bottom: 30px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 90%;
-          max-width: 600px;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          padding: 24px;
-          border-radius: 24px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-          z-index: 9999;
-          animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes slideUp {
-          from { transform: translate(-50%, 100%); opacity: 0; }
-          to { transform: translate(-50%, 0); opacity: 1; }
-        }
-        .consent-content {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-        }
-        .consent-icon {
-          font-size: 2rem;
-          background: #fff;
-          width: 60px;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 18px;
-          box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        }
-        .consent-text h4 { margin: 0 0 4px 0; font-size: 1.1rem; font-weight: 800; }
-        .consent-text p { margin: 0; font-size: 0.9rem; color: #666; line-height: 1.5; }
-        .consent-buttons { display: flex; gap: 10px; margin-left: auto; }
-        .btn-agree {
-          background: #111;
-          color: #fff;
-          border: none;
-          padding: 12px 20px;
-          border-radius: 12px;
-          font-weight: 700;
-          cursor: pointer;
-          white-space: nowrap;
-          transition: 0.3s;
-        }
-        .btn-deny {
-          background: transparent;
-          color: #999;
-          border: none;
-          padding: 12px 10px;
-          font-weight: 600;
-          cursor: pointer;
-          white-space: nowrap;
-        }
-        .btn-agree:hover { transform: scale(1.05); background: #000; }
-        
-        @media (max-width: 768px) {
-          .consent-content { flex-direction: column; text-align: center; gap: 15px; }
-          .consent-buttons { margin: 0; width: 100%; justify-content: center; }
-          .btn-agree { width: 100%; }
-        }
-      `}</style>
     </div>
   );
 }
