@@ -10,15 +10,7 @@ export default function AdminDashboard() {
   const [showLogoutTimer, setShowLogoutTimer] = useState(false);
   const [countdown, setCountdown] = useState(300);
   
-  const [usageData, setUsageData] = useState({
-    dbRows: 0,
-    dbLimit: 500000,
-    bandwidth: 12.5,
-    bandwidthLimit: 100,
-    storage: 0.2,
-    storageLimit: 1.0,
-  });
-
+  const [usageData, setUsageData] = useState({ dbRows: 0, dbLimit: 500000 });
   const [securityLogs, setSecurityLogs] = useState([]);
 
   const navigate = useNavigate();
@@ -26,90 +18,82 @@ export default function AdminDashboard() {
   const countdownIntervalRef = useRef(null);
 
   useEffect(() => {
-    checkAdminRole();
-    fetchRealUsage();
-    fetchSecurityLogs();
-    logAuditEvent('DASHBOARD_ACCESS', 'SUCCESS');
+    const init = async () => {
+      await checkAdminRole();
+      await fetchRealUsage();
+      await fetchSecurityLogs();
+      await logAuditEvent('DASHBOARD_ACCESS', 'SUCCESS');
+    };
+    init();
   }, []);
+
+  const getDeviceInfo = () => {
+    const ua = navigator.userAgent;
+    let os = "Unknown OS";
+    let device = "Desktop/Unknown";
+
+    if (ua.indexOf("Win") !== -1) os = "Windows";
+    if (ua.indexOf("Mac") !== -1) os = "MacOS";
+    if (ua.indexOf("X11") !== -1) os = "UNIX";
+    if (ua.indexOf("Linux") !== -1) os = "Linux";
+    if (ua.indexOf("Android") !== -1) os = "Android";
+    if (ua.indexOf("iPhone") !== -1) os = "iOS (iPhone)";
+
+    if (/Mobile|Android|iPhone|iPad/i.test(ua)) device = "Mobile Device";
+    else device = "PC / Desktop";
+
+    return { os, device };
+  };
+
+  const getGPS = () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve({ lat: null, lng: null });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve({ lat: null, lng: null }),
+        { timeout: 5000 }
+      );
+    });
+  };
 
   const logAuditEvent = async (eventType, status) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // IP 정보 가져오기 (무료 API 사용 예시)
-      const ipRes = await fetch('https://api.ipify.org?format=json');
-      const { ip } = await ipRes.json();
+      const { os, device } = getDeviceInfo();
+      const { lat, lng } = await getGPS();
+      
+      // IP 및 지역 정보 (IP-API 활용)
+      const ipRes = await fetch('http://ip-api.com/json/');
+      const ipData = await ipRes.json();
 
       await supabase.from('audit_logs').insert([{
         user_id: session.user.id,
         email: session.user.email,
         event_type: eventType,
-        ip_address: ip,
+        ip_address: ipData.query,
+        location_name: `${ipData.city}, ${ipData.country}`,
         user_agent: navigator.userAgent,
+        os: os,
+        device: device,
+        latitude: lat || ipData.lat,
+        longitude: lng || ipData.lon,
         status: status
       }]);
-    } catch (err) {
-      console.error("Audit log failed:", err);
-    }
+      
+      fetchSecurityLogs(); // 로그 새로고침
+    } catch (err) { console.error("Audit log failed:", err); }
   };
 
   const fetchSecurityLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (!error) setSecurityLogs(data || []);
-    } catch (err) { console.error(err); }
+    const { data } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(10);
+    setSecurityLogs(data || []);
   };
 
   const fetchRealUsage = async () => {
     const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
     setUsageData(prev => ({ ...prev, dbRows: count || 0 }));
-  };
-
-  // ... (Blur & Timer Logic - Keep as is)
-  useEffect(() => {
-    if (isBlurred) {
-      blurTimeoutRef.current = setTimeout(() => { setShowLogoutTimer(true); }, 10000);
-    } else {
-      if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
-      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-      setShowLogoutTimer(false);
-      setCountdown(300);
-    }
-    return () => { if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current); };
-  }, [isBlurred]);
-
-  useEffect(() => {
-    if (showLogoutTimer) {
-      countdownIntervalRef.current = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) { clearInterval(countdownIntervalRef.current); handleLogout(); return 0; }
-          return prev - 1;
-        });
-      }, 1000);
-    } else { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); }
-    return () => { if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current); };
-  }, [showLogoutTimer]);
-
-  const checkAdminRole = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate('/admin/login'); return; }
-      const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
-      if (error || profile?.role !== 'super_admin') {
-        await logAuditEvent('UNAUTHORIZED_ACCESS_ATTEMPT', 'CRITICAL');
-        alert("접근 권한이 없습니다.");
-        await supabase.auth.signOut();
-        navigate('/');
-        return;
-      }
-      setIsAdmin(true);
-    } catch (err) { navigate('/'); } finally { setLoading(false); }
   };
 
   const handleLogout = async () => {
@@ -124,12 +108,7 @@ export default function AdminDashboard() {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-  if (loading) return (
-    <div style={{height: '100vh', backgroundColor:'#FFFFFF', display:'flex', justifyContent:'center', alignItems:'center', fontFamily:'Inter'}}>
-      <div className="loader"></div>
-      <style>{`.loader { width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #FF6A00; border-radius: 50%; animation: spin 1s linear infinite; } @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+  if (loading) return <div style={{height: '100vh', display:'flex', justifyContent:'center', alignItems:'center'}}>Loading...</div>;
 
   if (!isAdmin) return null;
 
@@ -139,78 +118,77 @@ export default function AdminDashboard() {
         .sidebar-item { padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; color: #666; font-weight: 500; }
         .sidebar-item.active { background: #111; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .stat-card { background: #fff; padding: 30px; border-radius: 24px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
-        .log-row { padding: 12px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7rem; }
+        .log-row { padding: 16px 0; border-bottom: 1px solid #f0f0f0; display: grid; grid-template-columns: 2fr 1fr 1fr; align-items: center; font-size: 0.85rem; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 0.7rem; width: fit-content; }
       `}</style>
 
       {/* Sidebar */}
       <aside style={{ width: '280px', backgroundColor: '#fff', borderRight: '1px solid rgba(0,0,0,0.05)', padding: '40px 24px', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ fontSize: '1.5rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '48px', display:'flex', alignItems:'center', gap:'10px' }}>
+        <div style={{ fontSize: '1.5rem', fontWeight: '900', marginBottom: '48px', display:'flex', alignItems:'center', gap:'10px' }}>
           <div style={{width:'32px', height:'32px', borderRadius:'8px', background:'#FF6A00'}}></div>
           WURI. Admin
         </div>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <div className={`sidebar-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>📊 Overview</div>
-          <div className={`sidebar-item ${activeTab === 'infrastructure' ? 'active' : ''}`} onClick={() => setActiveTab('infrastructure')}>🛡️ Infrastructure</div>
           <div className={`sidebar-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}>🔐 Security Logs</div>
         </nav>
         <div style={{ paddingTop: '20px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
           <button style={{ width:'100%', padding: '12px', borderRadius: '12px', border: '1px solid #eee', background: isBlurred ? 'rgba(255,106,0,0.05)' : '#fff', color: isBlurred ? '#FF6A00' : '#666', cursor: 'pointer', fontWeight:'600', marginBottom:'12px' }} onClick={() => setIsBlurred(!isBlurred)}>
-            {isBlurred ? '🔓 Unlock Screen' : '🔒 Privacy Blur'}
+            {isBlurred ? '🔓 Unlock' : '🔒 Blur'}
           </button>
-          <button onClick={handleLogout} style={{ width:'100%', padding: '14px', border: '1px solid #ddd', color: '#666', borderRadius: '12px', cursor: 'pointer', fontWeight:'600' }}>Logout</button>
+          <button onClick={handleLogout} style={{ width:'100%', padding: '14px', border: '1px solid #ddd', borderRadius: '12px', cursor: 'pointer', fontWeight:'600' }}>Logout</button>
         </div>
       </aside>
 
       <main style={{ flex: 1, padding: '60px', overflowY: 'auto', filter: isBlurred ? 'blur(20px)' : 'none' }}>
         {showLogoutTimer && (
-          <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#111', color: '#fff', padding: '10px 24px', borderRadius: '100px', zIndex: 9999, display:'flex', gap:'12px' }}>
-            <span style={{color:'#FF6A00'}}>⚠️ Security Alert</span><span>Auto-Logout in {formatTime(countdown)}</span>
+          <div style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', background: '#111', color: '#fff', padding: '10px 24px', borderRadius: '100px', zIndex: 9999 }}>
+            ⚠️ Security Alert: Auto-Logout in {formatTime(countdown)}
           </div>
         )}
 
         <header style={{ marginBottom: '48px' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800' }}>{activeTab === 'security' ? 'Security Audit' : 'Control Center'}</h1>
-          <p style={{ color: '#888' }}>Monitoring system activity and access logs.</p>
+          <p style={{ color: '#888' }}>GPS, OS, and Device tracking enabled.</p>
         </header>
-
-        {activeTab === 'overview' && (
-          <div style={{ display:'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap:'30px' }}>
-            <div className="stat-card">
-              <div style={{ color: '#888', fontSize: '0.9rem', marginBottom: '16px' }}>TOTAL REVENUE</div>
-              <div style={{ fontSize: '2.2rem', fontWeight: '800' }}>₩14,290,000</div>
-            </div>
-            {/* ... other overview cards ... */}
-          </div>
-        )}
 
         {activeTab === 'security' && (
           <div className="stat-card">
-            <h3 style={{ marginBottom: '24px', fontWeight: '800' }}>Recent Security Events</h3>
+            <h3 style={{ marginBottom: '24px', fontWeight: '800' }}>Real-time Access Monitoring</h3>
+            <div style={{ fontWeight: '700', fontSize: '0.75rem', color: '#aaa', paddingBottom: '10px', borderBottom: '2px solid #f0f0f0', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr' }}>
+              <span>EVENT / INFO</span>
+              <span>LOCATION / IP</span>
+              <span>DEVICE / OS</span>
+            </div>
             {securityLogs.map(log => (
               <div key={log.id} className="log-row">
                 <div>
-                  <div style={{ fontWeight: '700', marginBottom: '2px' }}>{log.event_type}</div>
-                  <div style={{ color: '#888', fontSize: '0.75rem' }}>{new Date(log.created_at).toLocaleString()} • {log.ip_address}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontWeight: '700' }}>{log.event_type}</div>
+                  <div style={{ color: '#888', fontSize: '0.75rem' }}>{new Date(log.created_at).toLocaleString()}</div>
                   <div className="status-badge" style={{ 
+                    marginTop: '4px',
                     background: log.status === 'SUCCESS' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', 
                     color: log.status === 'SUCCESS' ? '#10b981' : '#ef4444' 
                   }}>{log.status}</div>
-                  <div style={{ color: '#aaa', fontSize: '0.7rem', marginTop: '4px' }}>{log.email}</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600' }}>📍 {log.location_name || 'Unknown'}</div>
+                  <div style={{ color: '#888' }}>{log.ip_address}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#aaa' }}>{log.latitude?.toFixed(4)}, {log.longitude?.toFixed(4)}</div>
+                </div>
+                <div>
+                  <div style={{ fontWeight: '600' }}>📱 {log.device}</div>
+                  <div style={{ color: '#666' }}>💻 {log.os}</div>
                 </div>
               </div>
             ))}
-            {securityLogs.length === 0 && <p style={{color:'#888', textAlign:'center', padding:'40px'}}>No security events recorded yet.</p>}
           </div>
         )}
-
-        {activeTab === 'infrastructure' && (
-           <div className="stat-card">
-              <h3 style={{ marginBottom:'24px' }}>🛡️ Infrastructure Status</h3>
-              <p>Database Rows: {usageData.dbRows.toLocaleString()} / 500,000</p>
-           </div>
+        
+        {activeTab === 'overview' && (
+          <div className="stat-card">
+            <p>Welcome to the enhanced security dashboard.</p>
+          </div>
         )}
       </main>
     </div>
