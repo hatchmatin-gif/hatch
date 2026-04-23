@@ -100,32 +100,35 @@ export default function LandingPage() {
         .feat-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; }
         .feat-desc { font-size: 1.1rem; color: #666; line-height: 1.6; }
 
-        /* Sleek Single-Line Consent Banner */
+        /* Ultra-Slim Single-Line Consent Banner */
         .consent-banner {
           position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-          width: 90%; max-width: 900px;
+          width: fit-content; max-width: 95%;
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
           border: 1px solid rgba(255, 255, 255, 0.4);
-          padding: 16px 32px; border-radius: 100px;
-          box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+          padding: 8px 12px 8px 32px; border-radius: 100px;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.06);
           z-index: 10000;
           animation: slideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes slideUp { from { transform: translate(-50%, 150%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-        .consent-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-        .consent-text { font-size: 0.95rem; font-weight: 600; color: #333; display: flex; gap: 12px; align-items: center; }
-        .consent-text b { color: #000; }
+        .consent-content { display: flex; align-items: center; gap: 32px; white-space: nowrap; }
+        .consent-text { font-size: 0.85rem; font-weight: 500; color: #555; display: flex; gap: 10px; align-items: center; }
+        .consent-text b { color: #000; font-weight: 800; }
         .consent-buttons { display: flex; gap: 24px; align-items: center; }
-        .btn-agree { background: #111; color: #fff; border: none; padding: 12px 32px; border-radius: 100px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        .btn-deny { background: transparent; color: #999; border: none; cursor: pointer; font-weight: 700; font-size: 0.9rem; transition: 0.3s; }
+        .btn-agree { background: #111; color: #fff; border: none; padding: 10px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
+        .btn-deny { background: transparent; color: #aaa; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
         .btn-deny:hover { color: #111; }
-        .btn-agree:hover { transform: scale(1.05); background: #000; }
         
-        @media (max-width: 768px) {
-          .consent-banner { border-radius: 24px; padding: 20px; }
-          .consent-content { flex-direction: column; text-align: center; gap: 15px; }
-          .consent-text { flex-direction: column; gap: 4px; }
+        @media (max-width: 1100px) {
+          .consent-text { font-size: 0.8rem; }
+          .consent-banner { padding-left: 20px; }
+        }
+        @media (max-width: 850px) {
+          .consent-banner { border-radius: 20px; padding: 16px 20px; width: 90%; max-width: 400px; }
+          .consent-content { flex-direction: column; white-space: normal; text-align: center; gap: 12px; }
+          .consent-text { flex-direction: column; gap: 2px; }
           .consent-buttons { width: 100%; justify-content: center; gap: 20px; }
         }
       `}</style>
@@ -169,16 +172,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Extra Info Section */}
-      <section style={{ padding: '120px 20px', textAlign: 'center', background: '#fff' }}>
-        <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '24px', letterSpacing: '-2px' }}>Everything you need.</h2>
-        <p style={{ fontSize: '1.4rem', color: '#888', maxWidth: '700px', margin: '0 auto 60px' }}>
-          WURI는 카페 비즈니스의 시작부터 끝까지, 모든 복잡함을 걷어내고 본질에만 집중하게 합니다.
-        </p>
-        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1200" alt="Cafe" style={{ width: '90%', maxWidth: '1100px', borderRadius: '40px', boxShadow: '0 40px 100px rgba(0,0,0,0.1)' }} />
-      </section>
-
-      {/* Refined Single-Line Consent Banner */}
+      {/* Ultra-Slim Consent Banner */}
       {showConsent && (
         <div className="consent-banner">
           <div className="consent-content">
