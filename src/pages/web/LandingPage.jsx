@@ -10,7 +10,12 @@ export default function LandingPage() {
     // 페이지 로드 후 2초 뒤에 자연스럽게 동의 배너 표시
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
-      if (!isAgreed) setShowConsent(true);
+      console.log("Consent Check - isAgreed in localStorage:", isAgreed);
+      
+      if (!isAgreed) {
+        console.log("Showing Consent Banner...");
+        setShowConsent(true);
+      }
     }, 2000);
     
     return () => clearTimeout(timer);
