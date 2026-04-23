@@ -33,15 +33,29 @@ export default function AdminLogin() {
     };
   }, [isModalOpen, navigate]);
 
-  // 2. Strict Redirect (1.77s) when modal IS open
+  // 2. Randomized Inactivity Redirect (1.77s - 2.92s) when modal IS open
   useEffect(() => {
     if (!isModalOpen) return;
 
-    const timeout = setTimeout(() => {
-      navigate('/');
-    }, 1770);
+    let timeout;
+    const getRandomTime = () => Math.floor(Math.random() * (2920 - 1770 + 1)) + 1770;
 
-    return () => clearTimeout(timeout);
+    const resetTimer = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        navigate('/');
+      }, getRandomTime());
+    };
+
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    resetTimer(); // Start initial random timer
+
+    return () => {
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      if (timeout) clearTimeout(timeout);
+    };
   }, [isModalOpen, navigate]);
 
   // Reusing the same CSS and Layout logic from LandingPage for visual consistency
