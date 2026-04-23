@@ -55,111 +55,78 @@ export default function LandingPage() {
         }
         .logo { font-size: clamp(1.5rem, 2vw, 2rem); font-weight: 900; letter-spacing: -1.5px; }
 
-        /* Hero Section */
         .hero-section {
           padding: clamp(60px, 10vw, 120px) 20px;
           text-align: center;
           display: flex; flex-direction: column; align-items: center;
         }
         .hero-badge {
-          display: inline-block;
-          padding: 8px 16px;
-          background: #fff;
-          border-radius: 100px;
-          font-size: clamp(0.7rem, 1vw, 0.85rem);
-          font-weight: 700;
-          color: var(--wuri-orange);
-          box-shadow: 0 4px 15px rgba(255,106,0,0.1);
-          margin-bottom: clamp(24px, 4vw, 48px);
+          display: inline-block; padding: 8px 16px; background: #fff; border-radius: 100px;
+          font-size: clamp(0.7rem, 1vw, 0.85rem); font-weight: 700; color: var(--wuri-orange);
+          box-shadow: 0 4px 15px rgba(255,106,0,0.1); margin-bottom: clamp(24px, 4vw, 48px);
           border: 1px solid rgba(255,106,0,0.1);
         }
         .hero-title {
-          font-size: clamp(3rem, 7vw, 6.5rem);
-          font-weight: 900;
-          line-height: 1.05;
-          letter-spacing: -0.04em;
-          margin-bottom: 32px;
-          color: #111;
+          font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05;
+          letter-spacing: -0.04em; margin-bottom: 32px; color: #111;
         }
         .gradient-text {
           background: linear-gradient(to right, #FF6A00, #FFB800);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
           display: block;
         }
         .hero-desc {
-          font-size: clamp(1.1rem, 1.5vw, 1.6rem);
-          color: var(--wuri-gray);
-          line-height: 1.6;
-          margin-bottom: clamp(40px, 5vw, 60px);
-          font-weight: 500;
-          max-width: 900px;
+          font-size: clamp(1.1rem, 1.5vw, 1.6rem); color: var(--wuri-gray);
+          line-height: 1.6; margin-bottom: clamp(40px, 5vw, 60px); font-weight: 500; max-width: 900px;
         }
         .hero-btns { display: flex; gap: 20px; }
         .primary-btn {
           padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
-          font-size: clamp(1rem, 1.2vw, 1.2rem);
-          font-weight: 800; border-radius: 100px; border: none;
+          font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px; border: none;
           background: #111; color: #fff; cursor: pointer;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .secondary-btn {
           padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
-          font-size: clamp(1rem, 1.2vw, 1.2rem);
-          font-weight: 800; border-radius: 100px;
-          border: 1px solid #eee; background: #fff; color: #111; cursor: pointer;
-          transition: all 0.3s;
+          font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px;
+          border: 1px solid #eee; background: #fff; color: #111; cursor: pointer; transition: all 0.3s;
         }
         .primary-btn:hover { transform: translateY(-3px); background: #000; box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
 
-        /* Feature Section */
-        .feature-section {
-          padding: 100px 10%;
-          background: #f9f9f9;
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 40px;
-        }
-        .feature-card {
-          padding: 48px;
-          background: #fff;
-          border-radius: 32px;
-          box-shadow: 0 10px 40px rgba(0,0,0,0.03);
-          transition: 0.3s;
-        }
+        .feature-section { padding: 100px 10%; background: #f9f9f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .feature-card { padding: 48px; background: #fff; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: 0.3s; }
         .feature-card:hover { transform: translateY(-10px); }
         .feat-icon { font-size: 2.5rem; margin-bottom: 24px; display: block; }
         .feat-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; }
         .feat-desc { font-size: 1.1rem; color: #666; line-height: 1.6; }
 
-        /* Consent Banner (Dainty & Smart) */
+        /* Sleek Single-Line Consent Banner */
         .consent-banner {
           position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
-          width: 90%; max-width: 720px;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-          border: 1px solid rgba(255, 255, 255, 0.5);
-          padding: 24px 32px; border-radius: 32px;
-          box-shadow: 0 40px 80px rgba(0,0,0,0.12);
+          width: 90%; max-width: 900px;
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
+          border: 1px solid rgba(255, 255, 255, 0.4);
+          padding: 16px 32px; border-radius: 100px;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.08);
           z-index: 10000;
-          animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1);
+          animation: slideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes slideUp { from { transform: translate(-50%, 150%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-        .consent-content { display: flex; align-items: center; gap: 24px; }
-        .consent-icon { font-size: 1.8rem; background: #fff; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
-        .consent-text h4 { margin: 0 0 4px 0; font-size: 1.1rem; font-weight: 800; }
-        .consent-text p { margin: 0; font-size: 0.9rem; color: #666; line-height: 1.5; }
-        .consent-buttons { display: flex; gap: 16px; margin-left: auto; }
-        .btn-agree { background: #111; color: #fff; border: none; padding: 14px 24px; border-radius: 12px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: 0.3s; }
-        .btn-deny { background: transparent; color: #aaa; border: none; cursor: pointer; font-weight: 700; font-size: 0.9rem; }
+        .consent-content { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+        .consent-text { font-size: 0.95rem; font-weight: 600; color: #333; display: flex; gap: 12px; align-items: center; }
+        .consent-text b { color: #000; }
+        .consent-buttons { display: flex; gap: 24px; align-items: center; }
+        .btn-agree { background: #111; color: #fff; border: none; padding: 12px 32px; border-radius: 100px; font-weight: 800; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .btn-deny { background: transparent; color: #999; border: none; cursor: pointer; font-weight: 700; font-size: 0.9rem; transition: 0.3s; }
+        .btn-deny:hover { color: #111; }
+        .btn-agree:hover { transform: scale(1.05); background: #000; }
         
         @media (max-width: 768px) {
-          .feature-section { padding: 60px 20px; }
-          .hero-btns { flex-direction: column; width: 100%; align-items: center; }
-          .primary-btn, .secondary-btn { width: 100%; max-width: 320px; }
-          .consent-content { flex-direction: column; text-align: center; }
-          .consent-buttons { margin: 0; width: 100%; justify-content: center; }
+          .consent-banner { border-radius: 24px; padding: 20px; }
+          .consent-content { flex-direction: column; text-align: center; gap: 15px; }
+          .consent-text { flex-direction: column; gap: 4px; }
+          .consent-buttons { width: 100%; justify-content: center; gap: 20px; }
         }
       `}</style>
 
@@ -183,7 +150,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Detailed Features Section */}
+      {/* Feature Section */}
       <section className="feature-section">
         <div className="feature-card">
           <span className="feat-icon">🏢</span>
@@ -211,18 +178,17 @@ export default function LandingPage() {
         <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=1200" alt="Cafe" style={{ width: '90%', maxWidth: '1100px', borderRadius: '40px', boxShadow: '0 40px 100px rgba(0,0,0,0.1)' }} />
       </section>
 
-      {/* Consent Banner */}
+      {/* Refined Single-Line Consent Banner */}
       {showConsent && (
         <div className="consent-banner">
           <div className="consent-content">
-            <div className="consent-icon">🛡️</div>
             <div className="consent-text">
-              <h4>WURI 서비스 최적화 안내</h4>
-              <p>주변 매장 추천 및 보안 강화를 위해 위치 정보와 쿠키 사용에 동의하시겠습니까?</p>
+              <b>WURI 서비스 최적화 안내</b>
+              <span>주변 매장 추천 및 보안 강화를 위해 위치 정보와 쿠키 사용에 동의하시겠습니까?</span>
             </div>
             <div className="consent-buttons">
               <button className="btn-deny" onClick={() => handleConsent(false)}>나중에</button>
-              <button className="btn-agree" onClick={() => handleConsent(true)}>동의하고 시작하기</button>
+              <button className="btn-agree" onClick={() => handleConsent(true)}>동의하기</button>
             </div>
           </div>
         </div>
