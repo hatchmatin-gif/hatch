@@ -6,11 +6,21 @@ export default function LandingPage() {
   const [showConsent, setShowConsent] = useState(false);
 
   useEffect(() => {
+    // 랜딩 페이지에서는 스크롤이 가능하도록 전역 스타일 수정
+    document.body.style.overflow = 'auto';
+    document.documentElement.style.overflow = 'auto';
+
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
       if (!isAgreed) setShowConsent(true);
     }, 2000);
-    return () => clearTimeout(timer);
+    
+    return () => {
+      clearTimeout(timer);
+      // 페이지를 떠날 때는 다시 모바일용으로 스크롤 잠금
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    };
   }, []);
 
   const handleConsent = (agreed) => {
