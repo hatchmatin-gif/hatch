@@ -27,6 +27,10 @@ export default function LandingPage() {
     <div className="landing-container">
       <style>{`
         .landing-container {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100vw;
           min-height: 100vh;
           background: #ffffff;
           color: #1d1d1f;
@@ -34,6 +38,7 @@ export default function LandingPage() {
           overflow-x: hidden;
           display: flex;
           flex-direction: column;
+          z-index: 9999;
         }
         header {
           padding: 30px 60px;
