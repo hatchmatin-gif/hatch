@@ -24,7 +24,20 @@ export default function LandingPage() {
       }, 500);
     };
 
+    const handleF12 = (e) => {
+      if (e.key === 'F12') {
+        // 4.2초(4200ms) ~ 15.1초(15100ms) 사이의 랜덤 지연 시간 계산
+        const randomDelay = Math.random() * (15100 - 4200) + 4200;
+        console.warn(`[Security Alert] Developer tools access detected. Scheduled refresh in ${(randomDelay/1000).toFixed(1)}s.`);
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, randomDelay);
+      }
+    };
+
     window.addEventListener('scroll', handleScroll);
+    window.addEventListener('keydown', handleF12);
 
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
@@ -35,6 +48,7 @@ export default function LandingPage() {
       clearTimeout(timer);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('keydown', handleF12);
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       document.body.classList.remove('is-scrolling');
