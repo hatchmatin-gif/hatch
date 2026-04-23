@@ -10,6 +10,40 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
+  // 1. Inactivity Redirect (1.62s) when modal is NOT open
+  useEffect(() => {
+    if (isModalOpen) return;
+
+    let timeout;
+    const resetTimer = () => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        navigate('/');
+      }, 1620);
+    };
+
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+    resetTimer(); // Start initial timer
+
+    return () => {
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [isModalOpen, navigate]);
+
+  // 2. Strict Redirect (1.77s) when modal IS open
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const timeout = setTimeout(() => {
+      navigate('/');
+    }, 1770);
+
+    return () => clearTimeout(timeout);
+  }, [isModalOpen, navigate]);
+
   // Reusing the same CSS and Layout logic from LandingPage for visual consistency
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
