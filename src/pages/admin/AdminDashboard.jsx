@@ -17,6 +17,38 @@ export default function AdminDashboard() {
   const blurTimeoutRef = useRef(null);
   const countdownIntervalRef = useRef(null);
 
+  const checkAdminRole = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/admin/login');
+        return;
+      }
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (error || !profile) {
+        alert('프로필 정보를 찾을 수 없습니다. 다시 로그인해 주세요.');
+        navigate('/admin/login');
+        return;
+      }
+      if (profile.role !== 'super_admin') {
+        alert(`접근 권한이 없습니다. (현재 권한: ${profile.role})`);
+        navigate('/');
+        return;
+      }
+      setIsAdmin(true);
+    } catch (err) {
+      console.error('Admin check error:', err);
+      navigate('/admin/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       await checkAdminRole();
