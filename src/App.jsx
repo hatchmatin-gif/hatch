@@ -56,8 +56,23 @@ export default function App() {
     });
 
     // 2. 로그인/로그아웃 이벤트 감지
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // SIGNED_IN: 신규 OAuth 로그인 시에만 super_admin을 대시보드로 이동
+    // INITIAL_SESSION: 새 탭에서 기존 세션 복원 시 → 리다이렉트 안 함
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
+
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          if (profile?.role === 'super_admin') {
+            navigate('/admin/dashboard');
+          }
+        } catch (e) { /* silent */ }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -234,27 +249,7 @@ export default function App() {
     return { i, dateStr, meeting, isToday: i === 0 };
   });
 
-  // --- 1) 최고 관리자가 '/'에 있으면 자동으로 관리자 대시보드로 이동 ---
-  // OAuth 콜백 완료 후 Supabase가 '/'에 사용자를 드롭하는 경우를 처리
-  useEffect(() => {
-    if (isSessionLoading) return; // 세션 확인 전엔 절대 실행 안 함
-    if (session && isDesktop) {
-      const checkAdminAndRedirect = async () => {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        // 로그아웃 대신 대시보드로 리다이렉트 (OAuth 콜백 후 '/'에 착지하는 경우 포함)
-        if (profile?.role === 'super_admin' && !location.pathname.startsWith('/admin')) {
-          navigate('/admin/dashboard');
-        }
-      };
-      checkAdminAndRedirect();
-    }
-  }, [session, location.pathname, isDesktop, isSessionLoading]);
-
+  // (super_admin 리다이렉트는 onAuthStateChange SIGNED_IN 이벤트에서 처리)
 
 
   // --- 2) 최고 관리자 숨겨진 라우팅 (모바일 UI 래퍼를 씌우지 않음) ---
