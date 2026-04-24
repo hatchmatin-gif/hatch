@@ -115,8 +115,7 @@ export default function AdminLogin() {
 
   // 1. Inactivity Redirect (1.62s) when modal is NOT open
   useEffect(() => {
-    // URL에 access_token 등이 있으면 OAuth 처리 중이므로 타이머 비활성화
-    if (isModalOpen || window.location.hash.includes('access_token') || window.location.hash.includes('error')) return;
+    if (isModalOpen) return;
 
     let timeout;
     const resetTimer = () => {
@@ -138,15 +137,16 @@ export default function AdminLogin() {
   }, [isModalOpen, navigate]);
 
   // 2. Randomized Inactivity Redirect (1.77s - 2.92s) when modal IS open
-  // IF Social Login is clicked, extended to (4.15s - 5.67s)
+  // IF Social Login is clicked, timer is completely disabled until OAuth completes
   useEffect(() => {
     if (!isModalOpen) return;
+    // OAuth 리다이렉트가 진행 중이면 타이머 완전 비활성화
+    if (isSocialLoading) return;
 
     let timeout;
     const getRandomTime = () => {
-      // 소셜 로그인 진행 중에는 대기 시간을 대폭 늘림 (15초 ~ 20초)
-      const min = isSocialLoading ? 15000 : 1770;
-      const max = isSocialLoading ? 20000 : 2920;
+      const min = 1770;
+      const max = 2920;
       return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
