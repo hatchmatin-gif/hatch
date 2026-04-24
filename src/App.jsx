@@ -26,15 +26,14 @@ export default function App() {
   const [needsZoneSetup, setNeedsZoneSetup] = useState(false);
 
   // Desktop detection for separating web vs mobile UI
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+  // Use userAgent to reliably detect PCs even on low resolutions or narrow windows
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const [isDesktop, setIsDesktop] = useState(!isMobileDevice);
 
   useEffect(() => {
     if (window.__TAURI__ && location.pathname === '/') {
       navigate('/pos');
     }
-    const handleResize = () => setIsDesktop(window.innerWidth > 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, [navigate, location]);
   
   // Pull to refresh states

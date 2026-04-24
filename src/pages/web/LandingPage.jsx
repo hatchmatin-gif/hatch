@@ -1,21 +1,167 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+// Scramble characters for the WURI → 우리 effect
+const SCRAMBLE_CHARS_L = 'ㅇㅜㅎㅏㄴㄱㅡWUwu';
+const SCRAMBLE_CHARS_R = 'ㄹㅣㄷㅁㅂㅅㅈRIri';
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [showConsent, setShowConsent] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [scaleFactor, setScaleFactor] = useState(1);
+  const [videoTextScale, setVideoTextScale] = useState(1);
+  const [wuriLeft, setWuriLeft] = useState('WU');
+  const [wuriRight, setWuriRight] = useState('RI');
+  const [isScramblingL, setIsScramblingL] = useState(false);
+  const [isScramblingR, setIsScramblingR] = useState(false);
+  const [getStartedHover, setGetStartedHover] = useState(false);
+  const [businessHover, setBusinessHover] = useState(false);
+  const animRef = useRef(null);
+  const videoSectionRef = useRef(null);
+  const videoRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
   const triggerRef = useRef(false);
   const keyBufferRef = useRef('');
   const keyBufferTimerRef = useRef(null);
   const SECRET_CODE = 'gocl';
 
+  // WURI → 우리 scramble animation (split WU / RI)
+  useEffect(() => {
+    const scrambleTimer = setTimeout(() => {
+      setIsScramblingL(true);
+      setIsScramblingR(true);
+      
+      // === Left half: WU → 우 (87ms interval) ===
+      let leftStep = 0;
+      const leftInterval = setInterval(() => {
+        leftStep++;
+        if (leftStep <= 5) {
+          // Scramble phase
+          const r1 = SCRAMBLE_CHARS_L[Math.floor(Math.random() * SCRAMBLE_CHARS_L.length)];
+          const r2 = SCRAMBLE_CHARS_L[Math.floor(Math.random() * SCRAMBLE_CHARS_L.length)];
+          setWuriLeft(r1 + r2);
+        } else if (leftStep === 6) {
+          setWuriLeft('ㅇㅜ');
+        } else {
+          setWuriLeft('우');
+          setIsScramblingL(false);
+          clearInterval(leftInterval);
+        }
+      }, 97);
+
+      // === Right half: RI → 리 (90ms interval, with pause) ===
+      let rightStep = 0;
+      let paused = false;
+      const rightInterval = setInterval(() => {
+        rightStep++;
+        if (rightStep <= 5) {
+          // Scramble phase
+          const r1 = SCRAMBLE_CHARS_R[Math.floor(Math.random() * SCRAMBLE_CHARS_R.length)];
+          const r2 = SCRAMBLE_CHARS_R[Math.floor(Math.random() * SCRAMBLE_CHARS_R.length)];
+          setWuriRight(r1 + r2);
+        } else if (rightStep === 6) {
+          // Show ㄹ then pause
+          setWuriRight('ㄹ');
+          if (!paused) {
+            paused = true;
+            clearInterval(rightInterval);
+            setIsScramblingR(false); // Stop shaking while waiting for 'ㅣ'
+            
+            // Deliberate pause before final assembly
+            setTimeout(() => {
+              setWuriRight('ㄹㅣ');
+              setTimeout(() => {
+                setWuriRight('리');
+              }, 120);
+            }, 340);
+          }
+        }
+      }, 120);
+
+      return () => {
+        clearInterval(leftInterval);
+        clearInterval(rightInterval);
+      };
+    }, 1200); // 1.2 seconds after mount
+
+    return () => clearTimeout(scrambleTimer);
+  }, []);
+
   useEffect(() => {
     document.body.style.overflow = 'auto';
     document.documentElement.style.overflow = 'auto';
 
     const handleScroll = () => {
+      // 1. Video Scroll Logic (Narrow strip passing by)
+      if (videoSectionRef.current && videoRef.current) {
+        const vRect = videoSectionRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        
+        // Section enters when vRect.top === windowHeight
+        // Section leaves when vRect.bottom === 0
+        const totalScrollDistance = windowHeight + vRect.height;
+        const scrolledPast = windowHeight - vRect.top;
+        
+        let vProgress = scrolledPast / totalScrollDistance;
+        
+        if (vProgress < 0) vProgress = 0;
+        if (vProgress > 1) vProgress = 1;
+        
+        // Ensure video is loaded and has a duration
+        if (!isNaN(videoRef.current.duration) && videoRef.current.duration > 0) {
+          // Smoothly scrub the video to match the scroll progress
+          videoRef.current.currentTime = videoRef.current.duration * vProgress;
+        }
+
+        // Text scale logic: max scale when vRect.top <= 0
+        let tScale = 1;
+        const MAX_TEXT_SCALE = 4; // Max scale of 4
+        if (vRect.top > 0) {
+          // As the section comes up from the bottom, grow the text
+          let tProgress = (windowHeight - vRect.top) / windowHeight;
+          if (tProgress < 0) tProgress = 0;
+          if (tProgress > 1) tProgress = 1;
+          tScale = 1 + Math.pow(tProgress, 3) * (MAX_TEXT_SCALE - 1);
+        } else {
+          // Once it hits the top (or scrolls past it), lock at max scale
+          tScale = MAX_TEXT_SCALE;
+        }
+        setVideoTextScale(tScale);
+      }
+
+      // 2. Calculate scroll scale for the typography animation
+      if (animRef.current) {
+        const rect = animRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        // The text is vertically centered in the section.
+        const textY = rect.top + (rect.height / 2);
+        
+        // targetY is where we want the text to be normal size (slightly above center)
+        const targetY = windowHeight * 0.35;
+        const range = windowHeight - targetY;
+        
+        // ratio goes from 1 (text is at bottom of screen) to 0 (text is exactly at targetY)
+        let ratio = (textY - targetY) / range;
+        
+        let newScale = 1;
+        
+        if (ratio > 1) {
+          newScale = 41; // Max stretch when below screen
+        } else if (ratio >= 0) {
+          // Cubic curve for a snappy "chewy" elastic feeling
+          newScale = 1 + Math.pow(ratio, 3) * 40; 
+        } else if (ratio > -0.5) {
+          // Bounce effect: squish up to 0.5 and return to 1
+          // Parabola: vertex at ratio = -0.25, scale = 0.5
+          newScale = 8 * Math.pow(ratio + 0.25, 2) + 0.5;
+        } else {
+          newScale = 1; // Past the bounce, stay normal
+        }
+        
+        setScaleFactor(newScale);
+      }
+
       // 스크롤 시작 시 상태 변경
       setIsScrolling(true);
       document.body.classList.add('is-scrolling');
@@ -97,6 +243,7 @@ export default function LandingPage() {
           --wuri-orange: #FF6A00;
           --wuri-black: #1d1d1f;
           --wuri-gray: #86868b;
+          --neu-bg: #e8e8e8;
         }
         
         /* Premium Custom Scrollbar */
@@ -127,20 +274,16 @@ export default function LandingPage() {
           top: 0; left: 0; width: 100vw;
           min-height: 100vh;
           background-color: #ffffff;
-          background-image: 
-            radial-gradient(circle at 0% 0%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
-            radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.04) 0%, transparent 50%),
-            radial-gradient(circle at 100% 100%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
-            radial-gradient(circle at 0% 100%, rgba(255, 184, 0, 0.04) 0%, transparent 50%);
           color: var(--wuri-black);
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif;
-          overflow-x: hidden;
+          overflow-x: clip;
           z-index: 9999;
         }
         
         header {
           padding: clamp(20px, 4vw, 40px) clamp(30px, 6vw, 100px);
           display: flex; justify-content: flex-start;
+          background: #fff;
         }
         .logo { font-size: clamp(1.5rem, 2vw, 2rem); font-weight: 900; letter-spacing: -1.5px; }
 
@@ -148,6 +291,7 @@ export default function LandingPage() {
           padding: clamp(60px, 10vw, 120px) 20px;
           text-align: center;
           display: flex; flex-direction: column; align-items: center;
+          background: #fff;
         }
         .hero-title {
           font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05;
@@ -163,16 +307,154 @@ export default function LandingPage() {
           line-height: 1.6; margin-bottom: clamp(40px, 5vw, 60px); font-weight: 500; max-width: 900px;
         }
         .hero-btns { display: flex; gap: 20px; }
-        .primary-btn {
-          padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
-          font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px; border: none;
-          background: #111; color: #fff; cursor: pointer;
-          transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+
+        /* Neumorphism Platform Badge (no hover on landing page) */
+        .neu-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 22px;
+          background: #f0f0f0;
+          border-radius: 100px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          margin-bottom: 32px;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          color: #555;
+          user-select: none;
+          border: none;
+          box-shadow: 
+            6px 6px 12px rgba(0, 0, 0, 0.08),
+            -6px -6px 12px rgba(255, 255, 255, 0.9);
         }
-        .secondary-btn {
-          padding: clamp(16px, 2vw, 22px) clamp(40px, 5vw, 64px);
-          font-size: clamp(1rem, 1.2vw, 1.2rem); font-weight: 800; border-radius: 100px;
-          border: 1px solid #eee; background: #fff; color: #111; cursor: pointer; transition: 0.3s;
+
+        /* Neumorphism Buttons */
+        .neu-btn-primary {
+          padding: clamp(13px, 1.6vw, 18px) 0;
+          width: 176px;
+          font-size: clamp(1rem, 1.2vw, 1.2rem);
+          font-weight: 800;
+          border-radius: 100px;
+          border: none;
+          background: #f0f0f0;
+          color: #111;
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          box-shadow:
+            8px 8px 16px rgba(0, 0, 0, 0.1),
+            -8px -8px 16px rgba(255, 255, 255, 0.95);
+          position: relative;
+          overflow: hidden;
+          text-align: center;
+        }
+        .neu-btn-primary:hover {
+          box-shadow:
+            inset 4px 4px 8px rgba(0, 0, 0, 0.08),
+            inset -4px -4px 8px rgba(255, 255, 255, 0.8);
+          color: #FF6A00;
+        }
+        .neu-btn-primary:active {
+          box-shadow:
+            inset 6px 6px 12px rgba(0, 0, 0, 0.12),
+            inset -6px -6px 12px rgba(255, 255, 255, 0.7);
+        }
+
+        .neu-btn-secondary {
+          padding: clamp(13px, 1.6vw, 18px) 0;
+          width: 176px;
+          font-size: clamp(1rem, 1.2vw, 1.2rem);
+          font-weight: 800;
+          border-radius: 100px;
+          border: none;
+          background: #f0f0f0;
+          color: #111;
+          cursor: pointer;
+          transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          box-shadow:
+            8px 8px 16px rgba(0, 0, 0, 0.1),
+            -8px -8px 16px rgba(255, 255, 255, 0.95);
+          position: relative;
+          overflow: hidden;
+          text-align: center;
+        }
+        .neu-btn-secondary:hover {
+          background: linear-gradient(135deg, #FF6A00, #FF8C00);
+          color: #fff;
+          box-shadow:
+            inset 4px 4px 8px rgba(0, 0, 0, 0.15),
+            inset -4px -4px 8px rgba(255, 160, 50, 0.3);
+        }
+        .neu-btn-secondary:active {
+          box-shadow:
+            inset 6px 6px 12px rgba(0, 0, 0, 0.2),
+            inset -6px -6px 12px rgba(255, 160, 50, 0.2);
+        }
+
+        /* WURI scramble animation (removed shaking glitch) */
+        .wuri-scramble {
+          display: inline-block;
+          min-width: 1em;
+          transition: opacity 0.1s;
+        }
+
+        /* Scroll Video Section Style (Narrow Strip) */
+        .video-scroll-section {
+          height: 32vh; /* Narrow space between sections */
+          position: relative;
+          background: #000;
+          overflow: hidden;
+          margin-top: clamp(150px, 20vw, 300px);
+          margin-bottom: clamp(20px, 4vw, 50px);
+        }
+        .scroll-video {
+          position: absolute;
+          top: 0; left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.6; /* Slightly dimmed for text */
+        }
+        .video-overlay-text {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%, -50%);
+          z-index: 10;
+          color: #fff;
+          font-size: clamp(1.5rem, 3vw, 2.5rem);
+          font-weight: 900;
+          text-align: center;
+          line-height: 1.3;
+          letter-spacing: -0.02em;
+          text-shadow: 0 4px 15px rgba(0,0,0,0.6);
+          width: 100%;
+          will-change: transform;
+          transition: transform 0.1s ease-out;
+          white-space: nowrap; /* Keep text structure while zooming */
+        }
+
+        /* Scroll Animation Section Style */
+        .animation-section {
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #fff;
+          border-top: 1px solid #eee;
+          overflow: hidden; /* Prevent huge stretched text from creating scrollbars */
+        }
+        .stretch-text {
+          font-size: clamp(4rem, 15vw, 12rem);
+          font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+          font-weight: 900;
+          color: #111;
+          white-space: nowrap;
+          text-transform: uppercase;
+          line-height: 1.2;
+          padding-top: 0.1em;
+          letter-spacing: -0.05em;
+          transition: transform 0.1s ease-out;
+          will-change: transform;
         }
 
         /* Smart Moving Consent Banner */
@@ -213,22 +495,16 @@ export default function LandingPage() {
       </header>
 
       <section className="hero-section">
-        {/* Decorative Platform Badge */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: '8px',
-          padding: '8px 16px',
-          background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)',
-          borderRadius: '100px', fontWeight: '600', fontSize: '0.85rem',
-          marginBottom: '32px', letterSpacing: '1px', textTransform: 'uppercase',
-          color: '#555', userSelect: 'none',
-        }}>
+        {/* Neumorphism Platform Badge */}
+        <div className="neu-badge">
           <span style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#FF6A00', boxShadow:'0 0 10px rgba(255,106,0,0.5)', display:'inline-block' }}></span>
           WURI Platform 2.0
         </div>
 
-        <h1 className="hero-title">커피의 모든 순간을
+        <h1 className="hero-title">
+          <span className={`wuri-scramble ${isScramblingL ? 'scrambling' : ''}`}>{wuriLeft}</span><span className={`wuri-scramble ${isScramblingR ? 'scrambling' : ''}`}>{wuriRight}</span>의 모든 순간을
           <span className="gradient-text" style={{ display: 'block' }}>
-            {'하나로 연결'.split('').map((char, i) => (
+            {'커피로 연결'.split('').map((char, i) => (
               <span key={i} style={{ display: 'inline' }}>{char}</span>
             ))}
             <span
@@ -246,25 +522,75 @@ export default function LandingPage() {
             <span style={{ display: 'inline' }}>다</span>
           </span>
         </h1>
-        <p className="hero-desc">B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 플랫폼.</p>
+        <p className="hero-desc">WURI와 함께하는 모든 카페를 위한 스마트한 커피 플랫폼</p>
         <div className="hero-btns">
-          <button className="primary-btn" onClick={() => navigate('/app')}>Get Started</button>
-          <button className="secondary-btn">Request Demo</button>
+          <button 
+            className="neu-btn-primary" 
+            onClick={() => navigate('/app')}
+            onMouseEnter={() => setGetStartedHover(true)}
+            onMouseLeave={() => setGetStartedHover(false)}
+          >
+            {getStartedHover ? '우리와 함께' : 'Get Started'}
+          </button>
+          <button 
+            className="neu-btn-secondary"
+            onMouseEnter={() => setBusinessHover(true)}
+            onMouseLeave={() => setBusinessHover(false)}
+          >
+            {businessHover ? '사업자전용' : 'Business'}
+          </button>
         </div>
       </section>
 
-      <section className="feature-section">
-        <div className="feature-card">
-          <h3 className="feat-title">🏢 B2B 원두 발주</h3>
-          <p className="feat-desc">전국의 로스터리와 카페를 실시간으로 연결합니다.</p>
+      {/* 2. Scroll-Linked Video Section (Narrow Strip) */}
+      <section className="video-scroll-section" ref={videoSectionRef}>
+        {/* Local video file for scroll scrubbing. YouTube URLs do not support frame-precise scrubbing. */}
+        <video 
+          ref={videoRef}
+          src="/hatch6.mp4" 
+          muted 
+          playsInline
+          preload="auto"
+          className="scroll-video"
+        />
+        <div 
+          className="video-overlay-text"
+          style={{ transform: `translate(-50%, -50%) scale(${videoTextScale})` }}
+        >
+          한 방울에 담긴 예술<br/>최상의 커피를 경험하다
         </div>
-        <div className="feature-card">
-          <h3 className="feat-title">🖥️ 통합 POS 시스템</h3>
-          <p className="feat-desc">어떤 기기에서도 작동하는 클라우드 POS.</p>
-        </div>
-        <div className="feature-card">
-          <h3 className="feat-title">📱 스마트 오더</h3>
-          <p className="feat-desc">줄 서지 않는 편리한 주문 경험.</p>
+      </section>
+
+      {/* 3. Typography Animation Section */}
+      <section className="animation-section" ref={animRef}>
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          {/* Top Half (Pristine) */}
+          <div 
+            className="stretch-text" 
+            style={{ 
+              position: 'absolute',
+              top: 0, left: 0, width: '100%',
+              clipPath: 'polygon(0 0, 100% 0, 100% 28%, 0 28%)',
+              WebkitClipPath: 'polygon(0 0, 100% 0, 100% 28%, 0 28%)',
+              zIndex: 2
+            }}
+          >
+            이밤의끝을잡고
+          </div>
+
+          {/* Bottom Half (Stretches) */}
+          <div 
+            className="stretch-text" 
+            style={{ 
+              transform: `scaleY(${scaleFactor})`,
+              transformOrigin: '50% 28%',
+              clipPath: 'polygon(0 28%, 100% 28%, 100% 100%, 0 100%)',
+              WebkitClipPath: 'polygon(0 28%, 100% 28%, 100% 100%, 0 100%)',
+              zIndex: 1
+            }}
+          >
+            이밤의끝을잡고
+          </div>
         </div>
       </section>
 

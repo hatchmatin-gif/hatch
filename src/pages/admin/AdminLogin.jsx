@@ -378,18 +378,19 @@ export default function AdminLogin() {
 
         <section style={{ position:'relative', zIndex:1, minHeight: '100vh', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', padding: '120px 5% 60px', textAlign: 'center' }}>
           <div className="hide-animate">
-            {/* Clickable Platform Tag */}
+            {/* Clickable Neumorphism Platform Tag */}
             <div 
               onClick={() => setIsModalOpen(true)}
               style={{ 
-                display: 'inline-flex', alignItems:'center', gap:'8px', padding: '8px 16px', 
-                background: 'rgba(0,0,0,0.03)', border:'1px solid rgba(0,0,0,0.05)', 
-                borderRadius: '100px', fontWeight: '600', fontSize:'0.85rem', 
+                display: 'inline-flex', alignItems:'center', gap:'8px', padding: '10px 22px', 
+                background: '#f0f0f0', border:'none', 
+                borderRadius: '100px', fontWeight: '700', fontSize:'0.85rem', 
                 marginBottom:'32px', letterSpacing:'1px', textTransform:'uppercase', 
-                color:'#555', cursor:'pointer', transition:'all 0.3s' 
+                color:'#555', cursor:'pointer', transition:'all 0.3s',
+                boxShadow: '6px 6px 12px rgba(0, 0, 0, 0.08), -6px -6px 12px rgba(255, 255, 255, 0.9)'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
+              onMouseEnter={(e) => e.currentTarget.style.boxShadow = 'inset 3px 3px 6px rgba(0,0,0,0.06), inset -3px -3px 6px rgba(255,255,255,0.7), 2px 2px 5px rgba(0,0,0,0.08), -2px -2px 5px rgba(255,255,255,0.9)'}
+              onMouseLeave={(e) => e.currentTarget.style.boxShadow = '6px 6px 12px rgba(0, 0, 0, 0.08), -6px -6px 12px rgba(255, 255, 255, 0.9)'}
             >
               <span style={{width:'8px', height:'8px', borderRadius:'50%', background:'#FF6A00', boxShadow:'0 0 10px rgba(255,106,0,0.5)'}}></span>
               WURI Platform 2.0
