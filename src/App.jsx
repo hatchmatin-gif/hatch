@@ -235,8 +235,9 @@ export default function App() {
   });
 
   // --- 1) 최고 관리자가 관리자 페이지('/admin/*')를 벗어나면 자동 로그아웃 ---
-  // 보안을 위해 대시보드 이탈 시 세션을 종료합니다.
+  // 세션 로딩 중에는 실행하지 않아 OAuth 콜백 시 오작동 방지
   useEffect(() => {
+    if (isSessionLoading) return; // 세션 확인 전엔 절대 실행 안 함
     if (session && isDesktop) {
       const checkAdminAndLogout = async () => {
         const { data: profile } = await supabase
@@ -251,11 +252,8 @@ export default function App() {
       };
       checkAdminAndLogout();
     }
-  }, [session, location.pathname, isDesktop]);
+  }, [session, location.pathname, isDesktop, isSessionLoading]);
 
-  if (isSessionLoading) {
-    return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
-  }
 
   // --- 2) 최고 관리자 숨겨진 라우팅 (모바일 UI 래퍼를 씌우지 않음) ---
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -269,13 +267,19 @@ export default function App() {
   }
 
   // --- 3) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
-  // 로그인 세션이 이미 있거나 OAuth 리다이렉트 중일 때는 랜딩 페이지가 가로채지 않도록 함
-  const hasAuthParams = window.location.href.includes('code=') || 
-                        window.location.href.includes('access_token=') || 
-                        window.location.href.includes('refresh_token=');
+  // hash 기반 라우터 환경(Vercel)에서 OAuth 토큰은 hash fragment에 포함될 수 있으므로 함께 확인
+  const fullUrl = window.location.href;
+  const hasAuthParams = fullUrl.includes('code=') || 
+                        fullUrl.includes('access_token=') || 
+                        fullUrl.includes('refresh_token=');
+  
+  // 세션 로딩 중이거나 OAuth 파라미터가 있으면 랜딩 페이지 또는 모바일 화면 노출 차단
+  if (isSessionLoading || hasAuthParams) {
+    return <div style={{width:'100%', height:'100dvh', backgroundColor: '#fff', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
+  }
   
   // 로그인된 세션이 있으면 랜딩 페이지를 보여주지 않음
-  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !hasAuthParams && !session;
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !session;
   
   if (isWebLanding) {
     return <LandingPage />;
