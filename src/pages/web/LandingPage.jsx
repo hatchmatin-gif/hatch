@@ -210,7 +210,7 @@ export default function LandingPage() {
       <section className="hero-section">
         <h1 className="hero-title">커피의 모든 순간을
           <span className="gradient-text" style={{ display: 'block' }}>
-            {'하나로 연결하'.split('').map((char, i) => (
+            {'하나로 연결'.split('').map((char, i) => (
               <span key={i} style={{ display: 'inline' }}>{char}</span>
             ))}
             <span
@@ -224,7 +224,8 @@ export default function LandingPage() {
                   keyBufferRef.current = '';
                 }, 5000);
               }}
-            >다</span>
+            >하</span>
+            <span style={{ display: 'inline' }}>다</span>
           </span>
         </h1>
         <p className="hero-desc">B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 플랫폼.</p>
