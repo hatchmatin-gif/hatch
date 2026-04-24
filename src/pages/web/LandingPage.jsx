@@ -208,6 +208,19 @@ export default function LandingPage() {
       </header>
 
       <section className="hero-section">
+        {/* Decorative Platform Badge */}
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: '8px',
+          padding: '8px 16px',
+          background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.05)',
+          borderRadius: '100px', fontWeight: '600', fontSize: '0.85rem',
+          marginBottom: '32px', letterSpacing: '1px', textTransform: 'uppercase',
+          color: '#555', userSelect: 'none',
+        }}>
+          <span style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#FF6A00', boxShadow:'0 0 10px rgba(255,106,0,0.5)', display:'inline-block' }}></span>
+          WURI Platform 2.0
+        </div>
+
         <h1 className="hero-title">커피의 모든 순간을
           <span className="gradient-text" style={{ display: 'block' }}>
             {'하나로 연결'.split('').map((char, i) => (
