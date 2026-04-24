@@ -235,25 +235,24 @@ export default function App() {
     return { i, dateStr, meeting, isToday: i === 0 };
   });
 
-  // 로딩 화면
-  // --- 1) 관리자가 루트('/')로 들어왔을 때 대시보드로 자동 리다이렉트 ---
-  // (Hook은 반드시 최상단에 위치해야 합니다)
+  // --- 1) 최고 관리자가 관리자 페이지('/admin/*')를 벗어나면 자동 로그아웃 ---
+  // 보안을 위해 대시보드 이탈 시 세션을 종료합니다.
   useEffect(() => {
-    if (session && location.pathname === '/' && isDesktop) {
-      const checkAdminAndRedirect = async () => {
+    if (session && isDesktop) {
+      const checkAdminAndLogout = async () => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', session.user.id)
           .single();
         
-        if (profile?.role === 'super_admin') {
-          navigate('/admin/dashboard');
+        if (profile?.role === 'super_admin' && !location.pathname.startsWith('/admin')) {
+          await supabase.auth.signOut();
         }
       };
-      checkAdminAndRedirect();
+      checkAdminAndLogout();
     }
-  }, [session, location.pathname, isDesktop, navigate]);
+  }, [session, location.pathname, isDesktop]);
 
   if (isSessionLoading) {
     return <div style={{width:'100%', height:'100dvh', backgroundColor: '#000', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
