@@ -126,7 +126,12 @@ export default function LandingPage() {
           position: absolute;
           top: 0; left: 0; width: 100vw;
           min-height: 100vh;
-          background: #ffffff;
+          background-color: #ffffff;
+          background-image: 
+            radial-gradient(circle at 0% 0%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 0% 100%, rgba(255, 184, 0, 0.04) 0%, transparent 50%);
           color: var(--wuri-black);
           font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Pretendard", sans-serif;
           overflow-x: hidden;
@@ -191,7 +196,7 @@ export default function LandingPage() {
         .btn-agree { background: #111; color: #fff; border: none; padding: 10px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
         .btn-deny { background: transparent; color: #aaa; border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
         
-        .feature-section { padding: 100px 10%; background: #f9f9f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
+        .feature-section { padding: 100px 10%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; }
         .feature-card { padding: 48px; background: #fff; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: 0.3s; }
         .feature-card:hover { transform: translateY(-10px); }
         .feat-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; }

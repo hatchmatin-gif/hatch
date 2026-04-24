@@ -237,7 +237,12 @@ export default function AdminLogin() {
         * { box-sizing: border-box; }
         .landing-wrapper {
           font-family: 'Inter', 'Noto Sans KR', sans-serif;
-          background-color: #FFFFFF;
+          background-color: #ffffff;
+          background-image: 
+            radial-gradient(circle at 0% 0%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+            radial-gradient(circle at 0% 100%, rgba(255, 184, 0, 0.04) 0%, transparent 50%);
           color: #111111;
           width: 100vw;
           min-height: 100vh;

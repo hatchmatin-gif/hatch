@@ -156,7 +156,17 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#F8F9FA', color: '#111', fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ 
+      display: 'flex', height: '100vh', 
+      backgroundColor: '#ffffff',
+      backgroundImage: `
+        radial-gradient(circle at 0% 0%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(255, 106, 0, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 0% 100%, rgba(255, 184, 0, 0.04) 0%, transparent 50%)
+      `,
+      color: '#111', fontFamily: "'Inter', sans-serif" 
+    }}>
       <style>{`
         .sidebar-item { padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px; color: #666; font-weight: 500; }
         .sidebar-item.active { background: #111; color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
