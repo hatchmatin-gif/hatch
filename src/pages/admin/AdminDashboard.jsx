@@ -95,27 +95,37 @@ export default function AdminDashboard() {
 
       const { os, device } = getDeviceInfo();
       const { lat, lng } = await getGPS();
-      
-      // IP 및 지역 정보 (IP-API 활용)
-      const ipRes = await fetch('http://ip-api.com/json/');
-      const ipData = await ipRes.json();
 
-      await supabase.from('audit_logs').insert([{
+      // IP 및 지역 정보 (HTTPS API 사용 - Mixed Content 방지)
+      let ipAddress = null, locationName = null, ipLat = null, ipLon = null;
+      try {
+        const ipRes = await fetch('https://ipapi.co/json/');
+        const ipData = await ipRes.json();
+        ipAddress = ipData.ip;
+        locationName = `${ipData.city || ''}, ${ipData.country_name || ''}`.trim().replace(/^,\s*/, '');
+        ipLat = ipData.latitude;
+        ipLon = ipData.longitude;
+      } catch (ipErr) {
+        console.warn('IP lookup failed (non-critical):', ipErr);
+      }
+
+      const { error } = await supabase.from('audit_logs').insert([{
         user_id: session.user.id,
         email: session.user.email,
         event_type: eventType,
-        ip_address: ipData.query,
-        location_name: `${ipData.city}, ${ipData.country}`,
+        ip_address: ipAddress,
+        location_name: locationName,
         user_agent: navigator.userAgent,
         os: os,
         device: device,
-        latitude: lat || ipData.lat,
-        longitude: lng || ipData.lon,
+        latitude: lat || ipLat,
+        longitude: lng || ipLon,
         status: status
       }]);
-      
-      fetchSecurityLogs(); // 로그 새로고침
-    } catch (err) { console.error("Audit log failed:", err); }
+
+      if (error) console.error('Audit insert error:', error);
+      else fetchSecurityLogs();
+    } catch (err) { console.error('Audit log failed:', err); }
   };
 
   const fetchSecurityLogs = async () => {
