@@ -53,8 +53,8 @@ export default function AdminDashboard() {
     const init = async () => {
       await checkAdminRole();
       await fetchRealUsage();
-      await fetchSecurityLogs();
-      await logAuditEvent('DASHBOARD_ACCESS', 'SUCCESS');
+      await logAuditEvent('DASHBOARD_ACCESS', 'SUCCESS'); // 먼저 기록
+      await fetchSecurityLogs(); // 그 다음 조회 (방금 기록 포함)
     };
     init();
   }, []);
