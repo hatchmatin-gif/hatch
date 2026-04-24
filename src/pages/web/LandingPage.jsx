@@ -6,6 +6,10 @@ export default function LandingPage() {
   const [showConsent, setShowConsent] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef(null);
+  const triggerRef = useRef(false);
+  const keyBufferRef = useRef('');
+  const keyBufferTimerRef = useRef(null);
+  const SECRET_CODE = 'gocl';
 
   useEffect(() => {
     document.body.style.overflow = 'auto';
@@ -26,18 +30,37 @@ export default function LandingPage() {
 
     const handleF12 = (e) => {
       if (e.key === 'F12') {
-        // 4.2초(4200ms) ~ 15.1초(15100ms) 사이의 랜덤 지연 시간 계산
         const randomDelay = Math.random() * (15100 - 4200) + 4200;
         console.warn(`[Security Alert] Developer tools access detected. Scheduled refresh in ${(randomDelay/1000).toFixed(1)}s.`);
-        
-        setTimeout(() => {
-          window.location.reload();
-        }, randomDelay);
+        setTimeout(() => { window.location.reload(); }, randomDelay);
+      }
+    };
+
+    const handleSecretKey = (e) => {
+      if (!triggerRef.current) return;
+      // 버퍼에 키 추가 (영문 소문자만)
+      const key = e.key.toLowerCase();
+      if (key.length === 1 && /[a-z]/.test(key)) {
+        keyBufferRef.current += key;
+        // 시크릿 코드 끝부분과 매칭
+        if (keyBufferRef.current.endsWith(SECRET_CODE)) {
+          keyBufferRef.current = '';
+          triggerRef.current = false;
+          navigate('/admin/login');
+          return;
+        }
+        // 5초 후 버퍼 자동 초기화
+        if (keyBufferTimerRef.current) clearTimeout(keyBufferTimerRef.current);
+        keyBufferTimerRef.current = setTimeout(() => {
+          keyBufferRef.current = '';
+          triggerRef.current = false;
+        }, 5000);
       }
     };
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('keydown', handleF12);
+    window.addEventListener('keydown', handleSecretKey);
 
     const timer = setTimeout(() => {
       const isAgreed = localStorage.getItem('wuri-consent');
@@ -47,8 +70,10 @@ export default function LandingPage() {
     return () => {
       clearTimeout(timer);
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      if (keyBufferTimerRef.current) clearTimeout(keyBufferTimerRef.current);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('keydown', handleF12);
+      window.removeEventListener('keydown', handleSecretKey);
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
       document.body.classList.remove('is-scrolling');
@@ -179,11 +204,29 @@ export default function LandingPage() {
       `}</style>
 
       <header>
-        <div className="logo">WURI.</div>
+        <div className="logo" style={{ userSelect: 'none' }}>WURI.</div>
       </header>
 
       <section className="hero-section">
-        <h1 className="hero-title">커피의 모든 순간을 <span className="gradient-text">하나로 연결하다</span></h1>
+        <h1 className="hero-title">커피의 모든 순간을
+          <span className="gradient-text" style={{ display: 'block' }}>
+            {'하나로 연결하'.split('').map((char, i) => (
+              <span key={i} style={{ display: 'inline' }}>{char}</span>
+            ))}
+            <span
+              style={{ display: 'inline', cursor: 'default' }}
+              onClick={() => {
+                triggerRef.current = true;
+                keyBufferRef.current = '';
+                if (keyBufferTimerRef.current) clearTimeout(keyBufferTimerRef.current);
+                keyBufferTimerRef.current = setTimeout(() => {
+                  triggerRef.current = false;
+                  keyBufferRef.current = '';
+                }, 5000);
+              }}
+            >다</span>
+          </span>
+        </h1>
         <p className="hero-desc">B2B 원두 발주부터 매장 POS 연동, 그리고 B2C 스마트 오더까지. 압도적으로 깨끗하고 우아한 플랫폼.</p>
         <div className="hero-btns">
           <button className="primary-btn" onClick={() => navigate('/app')}>Get Started</button>
