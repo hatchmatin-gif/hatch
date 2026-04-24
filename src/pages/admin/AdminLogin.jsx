@@ -11,6 +11,108 @@ export default function AdminLogin() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [isSocialLoading, setIsSocialLoading] = useState(false);
 
+  // 봇 감지용 refs
+  const mousePosRef = useRef([]);
+  const straightLineCountRef = useRef(0);
+  const keyTimingsRef = useRef([]);
+  const botCooldownRef = useRef({}); // 중복 로그 방지
+
+  // 의심 이벤트를 audit_logs에 기록
+  const logSuspiciousActivity = async (eventType, detail) => {
+    const now = Date.now();
+    if (botCooldownRef.current[eventType] && now - botCooldownRef.current[eventType] < 10000) return; // 10초 쿨다운
+    botCooldownRef.current[eventType] = now;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.from('audit_logs').insert([{
+        user_id: session?.user?.id || null,
+        email: session?.user?.email || '(미로그인)',
+        event_type: eventType,
+        user_agent: navigator.userAgent,
+        status: 'SUSPICIOUS',
+        location_name: detail,
+      }]);
+      console.warn(`[BOT DETECTION] ${eventType}:`, detail);
+    } catch (e) { /* silent */ }
+  };
+
+  // 봇 감지 useEffect
+  useEffect(() => {
+    // 1. 마우스 순간이동 & 완벽한 직선 감지
+    const handleMouseMove = (e) => {
+      const pos = { x: e.clientX, y: e.clientY, t: Date.now() };
+      const arr = mousePosRef.current;
+      arr.push(pos);
+      if (arr.length > 30) arr.shift();
+
+      if (arr.length >= 2) {
+        const prev = arr[arr.length - 2];
+        const dist = Math.hypot(pos.x - prev.x, pos.y - prev.y);
+        const dt = pos.t - prev.t;
+
+        // 순간이동: 100ms 이내에 400px 이상 이동
+        if (dist > 400 && dt < 100) {
+          logSuspiciousActivity('BOT_MOUSE_TELEPORT', `${Math.round(dist)}px in ${dt}ms`);
+        }
+      }
+
+      // 완벽한 직선: 최근 5개 점이 거의 완벽히 일직선
+      if (arr.length >= 5) {
+        const pts = arr.slice(-5);
+        const isCollinear = pts.every((p, i) => {
+          if (i < 2) return true;
+          const [a, b, c] = [pts[i - 2], pts[i - 1], p];
+          const cross = Math.abs((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x));
+          return cross < 2; // 픽셀 오차 2 이내 = 완벽한 직선
+        });
+        if (isCollinear) {
+          straightLineCountRef.current++;
+          if (straightLineCountRef.current >= 2) {
+            logSuspiciousActivity('BOT_STRAIGHT_LINE_MOUSE', `${straightLineCountRef.current}회 연속 직선 이동`);
+          }
+        } else {
+          straightLineCountRef.current = 0;
+        }
+      }
+    };
+
+    // 2. 키보드 타이밍 균일성 감지
+    const handleKeyDown = (e) => {
+      const now = Date.now();
+      const timings = keyTimingsRef.current;
+      timings.push(now);
+      if (timings.length > 12) timings.shift();
+
+      if (timings.length >= 6) {
+        const intervals = timings.slice(1).map((t, i) => t - timings[i]);
+        const mean = intervals.reduce((a, b) => a + b) / intervals.length;
+        const stdDev = Math.sqrt(intervals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / intervals.length);
+
+        // 표준편차 8ms 미만 + 평균 간격 200ms 이하 → 봇 의심
+        if (stdDev < 8 && mean < 200) {
+          logSuspiciousActivity('BOT_UNIFORM_KEYSTROKE', `평균간격 ${Math.round(mean)}ms, 편차 ${stdDev.toFixed(1)}ms`);
+        }
+      }
+    };
+
+    // 3. 복사-붙여넣기 감지
+    const handlePaste = (e) => {
+      const pastedLength = e.clipboardData?.getData('text')?.length || 0;
+      logSuspiciousActivity('BOT_PASTE_DETECTED', `붙여넣기 ${pastedLength}자`);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('paste', handlePaste);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, []);
+
   // 1. Inactivity Redirect (1.62s) when modal is NOT open
   useEffect(() => {
     if (isModalOpen) return;
