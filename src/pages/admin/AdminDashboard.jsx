@@ -139,7 +139,8 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = async () => {
-    await logAuditEvent('LOGOUT', 'SUCCESS');
+    // 로그 기록은 백그라운드에서 진행
+    logAuditEvent('LOGOUT', 'SUCCESS');
     await supabase.auth.signOut();
     navigate('/');
   };
