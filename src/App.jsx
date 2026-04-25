@@ -276,8 +276,9 @@ export default function App() {
     return <div style={{width:'100%', height:'100dvh', backgroundColor: '#fff', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
   }
   
-  // 로그인된 세션이 있으면 랜딩 페이지를 보여주지 않음
-  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__ && !session;
+  // PC 데스크톱에서 '/'는 항상 랜딩 페이지 (세션 유무 무관)
+  // 어드민은 SIGNED_IN 이벤트로 /admin/dashboard로 자동 이동됨
+  const isWebLanding = isDesktop && location.pathname === '/' && !window.__TAURI__;
   
   if (isWebLanding) {
     return <LandingPage />;
