@@ -17,6 +17,7 @@ export default function App() {
   const location = useLocation();
   const [session, setSession] = useState(null);
   const [isSessionLoading, setIsSessionLoading] = useState(true);
+  const [loadingTimeout, setLoadingTimeout] = useState(false); // 최대 3초 로딩 보호
 
   const [profile, setProfile] = useState(null);
   const [meetings, setMeetings] = useState([]);
@@ -47,6 +48,12 @@ export default function App() {
     transition: pulling ? 'none' : 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
     filter: selectedMeeting ? 'blur(15px)' : 'none'
   };
+
+  // 로딩 타임아웃: 최대 3초 후 강제 해제 (네트워크 지연 등 대비)
+  useEffect(() => {
+    const t = setTimeout(() => setLoadingTimeout(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     // 1. 현재 세션 로드 (로그인 되어있는지 체크)
@@ -263,15 +270,9 @@ export default function App() {
     );
   }
 
-  // --- 3) PC 데스크톱 접속 시 서비스 소개 홈페이지 렌더링 ---
-  // hash 기반 라우터 환경(Vercel)에서 OAuth 토큰은 hash fragment에 포함될 수 있으므로 함께 확인
-  const fullUrl = window.location.href;
-  const hasAuthParams = fullUrl.includes('code=') || 
-                        fullUrl.includes('access_token=') || 
-                        fullUrl.includes('refresh_token=');
-  
-  // 세션 로딩 중이거나 OAuth 파라미터가 있으면 랜딩 페이지 또는 모바일 화면 노출 차단
-  if (isSessionLoading || hasAuthParams) {
+  // OAuth 파라미터는 SIGNED_IN 이벤트에서 처리되므로 별도 체크 불필요
+  // 스피너는 isSessionLoading 중에만, 단 최대 3초로 제한
+  if (isSessionLoading && !loadingTimeout) {
     return <div style={{width:'100%', height:'100dvh', backgroundColor: '#fff', display:'flex', justifyContent:'center', alignItems:'center'}}><div className="refresh-spinner" style={{display:'block'}}></div></div>;
   }
   
