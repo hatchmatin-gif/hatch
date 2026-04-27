@@ -239,9 +239,9 @@ export default function App() {
     }
 
     if (diff > 0) {
-      if (diff > 120) {
-        diff = 120 + (diff - 120) * 0.2;
-        if (!readyToRefresh && diff > 130) {
+      if (diff > 90) {
+        diff = 90 + (diff - 90) * 0.2;
+        if (!readyToRefresh && diff > 100) {
           setReadyToRefresh(true);
           if (navigator.vibrate) navigator.vibrate(30);
         }
@@ -281,8 +281,8 @@ export default function App() {
       } finally {
         clearTimeout(fallbackTimer);
         const elapsedTime = Date.now() - startTime;
-        if (elapsedTime < 800) {
-          await new Promise(res => setTimeout(res, 800 - elapsedTime));
+        if (elapsedTime < 600) {
+          await new Promise(res => setTimeout(res, 600 - elapsedTime));
         }
         
         setIsRefreshing(false);

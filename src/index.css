@@ -928,7 +928,7 @@ main::-webkit-scrollbar {
 }
 
 .beans-expand.open {
-  max-height: 300px;
+  max-height: 800px;
   opacity: 1;
 }
 
@@ -983,7 +983,7 @@ main::-webkit-scrollbar {
 }
 
 .beans-sub-list.open {
-  max-height: 400px;
+  max-height: 700px;
   opacity: 1;
 }
 
