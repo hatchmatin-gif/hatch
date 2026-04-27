@@ -8,6 +8,9 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
   const [isMapMode, setIsMapMode] = useState(false);
   const [showBeansList, setShowBeansList] = useState(false);
   const [orderQuantities, setOrderQuantities] = useState({});
+  const [isPointsHidden, setIsPointsHidden] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [receivablePoints, setReceivablePoints] = useState(Math.random() > 0.3 ? 1500 : 0); // 70% 확률로 받을 포인트 표시
 
   const beansList = [
     { name: '해치너트', price: 22000 }, 
@@ -81,32 +84,59 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
   return (
     <div className={`home-interactive ${isMapMode ? 'map-active' : ''}`}>
       {/* 1. Balance Card - 맵 모드 시 콤팩트로 전환 (데이터는 유지하며 레이아웃만 변형) */}
-      <section className={`balance-card ${isMapMode ? 'compact' : ''}`}>
+      <section 
+        className={`balance-card ${isMapMode || (activeCard !== null && activeCard !== 'balance') ? 'compact' : ''} ${activeCard === 'balance' ? 'expanded' : ''}`}
+        onClick={() => {
+          if (isMapMode) toggleMapMode();
+          else toggleCard('balance');
+        }}
+      >
         <div className="balance-compact-row">
           <div className="balance-info-mini">
-            <span className="mini-label">My Cup</span>
-            <span className="mini-value">CUP {formatPoints(profile?.points)}</span>
+            <span className="mini-label">Point</span>
+            <span className="mini-value" style={{ filter: isPointsHidden ? 'blur(5px)' : 'none', transition: 'filter 0.3s' }}>
+              {formatPoints(profile?.points)} Point
+            </span>
           </div>
-          <button className="balance-topup mini">Top Up</button>
         </div>
         
         <div className="balance-full-content">
           <div className="balance-header">
-            <span className="balance-label">My Cup</span>
-            <button className="balance-topup">Top Up</button>
+            <span className="balance-label">Point</span>
           </div>
-          <div className="balance-amount">
-            CUP {formatPoints(profile?.points)}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity: 0.5}}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <div className="balance-amount" style={{ display: 'flex', alignItems: 'center' }}>
+            <span style={{ filter: isPointsHidden ? 'blur(6px)' : 'none', transition: 'filter 0.3s' }}>
+              {formatPoints(profile?.points)} Point
+            </span>
+            <svg 
+              onClick={(e) => { e.stopPropagation(); setIsPointsHidden(!isPointsHidden); }}
+              width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+              style={{ opacity: 0.5, cursor: 'pointer', marginLeft: '12px', padding: '4px' }}
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+              {isPointsHidden && <line x1="1" y1="1" x2="23" y2="23" strokeWidth="2"></line>}
+            </svg>
           </div>
           <div className="balance-actions">
-            <button className="balance-btn">
+            <button className="balance-btn" onClick={(e) => { e.stopPropagation(); setShowTransferModal(true); }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3L21 7L17 11"></path><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><path d="M7 21L3 17L7 13"></path><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
               Transfer
             </button>
-            <button className="balance-btn">
+            <button 
+              className={`balance-btn ${receivablePoints > 0 ? 'active-receive' : ''}`} 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (receivablePoints > 0) {
+                  alert(`${receivablePoints} 포인트를 받았습니다!`);
+                  setReceivablePoints(0);
+                } else {
+                  alert("현재 받을 수 있는 포인트가 없습니다.");
+                }
+              }}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-              Receive
+              {receivablePoints > 0 ? `Receive ${receivablePoints}` : 'Receive'}
             </button>
           </div>
         </div>
