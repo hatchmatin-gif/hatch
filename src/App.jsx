@@ -90,7 +90,10 @@ export default function App() {
   const fetchData = async () => {
     if (!session?.user?.id) return;
     try {
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('fetchData timeout')), 4000));
+      let timeoutId;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('fetchData timeout')), 4000);
+      });
       
       const fetchPromise = Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
@@ -99,17 +102,16 @@ export default function App() {
       ]);
 
       const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.race([fetchPromise, timeoutPromise]);
+      clearTimeout(timeoutId); // 메모리 누수 방지
       
       if (userRes) {
         setProfile(userRes);
-        // 동네 미설정 체크
         setNeedsZoneSetup(!userRes.home_zone_name);
       }
       if (meetRes) setMeetings(meetRes);
       if (storeRes) setStores(storeRes);
     } catch (error) {
       console.error('Error fetching data:', error);
-      // DB 연결 실패 시에도 임시로 UI가 작동하도록 데모 데이터 삽입
       if (stores.length === 0) {
         setStores([{ id: 'mock1', store_name: '해치카페 테스트점' }]);
       }
@@ -242,7 +244,7 @@ export default function App() {
 
   const handleTouchEnd = async (e) => {
     if (!pulling) {
-      if (pullY > 0 && !isRefreshing) setPullY(0); // 강제 복구 안전장치
+      if (pullY > 0 && !isRefreshing) setPullY(0);
       return;
     }
     setPulling(false);
@@ -252,16 +254,15 @@ export default function App() {
       
       try {
         if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-      } catch (vibrateErr) {
-        // 브라우저 권한에 의해 vibrate가 에러를 던질 수 있음
-      }
+      } catch (vibrateErr) {}
       
-      // 혹시 모를 데드락을 대비해 강제로 4초 후 UI 복구
       const fallbackTimer = setTimeout(() => {
         setIsRefreshing(false);
         setReadyToRefresh(false);
         setPullY(0);
       }, 4000);
+
+      const startTime = Date.now();
 
       try {
         await fetchData();
@@ -269,6 +270,11 @@ export default function App() {
         console.error("fetchData error:", fetchErr);
       } finally {
         clearTimeout(fallbackTimer);
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime < 800) {
+          await new Promise(res => setTimeout(res, 800 - elapsedTime));
+        }
+        
         setIsRefreshing(false);
         setReadyToRefresh(false);
         setPullY(0);
