@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+// Build trigger: restore functional state 2026-04-27 11:00
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabase.js';
 import Login from './Login.jsx';
