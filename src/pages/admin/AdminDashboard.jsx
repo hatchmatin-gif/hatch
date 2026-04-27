@@ -349,28 +349,28 @@ export default function AdminDashboard() {
           <div className="overview-container">
             <div className="kpi-grid">
               <div className="kpi-card">
-                <div className="kpi-label">OPERATING BUDGET</div>
+                <div className="kpi-label">카페1매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.totalBudget.toLocaleString()}</span>
                   <span className="kpi-unit">CUP</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">ACTIVE PERSONNEL</div>
+                <div className="kpi-label">카페2매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.personnel}</span>
                   <span className="kpi-unit">PERSONS</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">PRODUCTION RATE</div>
+                <div className="kpi-label">원두납품 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.prodRate}</span>
                   <span className="kpi-unit">%</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">ACTIVE TASKS</div>
+                <div className="kpi-label">디저트납품 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.activeTasks}</span>
                   <span className="kpi-unit">UNITS</span>
