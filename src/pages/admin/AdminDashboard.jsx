@@ -269,7 +269,7 @@ export default function AdminDashboard() {
         .metric-val { color: #666; }
 
         .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 60px; width: 60%; }
-        .kpi-card { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
+        .kpi-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
         .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
         .kpi-value-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
@@ -277,7 +277,7 @@ export default function AdminDashboard() {
         .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
 
         .grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
-        .card-item { background: #fff; padding: 28px; border-radius: 24px; border: 1px solid #f0f0f0; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .card-item { background: #fff; padding: 28px; border-radius: 16px; border: 1px solid #f0f0f0; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .card-item:hover { border-color: #111; }
         .card-tag { font-size: 0.7rem; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
         .card-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 24px; letter-spacing: -0.5px; }
