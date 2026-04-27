@@ -337,7 +337,8 @@ export default function AdminDashboard() {
             </div>
             <div className="usage-metrics">
               <div className="metric-row">SUPABASE <span className="metric-val">1.2k / 50k (2.4%)</span></div>
-              <div className="metric-row">VERCEL <span className="metric-val">13k Req / 349 MB (Used)</span></div>
+              <div className="metric-row">VERCEL REQ <span className="metric-val">1.3%</span></div>
+              <div className="metric-row">VERCEL BAND <span className="metric-val">0.35%</span></div>
             </div>
           </div>
         </header>
