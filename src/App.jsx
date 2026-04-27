@@ -98,7 +98,7 @@ export default function App() {
       const fetchPromise = Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
         supabase.from('meetings').select('*'),
-        supabase.from('stores').select('*')
+        supabase.from('profiles').select('*').in('role', ['store', '매장'])
       ]);
 
       const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.race([fetchPromise, timeoutPromise]);
