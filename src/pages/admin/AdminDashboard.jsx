@@ -242,7 +242,7 @@ export default function AdminDashboard() {
         .sidebar-logo { margin-bottom: 60px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 200px; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
         .logo-main { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; width: 100%; }
-        .logo-sub { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 900; margin-top: 6px; border-top: 3px solid #111; padding-top: 6px; width: 150px; }
+        .logo-sub { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 900; margin-top: 6px; border-top: 3px solid #111; padding-top: 6px; width: 100%; }
         
         .nav-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; color: #888; font-weight: 600; font-size: 0.85rem; }
