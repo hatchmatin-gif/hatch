@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { supabase } from '../../supabase.js';
+import { supabase } from '../../../supabase.js';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
