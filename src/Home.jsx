@@ -11,6 +11,7 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
   const [isPointsHidden, setIsPointsHidden] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [receivablePoints, setReceivablePoints] = useState(Math.random() > 0.3 ? 1500 : 0); // 70% 확률로 받을 포인트 표시
+  const [isBalanceExpanded, setIsBalanceExpanded] = useState(true);
 
   const beansList = [
     { name: '해치너트', price: 22000 }, 
@@ -85,10 +86,13 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
     <div className={`home-interactive ${isMapMode ? 'map-active' : ''}`}>
       {/* 1. Balance Card - 맵 모드 시 콤팩트로 전환 (데이터는 유지하며 레이아웃만 변형) */}
       <section 
-        className={`balance-card ${isMapMode || (activeCard !== null && activeCard !== 'balance') ? 'compact' : ''} ${activeCard === 'balance' ? 'expanded' : ''}`}
+        className={`balance-card ${isMapMode || !isBalanceExpanded ? 'compact' : 'expanded'}`}
         onClick={() => {
           if (isMapMode) toggleMapMode();
-          else toggleCard('balance');
+          else {
+            if (navigator.vibrate) navigator.vibrate(15);
+            setIsBalanceExpanded(!isBalanceExpanded);
+          }
         }}
       >
         <div className="balance-compact-row">
