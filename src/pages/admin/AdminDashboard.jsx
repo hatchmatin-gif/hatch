@@ -35,62 +35,111 @@ export default function AdminDashboard() {
 
   const navigate = useNavigate();
 
-  // --- Mock Data ---
-  const MOCK_DATA = {
-    운영: [
-      { id: 1, 업체명: '(주)해치코리아', 상태: '운영중', 월매출: '4,500만원', 담당자: '김우리', 최근점검: '2024-04-20' },
-      { id: 2, 업체명: '우리카페 본점', 상태: '운영중', 월매출: '2,800만원', 담당자: '이해치', 최근점검: '2024-04-22' },
-      { id: 3, 업체명: '해치 물류센터', 상태: '주의', 월매출: '-', 담당자: '박생산', 최근점검: '2024-04-15' },
-    ],
-    인사: [
-      { id: 1, 이름: '김우리', 부서: '운영팀', 직책: '팀장', 입사일: '2022-01-10', 연락처: '010-1234-5678' },
-      { id: 2, 이름: '이해치', 부서: '개발팀', 직책: '수석', 입사일: '2023-05-15', 연락처: '010-9876-5432' },
-      { id: 3, 이름: '박생산', 부서: '제조팀', 직책: '매니저', 입사일: '2023-11-01', 연락처: '010-5555-4444' },
-    ],
-    생산: [
-      { id: 1, 품목: '해치 블렌드 A', 수량: '500kg', 상태: '정상', 창고: '본사A', 업데이트: '2시간 전' },
-      { id: 2, 품목: '우리스마일 원두', 수량: '1,200kg', 상태: '부족', 창고: '지사B', 업데이트: '5분 전' },
-    ],
-    과제: [
-      { id: 1, 과제명: '스마트 물류 시스템 고도화', 담당자: '이해치', 진행률: '85%', 마감일: '2024-05-30', 상태: '진행중' },
-      { id: 2, 과제명: '어드민 보안 대시보드 구축', 담당자: '김우리', 진행률: '95%', 마감일: '2024-04-30', 상태: '마무리' },
-    ]
-  };
-
   const checkAdminRole = async () => {
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // 3초 타임아웃을 걸어 무한 대기(Deadlock) 방지
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 3000));
+      
+      const { data: { session }, error: sessionError } = await Promise.race([
+        supabase.auth.getSession(),
+        timeoutPromise
+      ]);
+      
       if (sessionError || !session) { navigate('/admin/login'); return; }
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+      const { data: profile, error: profileError } = await Promise.race([
+        supabase.from('profiles').select('role').eq('id', session.user.id).single(),
+        timeoutPromise
+      ]);
       
       if (profileError || profile?.role !== 'super_admin') {
-        console.error('Not an admin:', profileError);
         navigate('/');
         return;
       }
       setIsAdmin(true);
     } catch (err) {
-      console.error('Auth check failed:', err);
+      console.error("Auth check error:", err);
       navigate('/admin/login');
     } finally {
-      setLoading(false); // 어떤 경우에도 로딩은 해제
+      setLoading(false);
     }
   };
 
   const fetchSecurityLogs = async () => {
-    const { data } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(10);
-    setSecurityLogs(data || []);
+    try {
+      const { data } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(10);
+      setSecurityLogs(data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchUnifiedData = async () => {
+    try {
+      // 4개의 테이블을 동시에 비동기로 가져옵니다.
+      const [opsData, hrData, prodData, taskData] = await Promise.all([
+        supabase.from('wuri_unified_ops').select('*').order('target_date', { ascending: false }),
+        supabase.from('wuri_unified_hr').select('*').order('target_date', { ascending: false }),
+        supabase.from('wuri_unified_prod').select('*').order('target_date', { ascending: false }),
+        supabase.from('wuri_unified_task').select('*').order('target_date', { ascending: false })
+      ]);
+
+      // 중복 제거 및 최신 데이터만 유지하는 헬퍼 함수
+      const processData = (dataList) => {
+        const seen = new Set();
+        const result = [];
+        (dataList || []).forEach(item => {
+          const uniqueKey = `${item.category}-${item.label_name}`;
+          if (!seen.has(uniqueKey)) {
+            seen.add(uniqueKey);
+            result.push(item);
+          }
+        });
+        return result;
+      };
+
+      setSheetData({
+        운영: processData(opsData.data),
+        인사: processData(hrData.data),
+        생산: processData(prodData.data),
+        과제: processData(taskData.data)
+      });
+    } catch (e) {
+      console.error("fetchUnifiedData error:", e);
+    }
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    // 강제 로딩 해제 (최대 3.5초 대기)
+    const fallbackTimer = setTimeout(() => {
+      if (mounted && loading) {
+        setLoading(false);
+        console.warn("Loading spinner forcefully disabled by fallback timer.");
+      }
+    }, 3500);
+
     checkAdminRole();
     fetchSecurityLogs();
-    setSheetData(MOCK_DATA);
+    fetchUnifiedData();
+
+    // 4개 테이블 각각에 대한 실시간 구독 설정
+    const tables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task'];
+    const subscriptions = tables.map(table => 
+      supabase.channel(`channel_${table}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
+          console.log(`Update on ${table}:`, payload);
+          fetchUnifiedData();
+        })
+        .subscribe()
+    );
+
+    return () => {
+      mounted = false;
+      clearTimeout(fallbackTimer);
+      subscriptions.forEach(sub => supabase.removeChannel(sub));
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -108,14 +157,13 @@ export default function AdminDashboard() {
         initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
         className="modal-content" onClick={e => e.stopPropagation()}
       >
-        <h2>상세 데이터 정보</h2>
+        <h2>{data.category} 상세 정보</h2>
         <div className="detail-list">
-          {Object.entries(data).map(([key, value]) => (
-            <div key={key} className="detail-item">
-              <span className="detail-key">{key}</span>
-              <span className="detail-val">{value}</span>
-            </div>
-          ))}
+          <div className="detail-item"><span className="detail-key">항목명</span><span className="detail-val">{data.label_name}</span></div>
+          <div className="detail-item"><span className="detail-key">적용일자</span><span className="detail-val">{data.target_date}</span></div>
+          <div className="detail-item"><span className="detail-key">상태/비고</span><span className="detail-val">{data.status_text || '-'}</span></div>
+          <div className="detail-item"><span className="detail-key">목표/예산</span><span className="detail-val">{data.target_value ? data.target_value.toLocaleString() : '-'}</span></div>
+          <div className="detail-item"><span className="detail-key">현재/누적</span><span className="detail-val">{data.current_value ? data.current_value.toLocaleString() : '-'}</span></div>
         </div>
         <button className="close-btn" onClick={onClose}>닫기</button>
       </motion.div>
@@ -131,13 +179,12 @@ export default function AdminDashboard() {
         whileTap={{ scale: 0.98 }}
         className={`card-item ${isSummary ? 'summary' : ''}`}
       >
-        <div className="card-tag">{type}</div>
-        <h3 className="card-title">{item.업체명 || item.이름 || item.품목 || item.과제명}</h3>
-        <div className="card-info">
-          {item.상태 && <span>{item.상태}</span>}
-          {item.담당자 && <span>• {item.담당자}</span>}
-          {item.수량 && <span>• {item.수량}</span>}
-          {item.부서 && <span>• {item.부서}</span>}
+        <div className="card-tag">{item.category}</div>
+        <h3 className="card-title">{item.label_name}</h3>
+        <div className="card-info" style={{ display:'flex', flexDirection:'column', gap:'4px' }}>
+          {item.status_text && <div><span style={{color:'#FF6A00', fontWeight:'700'}}>•</span> {item.status_text}</div>}
+          {item.current_value !== null && <div><span style={{color:'#888'}}>현재:</span> {item.current_value?.toLocaleString()}</div>}
+          {item.target_value !== null && <div><span style={{color:'#ccc'}}>목표:</span> {item.target_value?.toLocaleString()}</div>}
         </div>
         {!isSummary && <div className="hold-hint">Hold for details</div>}
       </motion.div>
@@ -147,7 +194,7 @@ export default function AdminDashboard() {
   if (loading) return (
     <div style={{height: '100vh', width:'100vw', display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', background:'#fff'}}>
       <div className="refresh-spinner" style={{display:'block', marginBottom:'20px'}}></div>
-      <div style={{fontWeight:'700', color:'#111'}}>보안 세션 확인 중...</div>
+      <div style={{fontWeight:'700', color:'#111'}}>동기화 세션 확인 중...</div>
     </div>
   );
 

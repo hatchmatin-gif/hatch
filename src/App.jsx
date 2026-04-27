@@ -75,7 +75,8 @@ export default function App() {
             .select('role')
             .eq('id', session.user.id)
             .single();
-          if (profile?.role === 'super_admin') {
+          // 데스크톱(PC) 접속일 때만 최고 관리자를 대시보드로 자동 리다이렉트 (모바일은 앱 화면 유지)
+          if (profile?.role === 'super_admin' && !isMobileDevice) {
             navigate('/admin/dashboard');
           }
         } catch (e) { /* silent */ }
@@ -88,11 +89,16 @@ export default function App() {
   const fetchData = async () => {
     if (!session?.user?.id) return;
     try {
-      const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.all([
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('fetchData timeout')), 4000));
+      
+      const fetchPromise = Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
         supabase.from('meetings').select('*'),
         supabase.from('stores').select('*')
       ]);
+
+      const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.race([fetchPromise, timeoutPromise]);
+      
       if (userRes) {
         setProfile(userRes);
         // 동네 미설정 체크
@@ -102,6 +108,10 @@ export default function App() {
       if (storeRes) setStores(storeRes);
     } catch (error) {
       console.error('Error fetching data:', error);
+      // DB 연결 실패 시에도 임시로 UI가 작동하도록 데모 데이터 삽입
+      if (stores.length === 0) {
+        setStores([{ id: 'mock1', store_name: '해치카페 테스트점' }]);
+      }
     }
   };
 
@@ -230,17 +240,41 @@ export default function App() {
   };
 
   const handleTouchEnd = async (e) => {
-    if (!pulling) return;
+    if (!pulling) {
+      if (pullY > 0 && !isRefreshing) setPullY(0); // 강제 복구 안전장치
+      return;
+    }
     setPulling(false);
     
     if (readyToRefresh) {
       setIsRefreshing(true);
-      if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
-      await fetchData();
-      setIsRefreshing(false);
-      setReadyToRefresh(false);
+      
+      try {
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
+      } catch (vibrateErr) {
+        // 브라우저 권한에 의해 vibrate가 에러를 던질 수 있음
+      }
+      
+      // 혹시 모를 데드락을 대비해 강제로 4초 후 UI 복구
+      const fallbackTimer = setTimeout(() => {
+        setIsRefreshing(false);
+        setReadyToRefresh(false);
+        setPullY(0);
+      }, 4000);
+
+      try {
+        await fetchData();
+      } catch (fetchErr) {
+        console.error("fetchData error:", fetchErr);
+      } finally {
+        clearTimeout(fallbackTimer);
+        setIsRefreshing(false);
+        setReadyToRefresh(false);
+        setPullY(0);
+      }
+    } else {
+      setPullY(0);
     }
-    setPullY(0);
   };
 
   // Calendar setup (14 days)
@@ -300,10 +334,11 @@ export default function App() {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         <div id="pull-indicator">
           <div id="pull-text">
-            {isRefreshing ? '업데이트 중...' : readyToRefresh ? '손을 놓으면 업데이트 됩니다' : '↓ 아래로 당겨서 업데이트'}
+            {isRefreshing ? '데이터 동기화 중...' : readyToRefresh ? '손을 놓으면 동기화됩니다' : '↓ 아래로 당겨서 동기화'}
           </div>
           <div className="refresh-spinner" style={{ display: isRefreshing ? 'block' : 'none' }}></div>
         </div>
