@@ -74,14 +74,16 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
   };
 
 
-  // 최근 방문 카페 데이터 (DB 연동)
-  const recentCafes = stores && stores.length > 0
-    ? stores.map(store => ({ name: store.name || store.store_name, item: store.sub_text || store.item || '아메리카노', date: '최근 방문' }))
+  // 최근 방문 카페 데이터 (DB에서 불러온 매장 목록 중 상위 4개를 노출)
+  const recentCafes = stores.length > 0 
+    ? stores.slice(0, 4).map(s => ({
+        name: s.store_name,
+        item: s.item,
+        date: '방문 가능'
+      }))
     : [
-        { name: '인하대점', item: '아이스 아메리카노', date: '오늘' },
-        { name: '종각점', item: '카페라떼', date: '어제' },
-        { name: '을지로점', item: '핸드드립', date: '3일 전' },
-        { name: '성수점', item: '콜드브루', date: '1주 전' },
+        { name: '인하대점', item: '아이스 아메리카노', date: '데모' },
+        { name: '종각점', item: '카페라떼', date: '데모' }
       ];
 
   return (
@@ -444,11 +446,11 @@ function StoreCarousel({ stores, onMapClick, isSidebar, forceCompact, onClickHea
               </div>
               <div className="activity-info hide-in-sidebar">
                 <div className="activity-main">
-                  <span className="store-name">{store.name || store.store_name}</span>
+                  <span className="store-name">{store.store_name}</span>
                   <div className="status-tag blue compact-only">영업중</div>
                 </div>
                 <div className="activity-sub">
-                  <span className="item-name">{store.sub_text || store.item}</span>
+                  <span className="item-name">{store.item}</span>
                   <div className={`store-event-badge compact-only ${store.badge_text ? '' : 'v-hidden'}`}>
                     <span className="event-dot"></span>
                     이벤트

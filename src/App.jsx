@@ -98,7 +98,7 @@ export default function App() {
       const fetchPromise = Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
         supabase.from('meetings').select('*'),
-        supabase.from('profiles').select('*').in('role', ['store', '매장'])
+        supabase.from('profiles').select('*').eq('role', '매장')
       ]);
 
       const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.race([fetchPromise, timeoutPromise]);
@@ -109,7 +109,16 @@ export default function App() {
         setNeedsZoneSetup(!userRes.home_zone_name);
       }
       if (meetRes) setMeetings(meetRes);
-      if (storeRes) setStores(storeRes);
+      if (storeRes) {
+        // 프로필 테이블에서 매장으로 등록된 유저들만 매장 목록으로 변환
+        const mappedStores = storeRes.map(s => ({
+          id: s.id,
+          store_name: s.name,
+          item: s.sub_text || '커피 & 베이커리',
+          badge_text: s.points > 100000 ? '인기 매장' : ''
+        }));
+        setStores(mappedStores);
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
       if (stores.length === 0) {
