@@ -257,8 +257,8 @@ export default function AdminDashboard() {
 
         .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
         .page-header { margin-bottom: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; margin-top: -8px; }
-        .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 18px; }
+        .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; margin-top: -18px; }
+        .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 28px; }
 
         .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
         .live-sync-badge { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-weight: 900; font-size: 0.8rem; color: #FF6A00; }
