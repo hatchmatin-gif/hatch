@@ -207,7 +207,6 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        {!isSummary && <div className="hold-hint">Hold for details</div>}
       </motion.div>
     );
   };
@@ -231,65 +230,71 @@ export default function AdminDashboard() {
   return (
     <div className="admin-layout">
       <style>{`
-        .admin-layout { display: flex; height: 100vh; width: 100vw; background: #f6f8fa; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
-        .sidebar { width: 280px; background: #fff; border-right: 1px solid #e1e4e8; padding: 40px 24px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-logo { font-size: 1.5rem; font-weight: 900; margin-bottom: 48px; display: flex; align-items: center; gap: 14px; color: #FF6A00; cursor: pointer; }
-        .sidebar-logo-icon { width: 32px; height: 32px; border-radius: 10px; background: #FF6A00; box-shadow: 0 4px 12px rgba(255,106,0,0.3); }
-        .logo-text-stack { display: flex; flex-direction: column; line-height: 0.9; }
-        .logo-main { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; }
-        .logo-sub { font-size: 0.75rem; font-weight: 900; letter-spacing: 2.5px; color: #111; text-align: justify; width: 100%; }
+        @keyframes pulse-orange {
+          0% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.95); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+
+        .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
+        .sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-        .nav-item { padding: 14px 18px; border-radius: 14px; cursor: pointer; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 14px; color: #57606a; font-weight: 600; font-size: 0.95rem; }
-        .nav-item:hover { background: #f3f4f6; color: #111; }
-        .nav-item.active { background: #111; color: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .sidebar-logo { margin-bottom: 50px; display: flex; flex-direction: column; cursor: pointer; color: #111; }
+        .logo-text-stack { display: flex; flex-direction: column; line-height: 0.8; }
+        .logo-main { font-size: 1.8rem; font-weight: 950; letter-spacing: -1.5px; }
+        .logo-sub { font-size: 0.72rem; font-weight: 900; letter-spacing: 0.38em; margin-top: 2px; border-top: 2px solid #111; padding-top: 4px; }
         
-        .sidebar-footer { padding-top: 24px; border-top: 1px solid #e1e4e8; display: flex; flex-direction: column; gap: 12px; }
-        .blur-btn { padding: 14px; border-radius: 14px; border: 1px solid #e1e4e8; background: #fff; cursor: pointer; font-weight: 700; transition: 0.3s; font-size: 0.85rem; color: #24292f; }
-        .blur-btn.active { background: #FF6A00; color: #fff; border-color: #FF6A00; }
-        .logout-btn { padding: 14px; border-radius: 14px; border: 1px solid #e1e4e8; background: #fff; cursor: pointer; font-weight: 700; font-size: 0.85rem; color: #cf222e; }
+        .nav-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; color: #888; font-weight: 600; font-size: 0.85rem; }
+        .nav-item:hover { color: #111; background: #f8f8f8; }
+        .nav-item.active { background: #111; color: #fff; }
+        .nav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
+        
+        .sidebar-footer { padding-top: 20px; border-top: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; }
+        .footer-btn { padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #fff; cursor: pointer; font-weight: 700; font-size: 0.75rem; color: #666; transition: 0.2s; }
+        .footer-btn:hover { background: #f8f8f8; color: #111; }
+        .footer-btn.active { background: #111; color: #fff; border-color: #111; }
 
         .main-content { flex: 1; padding: 60px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
-        .page-header { margin-bottom: 56px; display: flex; justify-content: space-between; align-items: flex-end; }
-        .page-header h1 { font-size: 2.8rem; font-weight: 900; letter-spacing: -2px; line-height: 1; margin-bottom: 12px; }
-        .page-header p { color: #57606a; font-weight: 500; font-size: 1.1rem; }
+        .page-header { margin-bottom: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .page-header h1 { font-size: 3rem; font-weight: 950; letter-spacing: -2.5px; line-height: 1; margin-bottom: 12px; }
+        .page-header p { color: #888; font-weight: 500; font-size: 1rem; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
-        .kpi-card { background: #fff; padding: 24px; border-radius: 24px; border: 1px solid #e1e4e8; display: flex; align-items: center; gap: 20px; transition: transform 0.3s ease; }
-        .kpi-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); }
-        .kpi-icon { width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-        .kpi-title { font-size: 0.85rem; color: #57606a; font-weight: 700; margin-bottom: 4px; }
+        .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; }
+        .live-sync-badge { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-weight: 900; font-size: 0.8rem; color: #FF6A00; }
+        .live-pulse { width: 8px; height: 8px; border-radius: 50%; background: #FF6A00; animation: pulse-orange 1.5s infinite ease-in-out; }
+        
+        .usage-metrics { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+        .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
+        .metric-val { color: #666; }
+
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px; }
+        .kpi-card { background: #fff; padding: 24px; border-radius: 20px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; }
+        .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
+        .kpi-label { font-size: 0.75rem; color: #888; font-weight: 700; }
         .kpi-value-row { display: flex; align-items: baseline; gap: 4px; }
-        .kpi-value { font-size: 1.6rem; font-weight: 850; letter-spacing: -0.5px; }
-        .kpi-unit { font-size: 0.9rem; color: #888; font-weight: 600; }
+        .kpi-value { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; }
+        .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
 
-        .grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 28px; width: 100%; }
-        .card-item { background: #fff; padding: 32px; border-radius: 28px; border: 1px solid #e1e4e8; position: relative; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .card-tag { font-size: 0.75rem; font-weight: 800; color: #FF6A00; text-transform: uppercase; letter-spacing: 1px; }
-        .progress-tag { font-size: 0.75rem; font-weight: 900; color: #111; background: #f3f4f6; padding: 4px 10px; border-radius: 8px; }
-        .card-title { font-size: 1.4rem; font-weight: 850; margin-bottom: 24px; line-height: 1.2; letter-spacing: -0.5px; }
+        .grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
+        .card-item { background: #fff; padding: 28px; border-radius: 24px; border: 1px solid #f0f0f0; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .card-item:hover { border-color: #111; }
+        .card-tag { font-size: 0.7rem; font-weight: 800; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+        .card-title { font-size: 1.3rem; font-weight: 900; margin-bottom: 24px; letter-spacing: -0.5px; }
         
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #fff8f4; border-radius: 100px; font-size: 0.85rem; font-weight: 700; color: #FF6A00; border: 1px solid #ffe8d9; margin-bottom: 16px; }
-        .status-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #FF6A00; }
+        .status-badge-mini { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 800; color: #111; margin-bottom: 16px; padding: 4px 8px; background: #f5f5f5; border-radius: 6px; }
+        .value-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .value-row .label { font-size: 0.8rem; color: #aaa; font-weight: 600; }
+        .value-row .val { font-size: 1rem; font-weight: 800; }
         
-        .value-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .value-row .label { font-size: 0.85rem; color: #888; font-weight: 600; }
-        .value-row .val { font-size: 1.1rem; font-weight: 800; }
-        
-        .progress-container { width: 100%; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-        .progress-bar { height: 100%; background: #FF6A00; border-radius: 4px; transition: width 1s ease-out; }
+        .progress-container { width: 100%; height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; margin-top: 12px; }
+        .progress-bar { height: 100%; background: #111; transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 10000; display: flex; justifyContent: center; alignItems: center; }
-        .modal-content { background: #fff; padding: 48px; border-radius: 40px; width: 560px; max-width: 90%; box-shadow: 0 40px 100px rgba(0,0,0,0.4); }
-        .modal-content h2 { font-size: 2rem; font-weight: 900; margin-bottom: 32px; border-bottom: 2px solid #f3f4f6; padding-bottom: 20px; letter-spacing: -1px; }
-
-        .overview-section { margin-bottom: 64px; }
-        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; }
-        .section-title { font-size: 1.6rem; font-weight: 900; display: flex; align-items: center; gap: 14px; letter-spacing: -0.5px; }
-        .section-title::before { content:''; width:6px; height:24px; background:#FF6A00; border-radius:10px; }
-        .view-all { color: #888; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
-        .view-all:hover { color: #111; text-decoration: underline; }
+        .overview-section { margin-bottom: 60px; }
+        .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #111; }
+        .section-title { font-size: 1.4rem; font-weight: 950; letter-spacing: -0.5px; }
+        .view-all { color: #aaa; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .view-all:hover { color: #111; }
       `}</style>
 
       <AnimatePresence>
@@ -298,55 +303,83 @@ export default function AdminDashboard() {
 
       <aside className="sidebar">
         <div className="sidebar-logo" onClick={() => window.location.href = 'https://www.wuricafe.com/'}>
-          <div className="sidebar-logo-icon"></div>
           <div className="logo-text-stack">
             <div className="logo-main">WURI.</div>
             <div className="logo-sub">HATCH</div>
           </div>
         </div>
         <nav className="nav-group">
-          <div className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>📊 종합 리포트</div>
-          <div className={`nav-item ${activeTab === '운영' ? 'active' : ''}`} onClick={() => setActiveTab('운영')}>🏢 운영 관리</div>
-          <div className={`nav-item ${activeTab === '인사' ? 'active' : ''}`} onClick={() => setActiveTab('인사')}>👥 인사 정보</div>
-          <div className={`nav-item ${activeTab === '생산' ? 'active' : ''}`} onClick={() => setActiveTab('생산')}>📦 생산 현황</div>
-          <div className={`nav-item ${activeTab === '과제' ? 'active' : ''}`} onClick={() => setActiveTab('과제')}>📅 과제 진행</div>
-          <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}>🔐 보안 감사</div>
+          <div className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}><span className="dot"></span> 종합 리포트</div>
+          <div className={`nav-item ${activeTab === '운영' ? 'active' : ''}`} onClick={() => setActiveTab('운영')}><span className="dot"></span> 운영 관리</div>
+          <div className={`nav-item ${activeTab === '인사' ? 'active' : ''}`} onClick={() => setActiveTab('인사')}><span className="dot"></span> 인사 정보</div>
+          <div className={`nav-item ${activeTab === '생산' ? 'active' : ''}`} onClick={() => setActiveTab('생산')}><span className="dot"></span> 생산 현황</div>
+          <div className={`nav-item ${activeTab === '과제' ? 'active' : ''}`} onClick={() => setActiveTab('과제')}><span className="dot"></span> 과제 진행</div>
+          <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}><span className="dot"></span> 보안 감사</div>
         </nav>
         <div className="sidebar-footer">
-          <button className={`blur-btn ${isBlurred ? 'active' : ''}`} onClick={() => setIsBlurred(!isBlurred)}>
-            {isBlurred ? '🔓 데이터 잠금 해제' : '🔒 프라이버시 보호'}
+          <button className={`footer-btn ${isBlurred ? 'active' : ''}`} onClick={() => setIsBlurred(!isBlurred)}>
+            프라이버시 보호 {isBlurred ? 'ON' : 'OFF'}
           </button>
-          <button className="logout-btn" onClick={handleLogout}>시스템 로그아웃</button>
+          <button className="footer-btn" onClick={handleLogout} style={{color:'#cf222e'}}>로그아웃</button>
         </div>
       </aside>
 
       <main className="main-content">
         <header className="page-header">
           <div>
-            <h1>{activeTab === 'overview' ? 'Integrated Insight' : `${activeTab} Management`}</h1>
-            <p>{activeTab === 'overview' ? '비즈니스 핵심 지표를 실시간으로 집계합니다.' : `실시간 동기화된 ${activeTab} 데이터를 관리합니다.`}</p>
+            <h1>{activeTab === 'overview' ? 'Business Overview' : `${activeTab} Management`}</h1>
+            <p>{activeTab === 'overview' ? '통합 비즈니스 인텔리전스 시스템' : `실시간 동기화 데이터 세트`}</p>
           </div>
-          {activeTab === 'overview' && (
-            <div style={{ textAlign:'right', color:'#FF6A00', fontWeight:'800', fontSize:'0.9rem' }}>
-              ● LIVE SYNC
+          <div className="status-panel">
+            <div className="live-sync-badge">
+              <div className="live-pulse"></div>
+              LIVE SYNC
             </div>
-          )}
+            <div className="usage-metrics">
+              <div className="metric-row">SUPABASE <span className="metric-val">1.2k / 50k (2.4%)</span></div>
+              <div className="metric-row">VERCEL <span className="metric-val">84 / 100 GB (84%)</span></div>
+            </div>
+          </div>
         </header>
 
         {activeTab === 'overview' ? (
           <div className="overview-container">
             <div className="kpi-grid">
-              <KpiCard title="운영 예산 총액" value={stats.totalBudget.toLocaleString()} unit="CUP" color="#FF6A00" icon="💰" />
-              <KpiCard title="활성 인원" value={stats.personnel} unit="명" color="#0366d6" icon="👥" />
-              <KpiCard title="평균 생산율" value={stats.prodRate} unit="%" color="#28a745" icon="📦" />
-              <KpiCard title="진행 과제" value={stats.activeTasks} unit="건" color="#6f42c1" icon="📅" />
+              <div className="kpi-card">
+                <div className="kpi-label">OPERATING BUDGET</div>
+                <div className="kpi-value-row">
+                  <span className="kpi-value">{stats.totalBudget.toLocaleString()}</span>
+                  <span className="kpi-unit">CUP</span>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">ACTIVE PERSONNEL</div>
+                <div className="kpi-value-row">
+                  <span className="kpi-value">{stats.personnel}</span>
+                  <span className="kpi-unit">PERSONS</span>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">PRODUCTION RATE</div>
+                <div className="kpi-value-row">
+                  <span className="kpi-value">{stats.prodRate}</span>
+                  <span className="kpi-unit">%</span>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-label">ACTIVE TASKS</div>
+                <div className="kpi-value-row">
+                  <span className="kpi-value">{stats.activeTasks}</span>
+                  <span className="kpi-unit">UNITS</span>
+                </div>
+              </div>
             </div>
 
             {['운영', '인사', '생산', '과제'].map(type => (
               <div key={type} className="overview-section">
                 <div className="section-header">
-                  <div className="section-title">{type} 현황</div>
-                  <div className="view-all" onClick={() => setActiveTab(type)}>전체보기 →</div>
+                  <div className="section-title">{type}</div>
+                  <div className="view-all" onClick={() => setActiveTab(type)}>VIEW ALL</div>
                 </div>
                 <div className="grid-wide">
                   {sheetData[type].slice(0, 3).map(item => (
@@ -357,20 +390,20 @@ export default function AdminDashboard() {
             ))}
           </div>
         ) : activeTab === 'security' ? (
-          <div className="card-item" style={{ padding:'40px' }}>
-             <h3 style={{ marginBottom:'24px', fontWeight:'900', fontSize:'1.6rem' }}>보안 감사 로그</h3>
+          <div className="card-item" style={{ padding:'40px', borderRadius:'0', borderLeft:'none', borderRight:'none' }}>
+             <h3 style={{ marginBottom:'32px', fontWeight:'950', fontSize:'1.8rem' }}>SECURITY AUDIT</h3>
              {securityLogs.length > 0 ? securityLogs.map(log => (
-               <div key={log.id} style={{ padding:'20px 0', borderBottom:'1px solid #f3f4f6', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+               <div key={log.id} style={{ padding:'20px 0', borderBottom:'1px solid #f0f0f0', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                  <div>
-                   <div style={{ fontWeight:'800', fontSize:'1.1rem' }}>{log.event_type}</div>
-                   <div style={{ color:'#888', fontSize:'0.9rem', marginTop:'4px' }}>{log.email} • {new Date(log.created_at).toLocaleString()}</div>
+                   <div style={{ fontWeight:'900', fontSize:'1rem' }}>{log.event_type}</div>
+                   <div style={{ color:'#aaa', fontSize:'0.75rem', marginTop:'4px' }}>{log.email} • {new Date(log.created_at).toLocaleString()}</div>
                  </div>
                  <div style={{ textAlign:'right' }}>
-                   <div style={{ fontWeight:'700', color:'#FF6A00', background:'#fff4ee', padding:'6px 12px', borderRadius:'10px' }}>{log.device} ({log.os})</div>
-                   <div style={{ fontSize:'0.8rem', color:'#aaa', marginTop:'6px' }}>Status: {log.status}</div>
+                   <div style={{ fontWeight:'800', color:'#111', fontSize:'0.85rem' }}>{log.device}</div>
+                   <div style={{ fontSize:'0.7rem', color:'#ccc', marginTop:'4px' }}>{log.status}</div>
                  </div>
                </div>
-             )) : <p style={{ color:'#888' }}>보안 로그가 존재하지 않습니다.</p>}
+             )) : <p style={{ color:'#888' }}>No logs found.</p>}
           </div>
         ) : (
           <div className="grid-wide">
