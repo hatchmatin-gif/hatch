@@ -23,6 +23,7 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const [stores, setStores] = useState([]);
+  const [lastStoreId, setLastStoreId] = useState(null);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [needsZoneSetup, setNeedsZoneSetup] = useState(false);
@@ -98,11 +99,16 @@ export default function App() {
       const fetchPromise = Promise.all([
         supabase.from('profiles').select('*').eq('id', session.user.id).limit(1).single(),
         supabase.from('meetings').select('*'),
-        supabase.from('profiles').select('*').eq('role', '매장')
+        supabase.from('profiles').select('*').eq('role', '매장'),
+        supabase.from('orders').select('store_id').eq('user_id', session.user.id).order('created_at', { ascending: false }).limit(1)
       ]);
 
-      const [{ data: userRes }, { data: meetRes }, { data: storeRes }] = await Promise.race([fetchPromise, timeoutPromise]);
+      const [{ data: userRes }, { data: meetRes }, { data: storeRes }, { data: lastOrderRes }] = await Promise.race([fetchPromise, timeoutPromise]);
       clearTimeout(timeoutId); // 메모리 누수 방지
+      
+      if (lastOrderRes && lastOrderRes.length > 0) {
+        setLastStoreId(lastOrderRes[0].store_id);
+      }
       
       if (userRes) {
         setProfile(userRes);
@@ -246,8 +252,11 @@ export default function App() {
       setProfile(prev => ({ ...prev, points: updatedProfile.points }));
 
       // 2. 주문 내역 기록
+      // 직전 주문 매장이 있으면 그것을 사용, 없으면 현재 목록의 첫번째, 그것도 없으면 '해치2' 더미 ID 사용
+      const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : '00000000-0000-0000-0000-000000000002');
+      
       const orderData = {
-        store_id: stores[0]?.id || 'HATCH_HQ',
+        store_id: targetStoreId,
         user_id: session.user.id,
         items: cartItems,
         total_price: totalPrice, // 주문 총액 추가
