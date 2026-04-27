@@ -255,12 +255,12 @@ export default function AdminDashboard() {
         .footer-btn:hover { background: #f8f8f8; color: #111; }
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
 
-        .main-content { flex: 1; padding: 60px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
+        .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
         .page-header { margin-bottom: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .page-header h1 { font-size: 3rem; font-weight: 950; letter-spacing: -2.5px; line-height: 1; margin-bottom: 12px; }
-        .page-header p { color: #888; font-weight: 500; font-size: 1rem; }
+        .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin-bottom: 15px; }
+        .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin-top: 5px; }
 
-        .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; }
+        .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
         .live-sync-badge { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-weight: 900; font-size: 0.8rem; color: #FF6A00; }
         .live-pulse { width: 8px; height: 8px; border-radius: 50%; background: #FF6A00; animation: pulse-orange 1.5s infinite ease-in-out; }
         
