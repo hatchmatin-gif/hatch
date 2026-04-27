@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MapView from './MapView';
 
-export default function Home({ stores, profile, formatPoints, handleTestOrder, handleBeanOrder }) {
+export default function Home({ stores, profile, formatPoints, handleTestOrder, handleBeanOrder, handleReceivePoints }) {
   const navigate = useNavigate();
   const [activeCard, setActiveCard] = useState(null); // 'store' | 'cafe' | 'beans' | null
   const [isMapMode, setIsMapMode] = useState(false);
@@ -129,11 +129,20 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
             </button>
             <button 
               className={`balance-btn ${receivablePoints > 0 ? 'active-receive' : ''}`} 
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
                 if (receivablePoints > 0) {
-                  alert(`${receivablePoints} 포인트를 받았습니다!`);
-                  setReceivablePoints(0);
+                  if (handleReceivePoints) {
+                    const success = await handleReceivePoints(receivablePoints);
+                    if (success) {
+                      alert(`${receivablePoints} 포인트를 받았습니다!`);
+                      setReceivablePoints(0);
+                    }
+                  } else {
+                    // Fallback
+                    alert(`${receivablePoints} 포인트를 받았습니다! (로컬 텍스트)`);
+                    setReceivablePoints(0);
+                  }
                 } else {
                   alert("현재 받을 수 있는 포인트가 없습니다.");
                 }

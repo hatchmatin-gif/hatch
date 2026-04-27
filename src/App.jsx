@@ -129,22 +129,40 @@ export default function App() {
     await supabase.auth.signOut();
   };
 
-  // 임시 주문 생성 함수 (POS 테스트용)
-  const handleTestOrder = async () => {
+  // 테스트용 결제(포인트 소진)
+  const handleTestOrder = async (price) => {
     if (!session?.user?.id || stores.length === 0) {
-      alert("매장 데이터를 아직 불러오지 못했습니다.");
+      alert("데이터를 아직 불러오지 못했습니다.");
       return;
     }
+    
+    if (profile.points < price) {
+      alert(`잔여 포인트가 부족합니다. (현재: ${profile.points}P)`);
+      return;
+    }
+
+    if (!window.confirm(`주문하시겠습니까?\n${price} CUP이 차감됩니다.`)) return;
+
     try {
+      const newPoints = profile.points - price;
+      
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', session.user.id)
+        .select()
+        .single();
+        
+      if (profileError) throw profileError;
+
+      setProfile(prev => ({ ...prev, points: newPoints }));
+
       const orderData = {
         store_id: stores[0].id,
         user_id: session.user.id,
-        items: [
-          { name: "아메리카노 (HOT)", qty: 2, price: 4500 },
-          { name: "초코 무스 케이크", qty: 1, price: 6500 }
-        ],
-        total_price: 15500, // 4500*2 + 6500
-        status: '대기중'
+        items: [{ name: '아메리카노', qty: 1, price: price }],
+        total_price: price,
+        status: '주문완료'
       };
 
       const { error } = await supabase.from('orders').insert([orderData]);
@@ -153,6 +171,28 @@ export default function App() {
     } catch (err) {
       console.error(err);
       alert("주문 실패: " + err.message);
+    }
+  };
+
+  // 포인트 받기 기능
+  const handleReceivePoints = async (pointsToAdd) => {
+    if (!session?.user?.id) return false;
+    try {
+      const newPoints = profile.points + pointsToAdd;
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', session.user.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      setProfile(data);
+      return true;
+    } catch (err) {
+      console.error(err);
+      alert("포인트 획득 실패: " + err.message);
+      return false;
     }
   };
 
@@ -411,7 +451,7 @@ export default function App() {
 
         <main id="main-scroll" ref={scrollRef}>
           <Routes>
-            <Route path="/" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} />} />
+            <Route path="/" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} handleReceivePoints={handleReceivePoints} />} />
             <Route path="/moiza" element={
               <div style={{color:'#fff', textAlign:'center', marginTop:'50px'}}>
                 <h2>MOIZA 모이자 화면</h2><p>기능 준비 중입니다.</p>
@@ -423,7 +463,7 @@ export default function App() {
               <Settings session={session} profile={profile} onProfileUpdate={fetchData} />
             } />
             <Route path="/pos" element={<PosTest />} />
-            <Route path="*" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} />} />
+            <Route path="*" element={<Home stores={stores} profile={profile} formatPoints={formatPoints} handleTestOrder={handleTestOrder} handleBeanOrder={handleBeanOrder} handleReceivePoints={handleReceivePoints} />} />
           </Routes>
         </main>
       </div>
