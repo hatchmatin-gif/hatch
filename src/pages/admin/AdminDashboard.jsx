@@ -268,10 +268,10 @@ export default function AdminDashboard() {
         .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
         .metric-val { color: #666; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px; width: 50%; }
         .kpi-card { background: #fff; padding: 24px; border-radius: 20px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
-        .kpi-label { font-size: 0.75rem; color: #888; font-weight: 700; }
+        .kpi-label { font-size: 1.5rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -1px; }
         .kpi-value-row { display: flex; align-items: baseline; gap: 4px; }
         .kpi-value { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; }
         .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
@@ -352,28 +352,28 @@ export default function AdminDashboard() {
                 <div className="kpi-label">카페1매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.totalBudget.toLocaleString()}</span>
-                  <span className="kpi-unit">CUP</span>
+                  <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
                 <div className="kpi-label">카페2매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.personnel}</span>
-                  <span className="kpi-unit">PERSONS</span>
+                  <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
                 <div className="kpi-label">원두 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.prodRate}</span>
-                  <span className="kpi-unit">%</span>
+                  <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
                 <div className="kpi-label">디저트 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.activeTasks}</span>
-                  <span className="kpi-unit">UNITS</span>
+                  <span className="kpi-unit">원</span>
                 </div>
               </div>
             </div>
