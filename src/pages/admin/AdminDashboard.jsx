@@ -256,7 +256,7 @@ export default function AdminDashboard() {
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
 
         .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
-        .page-header { margin-bottom: 56px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-start; }
         .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; margin-top: -28px; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 2px; }
 
