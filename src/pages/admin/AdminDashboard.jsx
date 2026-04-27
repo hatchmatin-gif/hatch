@@ -256,7 +256,7 @@ export default function AdminDashboard() {
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
 
         .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
-        .page-header { margin-bottom: -12px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .page-header { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
         .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; margin-top: -24px; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 15px; }
 
@@ -268,11 +268,11 @@ export default function AdminDashboard() {
         .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
         .metric-val { color: #666; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px; width: 50%; }
-        .kpi-card { background: #fff; padding: 24px; border-radius: 20px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 60px; width: 60%; }
+        .kpi-card { background: #fff; padding: 20px; border-radius: 24px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
         .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
-        .kpi-value-row { display: flex; align-items: baseline; gap: 4px; }
+        .kpi-value-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
         .kpi-value { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; }
         .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
 
@@ -348,6 +348,12 @@ export default function AdminDashboard() {
         {activeTab === 'overview' ? (
           <div className="overview-container">
             <div className="kpi-grid">
+              <div className="kpi-card">
+                <div className="kpi-label">당월 기준</div>
+                <div className="kpi-value-row">
+                  <span className="kpi-value" style={{ fontSize: '1.0rem' }}>{`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`}</span>
+                </div>
+              </div>
               <div className="kpi-card">
                 <div className="kpi-label">카페1매출</div>
                 <div className="kpi-value-row">
