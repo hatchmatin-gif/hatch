@@ -363,14 +363,14 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">원두납품 매출</div>
+                <div className="kpi-label">원두 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.prodRate}</span>
                   <span className="kpi-unit">%</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">디저트납품 매출</div>
+                <div className="kpi-label">디저트 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{stats.activeTasks}</span>
                   <span className="kpi-unit">UNITS</span>
