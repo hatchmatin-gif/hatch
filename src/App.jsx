@@ -173,16 +173,24 @@ export default function App() {
     try {
       const newPoints = profile.points - price;
       
-      // 1. 포인트 차감 업데이트
-      const { error: profileError } = await supabase
+      // 1. 포인트 차감 업데이트 (select().single()을 붙여서 실제 업데이트가 안 되면 에러를 던지게 함)
+      const { data: updatedProfile, error: profileError } = await supabase
         .from('profiles')
         .update({ points: newPoints })
-        .eq('id', session.user.id);
+        .eq('id', session.user.id)
+        .select()
+        .single();
         
-      if (profileError) throw profileError;
+      if (profileError) {
+        throw new Error('프로필 포인트 업데이트 권한이 없거나 실패했습니다: ' + profileError.message);
+      }
+
+      if (!updatedProfile) {
+        throw new Error('포인트가 데이터베이스에 반영되지 않았습니다. (RLS 보안 정책 문제)');
+      }
 
       // 로컬 프로필 상태 즉시 업데이트
-      setProfile(prev => ({ ...prev, points: newPoints }));
+      setProfile(prev => ({ ...prev, points: updatedProfile.points }));
 
       // 2. 주문 내역 기록
       const orderData = {
