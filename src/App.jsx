@@ -140,8 +140,8 @@ export default function App() {
 
   // 테스트용 결제(포인트 소진)
   const handleTestOrder = async (price) => {
-    if (!session?.user?.id || stores.length === 0) {
-      alert("데이터를 아직 불러오지 못했습니다.");
+    if (!session?.user?.id) {
+      alert("로그인 정보가 없습니다.");
       return;
     }
     
@@ -167,7 +167,7 @@ export default function App() {
       setProfile(prev => ({ ...prev, points: newPoints }));
 
       const orderData = {
-        store_id: stores[0].id,
+        store_id: stores[0]?.id || 'HATCH_HQ',
         user_id: session.user.id,
         items: [{ name: '아메리카노', qty: 1, price: price }],
         total_price: price,
@@ -207,8 +207,8 @@ export default function App() {
 
   // 실제 원두 주문 및 포인트 차감 로직
   const handleBeanOrder = async (cartItems, totalPrice) => {
-    if (!session?.user?.id || stores.length === 0) {
-      alert("데이터를 아직 불러오지 못했습니다.");
+    if (!session?.user?.id) {
+      alert("로그인 정보가 없습니다.");
       return;
     }
     
@@ -247,7 +247,7 @@ export default function App() {
 
       // 2. 주문 내역 기록
       const orderData = {
-        store_id: stores[0].id,
+        store_id: stores[0]?.id || 'HATCH_HQ',
         user_id: session.user.id,
         items: cartItems,
         total_price: totalPrice, // 주문 총액 추가
