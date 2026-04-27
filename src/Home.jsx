@@ -7,6 +7,52 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
   const [activeCard, setActiveCard] = useState(null); // 'store' | 'cafe' | 'beans' | null
   const [isMapMode, setIsMapMode] = useState(false);
   const [showBeansList, setShowBeansList] = useState(false);
+  const [orderQuantities, setOrderQuantities] = useState({});
+
+  const beansList = [
+    { name: '해치너트', price: 22000 }, 
+    { name: '해치프룻', price: 28000 }, 
+    { name: '디카페인', price: 36000 }, 
+    { name: '해치너트2', price: 24000 }, 
+    { name: '해치너트3', price: 24000 }
+  ];
+
+  const totalOrderQty = Object.values(orderQuantities).reduce((a, b) => a + b, 0);
+  const totalOrderPrice = Object.entries(orderQuantities).reduce((total, [name, qty]) => {
+    const bean = beansList.find(b => b.name === name);
+    return total + (bean ? bean.price * qty : 0);
+  }, 0);
+
+  const submitCartOrder = (e) => {
+    e.stopPropagation();
+    if (totalOrderQty === 0) return;
+    const cartItems = Object.entries(orderQuantities).map(([name, qty]) => {
+      const bean = beansList.find(b => b.name === name);
+      return { name, qty, price: bean.price };
+    });
+    handleBeanOrder(cartItems, totalOrderPrice).then(() => {
+      setOrderQuantities({});
+      setShowBeansList(false);
+    }).catch(err => {
+      // Error handled inside App.jsx
+    });
+  };
+
+  const handleIncrement = (e, name) => {
+    e.stopPropagation();
+    setOrderQuantities(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+  };
+
+  const handleDecrement = (name) => {
+    setOrderQuantities(prev => {
+      const next = { ...prev };
+      if (next[name] > 0) {
+        next[name] -= 1;
+        if (next[name] === 0) delete next[name];
+      }
+      return next;
+    });
+  };
 
   const toggleMapMode = () => {
     if (navigator.vibrate) navigator.vibrate(15);
@@ -120,34 +166,46 @@ export default function Home({ stores, profile, formatPoints, handleTestOrder, h
             <div className={`beans-expand hide-in-sidebar ${activeCard === 'beans' ? 'open' : ''}`}>
               <div className="beans-expand-divider" />
               <div className="beans-expand-grid">
-                <button 
+                <div 
                   className="beans-expand-btn w-100" 
-                  style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', padding: '14px 20px', background: 'rgba(255,255,255,0.15)' }}
+                  style={{ flex: 1, display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '14px 20px', background: 'rgba(255,255,255,0.15)', borderRadius: '14px', cursor: 'pointer' }}
                   onClick={(e) => { 
                     e.stopPropagation(); 
                     setShowBeansList(prev => !prev);
                   }}
                 >
-                  <span style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>해치커피로스터리</span>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showBeansList ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.95rem', fontWeight: 'bold' }}>해치커피로스터리</span>
+                    {totalOrderQty > 0 && (
+                      <span style={{ fontSize: '0.8rem', color: '#ff6b6b', fontWeight: 'bold' }}>
+                        {totalOrderQty}개 / {formatPoints(totalOrderPrice)}P
+                      </span>
+                    )}
+                  </div>
+                  
+                  {totalOrderQty > 0 ? (
+                    <button 
+                      onClick={submitCartOrder}
+                      style={{ background: '#ff6b6b', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '0.8rem', fontWeight: 'bold', zIndex: 10 }}
+                    >
+                      주문하기
+                    </button>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: showBeansList ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  )}
+                </div>
               </div>
               
               <div className={`beans-sub-list ${showBeansList ? 'open' : ''}`}>
-                {[
-                  { name: '해치너트', price: 22000 }, 
-                  { name: '해치프룻', price: 28000 }, 
-                  { name: '디카페인', price: 36000 }, 
-                  { name: '해치너트2', price: 24000 }, 
-                  { name: '해치너트3', price: 24000 }
-                ].map((bean, idx) => (
-                  <button key={idx} className="beans-sub-item-btn" onClick={(e) => { e.stopPropagation(); handleBeanOrder(bean.name, bean.price); }}>
-                    <span>{bean.name}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{formatPoints(bean.price)}P</span>
-                      <span className="order-plus">+</span>
-                    </div>
-                  </button>
+                {beansList.map((bean, idx) => (
+                  <BeanItem 
+                    key={idx} 
+                    bean={bean} 
+                    quantity={orderQuantities[bean.name] || 0}
+                    onIncrement={(e) => handleIncrement(e, bean.name)}
+                    onDecrement={() => handleDecrement(bean.name)}
+                    formatPoints={formatPoints}
+                  />
                 ))}
               </div>
             </div>
@@ -494,6 +552,36 @@ function CafeSection({ isCompact, isExpanded, toggleCafe, onRestoreCafe, recentC
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+function BeanItem({ bean, quantity, onIncrement, onDecrement, formatPoints }) {
+  const [touchStartX, setTouchStartX] = React.useState(0);
+  
+  const handleTouchStart = (e) => setTouchStartX(e.touches[0].clientX);
+  const handleTouchEnd = (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    if (touchStartX - touchEndX > 40) {
+      onDecrement();
+    }
+  };
+
+  return (
+    <div 
+      className="beans-sub-item-btn" 
+      onClick={onIncrement} 
+      onTouchStart={handleTouchStart} 
+      onTouchEnd={handleTouchEnd}
+      style={{ userSelect: 'none', display: 'flex', justifyContent: 'space-between', padding: '14px 20px', cursor: 'pointer' }}
+    >
+      <span style={{ display: 'flex', alignItems: 'center' }}>
+        {bean.name}
+        {quantity > 0 && <span style={{ marginLeft: '8px', color: '#ff6b6b', fontWeight: 'bold' }}>{quantity}</span>}
+      </span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>{formatPoints(bean.price)}P</span>
+        <span className="order-plus">+</span>
       </div>
     </div>
   );

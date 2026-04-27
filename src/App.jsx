@@ -157,21 +157,25 @@ export default function App() {
   };
 
   // 실제 원두 주문 및 포인트 차감 로직
-  const handleBeanOrder = async (beanName, price) => {
+  const handleBeanOrder = async (cartItems, totalPrice) => {
     if (!session?.user?.id || stores.length === 0) {
       alert("데이터를 아직 불러오지 못했습니다.");
       return;
     }
     
-    if (profile.points < price) {
-      alert(`잔여 포인트가 부족합니다.\n(현재: ${formatPoints(profile.points)}P / 필요: ${formatPoints(price)}P)`);
+    if (profile.points < totalPrice) {
+      alert(`잔여 포인트가 부족합니다.\n(현재: ${formatPoints(profile.points)}P / 필요: ${formatPoints(totalPrice)}P)`);
       return;
     }
 
-    if (!window.confirm(`${beanName}을(를) 주문하시겠습니까?\n${formatPoints(price)} CUP이 차감됩니다.`)) return;
+    const orderTitle = cartItems.length === 1 && cartItems[0].qty === 1 
+      ? cartItems[0].name 
+      : `${cartItems[0].name} 포함 총 ${cartItems.reduce((sum, item) => sum + item.qty, 0)}개`;
+
+    if (!window.confirm(`${orderTitle}을(를) 주문하시겠습니까?\n${formatPoints(totalPrice)} CUP이 차감됩니다.`)) return;
 
     try {
-      const newPoints = profile.points - price;
+      const newPoints = profile.points - totalPrice;
       
       // 1. 포인트 차감 업데이트 (select().single()을 붙여서 실제 업데이트가 안 되면 에러를 던지게 함)
       const { data: updatedProfile, error: profileError } = await supabase
@@ -196,10 +200,8 @@ export default function App() {
       const orderData = {
         store_id: stores[0].id,
         user_id: session.user.id,
-        items: [
-          { name: beanName, qty: 1, price: price }
-        ],
-        total_price: price, // 주문 총액 추가
+        items: cartItems,
+        total_price: totalPrice, // 주문 총액 추가
         status: '주문완료' // 매장 테스트할 땐 대기중이겠지만 원두 발주는 주문완료
       };
 
