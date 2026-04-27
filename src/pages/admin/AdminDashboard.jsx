@@ -233,8 +233,11 @@ export default function AdminDashboard() {
       <style>{`
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #f6f8fa; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
         .sidebar { width: 280px; background: #fff; border-right: 1px solid #e1e4e8; padding: 40px 24px; display: flex; flex-direction: column; flex-shrink: 0; }
-        .sidebar-logo { font-size: 1.5rem; font-weight: 900; margin-bottom: 48px; display: flex; align-items: center; gap: 12px; color: #FF6A00; }
+        .sidebar-logo { font-size: 1.5rem; font-weight: 900; margin-bottom: 48px; display: flex; align-items: center; gap: 14px; color: #FF6A00; cursor: pointer; }
         .sidebar-logo-icon { width: 32px; height: 32px; border-radius: 10px; background: #FF6A00; box-shadow: 0 4px 12px rgba(255,106,0,0.3); }
+        .logo-text-stack { display: flex; flex-direction: column; line-height: 0.9; }
+        .logo-main { font-size: 1.6rem; font-weight: 900; letter-spacing: -1px; }
+        .logo-sub { font-size: 0.75rem; font-weight: 900; letter-spacing: 2.5px; color: #111; text-align: justify; width: 100%; }
         
         .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; }
         .nav-item { padding: 14px 18px; border-radius: 14px; cursor: pointer; transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 14px; color: #57606a; font-weight: 600; font-size: 0.95rem; }
@@ -294,9 +297,12 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       <aside className="sidebar">
-        <div className="sidebar-logo">
+        <div className="sidebar-logo" onClick={() => window.location.href = 'https://www.wuricafe.com/'}>
           <div className="sidebar-logo-icon"></div>
-          WURI BI
+          <div className="logo-text-stack">
+            <div className="logo-main">WURI.</div>
+            <div className="logo-sub">HATCH</div>
+          </div>
         </div>
         <nav className="nav-group">
           <div className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>📊 종합 리포트</div>
