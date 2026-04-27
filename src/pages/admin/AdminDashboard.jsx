@@ -271,9 +271,9 @@ export default function AdminDashboard() {
         .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 60px; width: 50%; }
         .kpi-card { background: #fff; padding: 24px; border-radius: 20px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 12px; transition: 0.3s; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
-        .kpi-label { font-size: 1.5rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -1px; }
+        .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
         .kpi-value-row { display: flex; align-items: baseline; gap: 4px; }
-        .kpi-value { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.5px; }
+        .kpi-value { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; }
         .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
 
         .grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
