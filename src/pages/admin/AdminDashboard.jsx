@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../../supabase.js';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TENANT_CONFIG } from '../../config/tenant.js';
 
 // --- Privacy Scramble Hooks & Components ---
 function usePrivacyButton(initialState = 'normal', onLogout) {
@@ -506,13 +507,13 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       <aside className="sidebar">
-        <div className="sidebar-logo" onClick={() => window.location.href = 'https://www.wuricafe.com/'}>
+        <div className="sidebar-logo" onClick={() => window.location.href = TENANT_CONFIG.brand.websiteUrl}>
           <div className="logo-text-stack">
             <div className="logo-main">
-              <span>W</span><span>U</span><span>R</span><span>I</span><span>.</span>
+              {TENANT_CONFIG.brand.mainName.split('').map((char, i) => <span key={`main-${i}`}>{char}</span>)}
             </div>
             <div className="logo-sub">
-              <span>H</span><span>A</span><span>T</span><span>C</span><span>H</span>
+              {TENANT_CONFIG.brand.subName.split('').map((char, i) => <span key={`sub-${i}`}>{char}</span>)}
             </div>
           </div>
         </div>
@@ -529,7 +530,7 @@ export default function AdminDashboard() {
             프라이버시 보호 {privacyState === 'scrambling' ? 'ON' : 'OFF'}
           </button>
           <button className="footer-btn" onClick={handleLogout} style={{color:'#cf222e'}}>로그아웃</button>
-          <div style={{ fontSize: '0.6rem', color: '#ccc', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>v1.0.9</div>
+          <div style={{ fontSize: '0.6rem', color: '#ccc', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>{TENANT_CONFIG.meta.version}</div>
         </div>
       </aside>
 
@@ -551,28 +552,28 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label"><ScrambleText text="카페1매출" mode={privacyState} /></div>
+                <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.budget1} mode={privacyState} /></div>
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={stats.totalBudget.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label"><ScrambleText text="카페2매출" mode={privacyState} /></div>
+                <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.budget2} mode={privacyState} /></div>
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={stats.personnel.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className={`kpi-card${beanSalesFlash ? ' kpi-card-flash' : ''}`} onClick={() => setBeanSalesFlash(false)}>
-                <div className="kpi-label"><ScrambleText text="원두 매출" mode={privacyState} /></div>
+                <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.sales1} mode={privacyState} /></div>
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={beanSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label"><ScrambleText text="디저트 매출" mode={privacyState} /></div>
+                <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.sales2} mode={privacyState} /></div>
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={dessertSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>

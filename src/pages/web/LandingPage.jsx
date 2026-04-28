@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TENANT_CONFIG } from '../../config/tenant.js';
 
 // Scramble characters for the WURI → 우리 effect
 const SCRAMBLE_CHARS_L = 'ㅇㅜㅎㅏㄴㄱㅡWUwu';
@@ -491,14 +492,14 @@ export default function LandingPage() {
       `}</style>
 
       <header>
-        <div className="logo" style={{ userSelect: 'none' }}>WURI.</div>
+        <div className="logo" style={{ userSelect: 'none' }}>{TENANT_CONFIG.brand.mainName}</div>
       </header>
 
       <section className="hero-section">
         {/* Neumorphism Platform Badge */}
         <div className="neu-badge">
           <span style={{ width:'8px', height:'8px', borderRadius:'50%', background:'#FF6A00', boxShadow:'0 0 10px rgba(255,106,0,0.5)', display:'inline-block' }}></span>
-          WURI Platform 2.0
+          {TENANT_CONFIG.brand.mainName} Platform 2.0
         </div>
 
         <h1 className="hero-title">
@@ -522,7 +523,7 @@ export default function LandingPage() {
             <span style={{ display: 'inline' }}>다</span>
           </span>
         </h1>
-        <p className="hero-desc">WURI와 함께하는 모든 카페를 위한 스마트한 커피 플랫폼</p>
+        <p className="hero-desc">{TENANT_CONFIG.brand.mainName}와 함께하는 모든 카페를 위한 스마트한 커피 플랫폼</p>
         <div className="hero-btns">
           <button 
             className="neu-btn-primary" 
@@ -598,7 +599,7 @@ export default function LandingPage() {
         <div className="consent-banner">
           <div className="consent-content">
             <div className="consent-text">
-              <b>WURI 서비스 최적화 안내</b>
+              <b>{TENANT_CONFIG.brand.mainName} 서비스 최적화 안내</b>
               <span>주변 매장 추천 및 보안 강화를 위해 위치 정보와 쿠키 사용에 동의하시겠습니까?</span>
             </div>
             <div className="consent-buttons">
