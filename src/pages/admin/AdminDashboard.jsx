@@ -340,13 +340,13 @@ export default function AdminDashboard() {
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
         .sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        .sidebar-logo { margin-bottom: 60px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 200px; }
+        .sidebar-logo { margin-bottom: 70px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 200px; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
         .logo-main { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; width: 100%; }
         .logo-sub { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 900; margin-top: 6px; border-top: 3px solid #111; padding-top: 6px; width: 100%; }
         
-        .nav-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; color: #888; font-weight: 600; font-size: 0.85rem; }
+        .nav-group { display: flex; flex-direction: column; gap: 4px; flex: 1; margin-top: 5px; }
+        .nav-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; color: #888; font-weight: 600; font-size: 0.85rem; height: 48px; }
         .nav-item:hover { color: #111; background: #f8f8f8; }
         .nav-item.active { background: #111; color: #fff; }
         .nav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; }
@@ -355,10 +355,10 @@ export default function AdminDashboard() {
         .footer-btn { padding: 10px; border-radius: 8px; border: 1px solid #eee; background: #fff; cursor: pointer; font-weight: 700; font-size: 0.75rem; color: #666; transition: 0.2s; }
         .footer-btn:hover { background: #f8f8f8; color: #111; }
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
-
+ 
         .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
-        .page-header { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; margin-top: -24px; }
+        .page-header { margin-bottom: 40px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; min-height: 85px; }
+        .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 15px; }
 
         .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
