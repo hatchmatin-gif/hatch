@@ -134,7 +134,14 @@ export default function AdminDashboard() {
     if (isKpiRefreshing) return;
     setIsKpiRefreshing(true);
     try {
-      await Promise.all([fetchOrderSales(), fetchUsageStats()]);
+      // 대시보드 전체 데이터를 다시 불러오기 (F5 대신 사용)
+      await Promise.all([
+        checkAdminRole(),
+        fetchSecurityLogs(),
+        fetchUnifiedData(),
+        fetchOrderSales(),
+        fetchUsageStats()
+      ]);
     } catch (err) {
       console.error('Refresh error:', err);
     } finally {
