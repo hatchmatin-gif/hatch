@@ -129,19 +129,21 @@ export default function AdminDashboard() {
     fetchSecurityLogs();
     fetchUnifiedData();
 
+    const dashboardChannel = supabase.channel('admin_dashboard');
     const tables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task', 'orders'];
-    const subscriptions = tables.map(table => 
-      supabase.channel(`channel_${table}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
-          fetchUnifiedData();
-        })
-        .subscribe()
-    );
+    
+    tables.forEach(table => {
+      dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
+        fetchUnifiedData();
+      });
+    });
+    
+    dashboardChannel.subscribe();
 
     return () => {
       mounted = false;
       clearTimeout(fallbackTimer);
-      subscriptions.forEach(sub => supabase.removeChannel(sub));
+      supabase.removeChannel(dashboardChannel);
     };
   }, []);
 
