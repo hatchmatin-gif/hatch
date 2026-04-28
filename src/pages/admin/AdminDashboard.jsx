@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [monthOrderCount, setMonthOrderCount] = useState(0);
   const [usageStats, setUsageStats] = useState({ supabase: null, vercel: null, configured: { supabase: false, vercel: false } });
+  const [isKpiRefreshing, setIsKpiRefreshing] = useState(false);
 
   const navigate = useNavigate();
 
@@ -117,6 +118,12 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error('fetchUsageStats error:', e);
     }
+  };
+
+  const handleKpiRefresh = async () => {
+    setIsKpiRefreshing(true);
+    await Promise.all([fetchOrderSales(), fetchUsageStats()]);
+    setTimeout(() => setIsKpiRefreshing(false), 600);
   };
 
   const fetchUnifiedData = async () => {
@@ -447,7 +454,7 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card-empty" />
               <div className="kpi-card-empty" />
-              <div className="kpi-card" style={{ gap: '0', background: syncStatus === 'live' ? '#fff' : '#fffaf7', position: 'relative', padding: '16px', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+              <div className="kpi-card" onClick={handleKpiRefresh} style={{ gap: '0', background: syncStatus === 'live' ? '#fff' : '#fffaf7', position: 'relative', padding: '16px', alignItems: 'flex-start', justifyContent: 'flex-start', cursor: 'pointer', transition: 'transform 0.15s', transform: isKpiRefreshing ? 'scale(0.96)' : 'scale(1)' }}>
                 {/* 상단: 상태 배지 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
                   <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none', flexShrink: 0 }} />
@@ -481,8 +488,8 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 {/* 하단 우측: 마지막 동기 시간 */}
-                <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '0.55rem', color: '#ccc', fontWeight: 600, textAlign: 'right' }}>
-                  {lastSyncTime
+                <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '0.55rem', color: isKpiRefreshing ? '#FF6A00' : '#ccc', fontWeight: 600, textAlign: 'right', transition: 'color 0.3s' }}>
+                  {isKpiRefreshing ? '↻ 갱신 중...' : lastSyncTime
                     ? `${lastSyncTime.getHours().toString().padStart(2,'0')}:${lastSyncTime.getMinutes().toString().padStart(2,'0')}:${lastSyncTime.getSeconds().toString().padStart(2,'0')}`
                     : '--:--:--'}
                 </div>
