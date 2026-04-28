@@ -235,10 +235,7 @@ export default function App() {
     // 1) 로컬 상태 즉시 업데이트 (Optimistic UI)
     setProfile(prev => ({ ...prev, points: newPoints }));
 
-    // 2) 즉시 성공 알림 → 사용자 대기 시간 0초
-    alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
-
-    // 3) DB 기록은 백그라운드에서 처리 (fire-and-forget)
+    // 2) DB 통신 먼저 시작 (alert 표시 중에도 네트워크 요청은 백그라운드 진행)
     const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : 1);
     const orderData = {
       store_id: targetStoreId,
@@ -255,7 +252,6 @@ export default function App() {
     ]).then(([profileResult, orderResult]) => {
       if (profileResult.error) console.error('프로필 업데이트 실패:', profileResult.error);
       if (orderResult.error) console.error('주문 삽입 실패:', orderResult.error);
-      // DB 실패 시 자동 롤백
       if (profileResult.error || orderResult.error) {
         setProfile(prev => ({ ...prev, points: profile.points }));
         alert('서버 동기화 실패. 잔액이 복구됩니다. 다시 시도해주세요.');
@@ -264,6 +260,9 @@ export default function App() {
       console.error('주문 처리 오류:', err);
       setProfile(prev => ({ ...prev, points: profile.points }));
     });
+
+    // 3) 알림은 DB 통신 시작 후에 표시 → 팝업 읽는 동안 DB 기록 완료
+    alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
   };
 
   // Format currency
