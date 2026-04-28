@@ -511,9 +511,11 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* 하단 섹션 공간 확보 (추후 새로운 기능 추가 예정) */}
-            <div style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #f0f0f0', borderRadius: '24px', margin: '40px 0' }}>
-              <span style={{ color: '#ccc', fontWeight: 700 }}>새로운 대시보드 기능을 준비 중입니다.</span>
+            {/* 하단 확장 섹션: 8열 x 3행 그리드 추가 */}
+            <div className="kpi-grid" style={{ marginTop: '20px' }}>
+              {[...Array(24)].map((_, i) => (
+                <div key={i} className="kpi-card-empty" />
+              ))}
             </div>
           </div>
         ) : activeTab === 'security' ? (
