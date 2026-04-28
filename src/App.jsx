@@ -173,7 +173,7 @@ export default function App() {
       setProfile(prev => ({ ...prev, points: newPoints }));
 
       const orderData = {
-        store_id: stores[0]?.id || 'HATCH_HQ',
+        store_id: stores[0]?.id || 1,
         user_id: session.user.id,
         order_type: '음료',
         items: [{ name: '아메리카노', qty: 1, price: price }],
@@ -254,7 +254,7 @@ export default function App() {
 
       // 2. 주문 내역 기록
       // 직전 주문 매장이 있으면 그것을 사용, 없으면 현재 목록의 첫번째, 그것도 없으면 '해치2' 더미 ID 사용
-      const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : '00000000-0000-0000-0000-000000000002');
+      const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : 1);
       
       const orderData = {
         store_id: targetStoreId,
