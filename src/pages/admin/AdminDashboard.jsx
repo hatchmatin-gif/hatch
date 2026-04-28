@@ -472,14 +472,14 @@ export default function AdminDashboard() {
         .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
         .metric-val { color: #666; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 20px; margin-bottom: 60px; width: 100%; }
-        .kpi-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 32px; margin-bottom: 60px; width: 100%; }
+        .kpi-card { background: #fff; padding: 18px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
         .kpi-card-empty { background: #fafafa; border: 1.5px dashed #d0d0d0; border-radius: 16px; aspect-ratio: 1 / 1; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
-        .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
+        .kpi-label { font-size: 0.93rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
         .kpi-value-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
-        .kpi-value { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px; }
-        .kpi-unit { font-size: 0.8rem; color: #ccc; font-weight: 600; }
+        .kpi-value { font-size: 1.12rem; font-weight: 900; letter-spacing: -0.5px; }
+        .kpi-unit { font-size: 0.74rem; color: #ccc; font-weight: 600; }
 
         .grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
         .card-item { background: #fff; padding: 28px; border-radius: 16px; border: 1px solid #f0f0f0; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
@@ -548,7 +548,7 @@ export default function AdminDashboard() {
               <div className="kpi-card">
                 <div className="kpi-label"><ScrambleText text="당월 기준" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value" style={{ fontSize: '1.0rem' }}><ScrambleText text={`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`} mode={privacyState} /></span>
+                  <span className="kpi-value" style={{ fontSize: '0.93rem' }}><ScrambleText text={`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`} mode={privacyState} /></span>
                 </div>
               </div>
               <div className="kpi-card">
@@ -581,17 +581,17 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card-empty" />
               <div className="kpi-card-empty" />
-              <div className="kpi-card" onClick={handleKpiRefresh} style={{ gap: '0', background: syncStatus === 'live' ? '#fff' : '#fffaf7', position: 'relative', padding: '16px', alignItems: 'flex-start', justifyContent: 'flex-start', cursor: 'pointer', transition: 'transform 0.15s', transform: isKpiRefreshing ? 'scale(0.96)' : 'scale(1)' }}>
+              <div className="kpi-card" onClick={handleKpiRefresh} style={{ gap: '0', background: syncStatus === 'live' ? '#fff' : '#fffaf7', position: 'relative', padding: '15px', alignItems: 'flex-start', justifyContent: 'flex-start', cursor: 'pointer', transition: 'transform 0.15s', transform: isKpiRefreshing ? 'scale(0.96)' : 'scale(1)' }}>
                 {/* 상단: 상태 배지 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
-                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none', flexShrink: 0 }} />
-                  <span style={{ fontSize: '0.7rem', fontWeight: 900, color: syncStatus === 'live' ? '#FF6A00' : '#aaa', letterSpacing: '0.5px' }}>
+                  <div style={{ width: '6.5px', height: '6.5px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.65rem', fontWeight: 900, color: syncStatus === 'live' ? '#FF6A00' : '#aaa', letterSpacing: '0.5px' }}>
                     {syncStatus === 'live' ? 'LIVE' : syncStatus === 'polling' ? 'POLL' : 'CONN...'}
                   </span>
                 </div>
                 {/* 중단: Supabase / Vercel 사용량 */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
-                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.58rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
                     <span>SUPABASE DB</span>
                     <span style={{ color: '#FF6A00' }}>
                       {usageStats.configured?.supabase 
@@ -599,7 +599,7 @@ export default function AdminDashboard() {
                         : '설정 필요'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.58rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
                     <span>API REQ</span>
                     <span style={{ color: '#666' }}>
                       {usageStats.configured?.supabase 
@@ -607,7 +607,7 @@ export default function AdminDashboard() {
                         : '—'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.58rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
                     <span>VERCEL BW</span>
                     <span style={{ color: '#666' }}>
                       {usageStats.configured?.vercel 
@@ -617,7 +617,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 {/* 하단 우측: 마지막 동기 시간 */}
-                <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '0.55rem', color: isKpiRefreshing ? '#FF6A00' : '#ccc', fontWeight: 600, textAlign: 'right', transition: 'color 0.3s' }}>
+                <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '0.51rem', color: isKpiRefreshing ? '#FF6A00' : '#ccc', fontWeight: 600, textAlign: 'right', transition: 'color 0.3s' }}>
                   {isKpiRefreshing ? '↻ 갱신 중...' : lastSyncTime
                     ? `${lastSyncTime.getHours().toString().padStart(2,'0')}:${lastSyncTime.getMinutes().toString().padStart(2,'0')}:${lastSyncTime.getSeconds().toString().padStart(2,'0')}`
                     : '--:--:--'}
