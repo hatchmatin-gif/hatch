@@ -44,26 +44,27 @@ export default async function handler(req, res) {
   const vercelDeploy  = results[2].status === 'fulfilled' ? results[2].value : null;
 
   // ── Supabase 사용량 파싱 ────────────────────────────────────────────
-  let supabase = { dbSize: null, apiRequests: null, dbPercent: 0, apiPercent: 0 };
+  let supabase = { dbSize: 0, apiRequests: 0, dbPercent: 0, apiPercent: 0 };
   if (supabaseData) {
+    // API 응답 구조가 복잡하므로 여러 경로 확인
     const metrics = supabaseData.usages || supabaseData.metrics || supabaseData;
-    const dbUsage = metrics?.db_size?.usage ?? metrics?.database_size ?? 0;
-    const apiUsage = metrics?.api_requests?.usage ?? 0;
+    const dbVal = metrics?.db_size?.usage ?? metrics?.database_size?.usage ?? 0;
+    const apiVal = metrics?.api_requests?.usage ?? 0;
     
     supabase = {
-      dbSize: dbUsage,
-      apiRequests: apiUsage,
-      dbPercent: Math.min(Math.round((dbUsage / 536870912) * 100), 100), // 512MB 기준
-      apiPercent: Math.min(Math.round((apiUsage / 500000) * 100), 100),  // 500k 기준
+      dbSize: dbVal,
+      apiRequests: apiVal,
+      // 0보다 크면 최소 1%로 표시되게 Math.ceil 사용
+      dbPercent: dbVal > 0 ? Math.max(1, Math.ceil((dbVal / 536870912) * 100)) : 0,
+      apiPercent: apiVal > 0 ? Math.max(1, Math.ceil((apiVal / 500000) * 100)) : 0,
     };
   }
 
   // ── Vercel 사용량 파싱 ──────────────────────────────────────────────
   let vercel = { bandwidthPercent: 0, requestsPercent: 0 };
-  // Vercel Hobby 티어는 API로 상세 사용량을 가져오기 어려우므로 
-  // 연동 여부와 기본 프로젝트 정보를 기반으로 표시 (나중에 확장 가능)
   if (vercelProject) {
-    vercel.bandwidthPercent = 1; // 연동 시 최소 1% 표시 (샘플)
+    // 임시로 연동 확인용 1% 표시 (실제 데이터는 Vercel Billing API 필요)
+    vercel.bandwidthPercent = 1; 
     vercel.requestsPercent = 1;
   }
 
