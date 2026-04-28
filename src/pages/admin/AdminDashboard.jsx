@@ -55,14 +55,21 @@ export default function AdminDashboard() {
 
   const checkAdminRole = async () => {
     try {
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 3000));
+      // F5 새로고침 시 세션 복구 시간을 확보하기 위해 짧은 지연 추가
+      await new Promise(r => setTimeout(r, 500));
+      
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Session timeout')), 5000));
       
       const { data: { session }, error: sessionError } = await Promise.race([
         supabase.auth.getSession(),
         timeoutPromise
       ]);
       
-      if (sessionError || !session) { navigate('/admin/login'); return; }
+      if (sessionError || !session) { 
+        console.log("No session found, navigating to login...");
+        navigate('/admin/login'); 
+        return; 
+      }
 
       const { data: profile, error: profileError } = await Promise.race([
         supabase.from('profiles').select('role').eq('id', session.user.id).single(),
@@ -70,6 +77,7 @@ export default function AdminDashboard() {
       ]);
       
       if (profileError || profile?.role !== 'super_admin') {
+        console.log("Not a super admin, navigating to home...");
         navigate('/');
         return;
       }
@@ -367,7 +375,7 @@ export default function AdminDashboard() {
 
         .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 20px; margin-bottom: 60px; width: 100%; }
         .kpi-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
-        .kpi-card-empty { background: #fafafa; border: 1.5px dashed #e8e8e8; border-radius: 16px; aspect-ratio: 1 / 1; }
+        .kpi-card-empty { background: #fafafa; border: 1.5px dashed #d0d0d0; border-radius: 16px; aspect-ratio: 1 / 1; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
         .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
         .kpi-value-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
@@ -413,6 +421,7 @@ export default function AdminDashboard() {
           <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}><span className="dot"></span> 보안 감사</div>
         </nav>
         <div className="sidebar-footer">
+          <div style={{ fontSize: '0.65rem', color: '#ccc', marginBottom: '10px', fontWeight: 600 }}>BUILD VERSION v1.0.8</div>
           <button className={`footer-btn ${isBlurred ? 'active' : ''}`} onClick={() => setIsBlurred(!isBlurred)}>
             프라이버시 보호 {isBlurred ? 'ON' : 'OFF'}
           </button>
