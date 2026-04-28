@@ -555,10 +555,10 @@ export default function AdminDashboard() {
         /* Glass Calendar Popup */
         .glass-popup {
           position: absolute;
-          top: 50%;
-          left: 50%;
-          width: 280px;
-          height: 340px;
+          top: 25%;
+          left: 15%;
+          width: 320px;
+          height: 380px;
           background: rgba(120, 120, 120, 0.4);
           backdrop-filter: blur(30px);
           -webkit-backdrop-filter: blur(30px);
@@ -569,15 +569,15 @@ export default function AdminDashboard() {
           transform-origin: top left;
           display: flex;
           flex-direction: column;
-          padding: 24px;
+          padding: 28px;
           cursor: default;
         }
         .glass-close-btn {
           position: absolute;
           top: -12px;
           right: -12px;
-          width: 36px;
-          height: 36px;
+          width: 42px;
+          height: 42px;
           border-radius: 50%;
           background: rgba(255, 106, 0, 0.65);
           backdrop-filter: blur(16px);
@@ -585,6 +585,7 @@ export default function AdminDashboard() {
           border: 1px solid rgba(255, 160, 100, 0.5);
           box-shadow: 0 8px 16px rgba(255, 106, 0, 0.3);
           color: #fff;
+          font-size: 1.1rem;
           font-weight: 900;
           display: flex;
           align-items: center;
@@ -598,7 +599,7 @@ export default function AdminDashboard() {
           position: absolute;
           bottom: -16px;
           right: -16px;
-          padding: 10px 24px;
+          padding: 12px 28px;
           border-radius: 100px;
           background: rgba(46, 204, 113, 0.65);
           backdrop-filter: blur(16px);
@@ -607,7 +608,7 @@ export default function AdminDashboard() {
           box-shadow: 0 8px 16px rgba(46, 204, 113, 0.3);
           color: #fff;
           font-weight: 800;
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           cursor: pointer;
           z-index: 1001;
           transition: transform 0.2s;
@@ -625,26 +626,26 @@ export default function AdminDashboard() {
         .calendar-month-title {
           color: #fff;
           font-weight: 800;
-          font-size: 1.1rem;
-          margin-bottom: 12px;
+          font-size: 1.3rem;
+          margin-bottom: 16px;
           text-align: left;
         }
         .calendar-days-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          gap: 6px;
+          gap: 10px;
           text-align: center;
         }
         .cal-head {
           color: rgba(255,255,255,0.6);
-          font-size: 0.7rem;
+          font-size: 0.8rem;
           font-weight: 700;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
         }
         .calendar-day {
           color: #fff;
           font-weight: 600;
-          font-size: 0.85rem;
+          font-size: 0.95rem;
           aspect-ratio: 1;
           display: flex;
           align-items: center;
@@ -701,7 +702,7 @@ export default function AdminDashboard() {
             <div className="kpi-grid">
               <div 
                 className="kpi-card" 
-                style={{ position: 'relative', cursor: 'pointer' }}
+                style={{ position: 'relative', cursor: 'pointer', zIndex: showCalendar ? 50 : 1 }}
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowCalendar(true);
