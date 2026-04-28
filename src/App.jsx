@@ -232,36 +232,38 @@ export default function App() {
 
     const newPoints = profile.points - totalPrice;
 
-    // 로컬 상태 즉시 업데이트 (Optimistic UI → 화면 바로 반영)
+    // 1) 로컬 상태 즉시 업데이트 (Optimistic UI)
     setProfile(prev => ({ ...prev, points: newPoints }));
 
-    try {
-      const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : 1);
-      const orderData = {
-        store_id: targetStoreId,
-        user_id: session.user.id,
-        order_type: '원두',
-        items: cartItems,
-        total_price: totalPrice,
-        status: '주문완료'
-      };
+    // 2) 즉시 성공 알림 → 사용자 대기 시간 0초
+    alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
 
-      // 포인트 차감 + 주문 삽입을 동시에 실행 → 지연 최소화
-      const [profileResult, orderResult] = await Promise.all([
-        supabase.from('profiles').update({ points: newPoints }).eq('id', session.user.id),
-        supabase.from('orders').insert([orderData])
-      ]);
+    // 3) DB 기록은 백그라운드에서 처리 (fire-and-forget)
+    const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : 1);
+    const orderData = {
+      store_id: targetStoreId,
+      user_id: session.user.id,
+      order_type: '원두',
+      items: cartItems,
+      total_price: totalPrice,
+      status: '주문완료'
+    };
 
-      if (profileResult.error) throw profileResult.error;
-      if (orderResult.error) throw orderResult.error;
-
-      alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
-    } catch (err) {
-      // DB 실패 시 로컬 상태 롤백
+    Promise.all([
+      supabase.from('profiles').update({ points: newPoints }).eq('id', session.user.id),
+      supabase.from('orders').insert([orderData])
+    ]).then(([profileResult, orderResult]) => {
+      if (profileResult.error) console.error('프로필 업데이트 실패:', profileResult.error);
+      if (orderResult.error) console.error('주문 삽입 실패:', orderResult.error);
+      // DB 실패 시 자동 롤백
+      if (profileResult.error || orderResult.error) {
+        setProfile(prev => ({ ...prev, points: profile.points }));
+        alert('서버 동기화 실패. 잔액이 복구됩니다. 다시 시도해주세요.');
+      }
+    }).catch(err => {
+      console.error('주문 처리 오류:', err);
       setProfile(prev => ({ ...prev, points: profile.points }));
-      console.error(err);
-      alert("결제 실패: " + err.message);
-    }
+    });
   };
 
   // Format currency

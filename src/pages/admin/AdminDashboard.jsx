@@ -188,10 +188,10 @@ export default function AdminDashboard() {
       else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setSyncStatus('polling');
     });
 
-    // 10초마다 주문 매출 자동 갱신 (Realtime 불안정 대비, 월 86k req ≈ 86MB 무료티어 안전)
+    // 5초마다 주문 매출 자동 갱신 (월 ~170MB, 무료티어 2GB의 8.5% — 안전)
     const salesPolling = setInterval(() => {
       fetchOrderSales();
-    }, 10000);
+    }, 5000);
 
     // 5분마다 사용량 지표 갱신 (API 호출 반복 최소화)
     const usagePolling = setInterval(() => {
