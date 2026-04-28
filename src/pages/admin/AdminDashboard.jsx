@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [isBlurred, setIsBlurred] = useState(false);
   const [securityLogs, setSecurityLogs] = useState([]);
   const [selectedDetail, setSelectedDetail] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   
   const [sheetData, setSheetData] = useState({
     운영: [], 인사: [], 생산: [], 과제: []
@@ -133,20 +134,8 @@ export default function AdminDashboard() {
   const handleKpiRefresh = async () => {
     if (isKpiRefreshing) return;
     setIsKpiRefreshing(true);
-    try {
-      // 대시보드 전체 데이터를 다시 불러오기 (F5 대신 사용)
-      await Promise.all([
-        checkAdminRole(),
-        fetchSecurityLogs(),
-        fetchUnifiedData(),
-        fetchOrderSales(),
-        fetchUsageStats()
-      ]);
-    } catch (err) {
-      console.error('Refresh error:', err);
-    } finally {
-      setTimeout(() => setIsKpiRefreshing(false), 600);
-    }
+    // UI 전체를 처음부터 다시 불러오기 (key를 바꿔서 컴포넌트 리마운트)
+    setReloadKey(prev => prev + 1);
   };
 
   const fetchUnifiedData = async () => {
@@ -331,7 +320,7 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div className="admin-layout">
+    <div className="admin-layout" key={reloadKey}>
       <style>{`
         @keyframes pulse-orange {
           0% { opacity: 1; transform: scale(1); }
