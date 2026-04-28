@@ -503,7 +503,7 @@ main::-webkit-scrollbar {
   align-items: center;
   background: var(--bg-pure);
   border-radius: var(--unified-card-radius);
-  padding: 0 16px;
+  padding: 0 20px;
   box-shadow: var(--card-shadow);
   margin-top: 0px;
   height: var(--unified-card-height);
@@ -666,12 +666,13 @@ main::-webkit-scrollbar {
   align-items: center;
   max-height: var(--unified-card-height);
   height: var(--unified-card-height);
-  padding: 0 16px;
+  padding: 0 20px;
   cursor: pointer;
   margin-top: 0px;
   background: var(--bg-pure);
   border-radius: var(--unified-card-radius);
   box-shadow: var(--card-shadow);
+  margin-bottom: 0;
 }
 
 .cafe-wrapper.compact::before {
@@ -883,9 +884,11 @@ main::-webkit-scrollbar {
 }
 
 .beans-order-card.compact {
-  opacity: 0.8;
-  padding: 12px 18px; /* 위아래 패딩을 줄여 납작하게 만듭니다 */
-  border-radius: 14px;
+  height: var(--unified-card-height);
+  padding: 0 20px; 
+  display: flex;
+  align-items: center;
+  border-radius: var(--unified-card-radius);
   transform: none !important; /* 가로폭 변동 방지 */
 }
 
@@ -1778,11 +1781,14 @@ main::-webkit-scrollbar {
 
 /* 자산 카드 콤팩트 모드 (가로 한 줄 레이아웃) */
 .balance-card.compact {
-  padding: 8px 16px;
-  border-radius: 16px;
-  margin-bottom: 8px;
+  height: var(--unified-card-height);
+  padding: 0 20px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-radius: var(--unified-card-radius);
   background-color: var(--accent-black);
-  height: 44px; /* 높이 고정으로 안정감 부여 */
+  margin-bottom: 0; /* 부모 gap으로 조절 */
 }
 
 /* 콤팩트 전용 한 줄 (기존에는 숨김) */
@@ -1800,7 +1806,9 @@ main::-webkit-scrollbar {
 .balance-card.compact .balance-compact-row {
   opacity: 1;
   visibility: visible;
-  height: auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
 
 /* 전체 내용 (기본 보임, 콤팩트 시 숨김) */

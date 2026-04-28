@@ -83,14 +83,22 @@ export default function AdminDashboard() {
     try {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
-      const { data } = await supabase
+      console.log('[매출조회] 범위:', startOfMonth, '~', endOfMonth);
+      const { data, error } = await supabase
         .from('orders')
         .select('total_price, order_type')
         .gte('created_at', startOfMonth)
         .lte('created_at', endOfMonth);
+      if (error) {
+        console.error('[매출조회] 에러:', error);
+        return;
+      }
       if (data) {
-        setBeanSales(data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
-        setDessertSales(data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+        const bean = data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0);
+        const dessert = data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0);
+        console.log(`[매출조회] 총 ${data.length}건 | 원두: ${bean} | 디저트: ${dessert} | types:`, data.map(o => o.order_type));
+        setBeanSales(bean);
+        setDessertSales(dessert);
         setMonthOrderCount(data.length);
         setLastSyncTime(new Date());
       }
@@ -163,24 +171,27 @@ export default function AdminDashboard() {
     const unifiedTables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task'];
     
     unifiedTables.forEach(table => {
-      dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
+      dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
+        console.log(`[RT] ${table} 변경 감지:`, payload);
         fetchUnifiedData();
       });
     });
 
-    dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+    dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+      console.log('[RT] orders 변경 감지:', payload);
       fetchOrderSales();
     });
     
     dashboardChannel.subscribe((status) => {
+      console.log('[RT] 채널 상태:', status);
       if (status === 'SUBSCRIBED') setSyncStatus('live');
       else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setSyncStatus('polling');
     });
 
-    // 30초마다 주문 매출 자동 갱신 (Realtime 누락 대비 백업, 무료티어 안전)
+    // 10초마다 주문 매출 자동 갱신 (Realtime 불안정 대비, 월 86k req ≈ 86MB 무료티어 안전)
     const salesPolling = setInterval(() => {
       fetchOrderSales();
-    }, 30000);
+    }, 10000);
 
     // 5분마다 사용량 지표 갱신 (API 호출 반복 최소화)
     const usagePolling = setInterval(() => {

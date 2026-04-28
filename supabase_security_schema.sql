@@ -45,6 +45,10 @@ CREATE POLICY "사용자는 본인의 주문만 볼 수 있다"
 ON public.orders FOR SELECT 
 USING (auth.uid() = user_id);
 
+CREATE POLICY "사용자는 자신의 주문을 추가할 수 있다" 
+ON public.orders FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
 CREATE POLICY "최고관리자는 모든 주문을 볼 수 있다" 
 ON public.orders FOR SELECT 
 USING (
