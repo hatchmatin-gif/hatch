@@ -340,7 +340,7 @@ export default function AdminDashboard() {
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
         .sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        .sidebar-logo { margin-bottom: 70px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 200px; }
+        .sidebar-logo { margin-bottom: 64px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 200px; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
         .logo-main { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; width: 100%; }
         .logo-sub { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 900; margin-top: 6px; border-top: 3px solid #111; padding-top: 6px; width: 100%; }
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
  
         .main-content { flex: 1; padding: 40px 80px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
-        .page-header { margin-bottom: 40px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; min-height: 85px; }
+        .page-header { margin-bottom: 20px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; min-height: 85px; }
         .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 15px; }
 
