@@ -131,9 +131,15 @@ export default function AdminDashboard() {
   };
 
   const handleKpiRefresh = async () => {
+    if (isKpiRefreshing) return;
     setIsKpiRefreshing(true);
-    await Promise.all([fetchOrderSales(), fetchUsageStats()]);
-    setTimeout(() => setIsKpiRefreshing(false), 600);
+    try {
+      await Promise.all([fetchOrderSales(), fetchUsageStats()]);
+    } catch (err) {
+      console.error('Refresh error:', err);
+    } finally {
+      setTimeout(() => setIsKpiRefreshing(false), 600);
+    }
   };
 
   const fetchUnifiedData = async () => {
