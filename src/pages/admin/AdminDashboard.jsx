@@ -39,6 +39,18 @@ export default function AdminDashboard() {
   const [monthOrderCount, setMonthOrderCount] = useState(0);
   const [usageStats, setUsageStats] = useState({ supabase: null, vercel: null, configured: { supabase: false, vercel: false } });
   const [isKpiRefreshing, setIsKpiRefreshing] = useState(false);
+  const [beanSalesFlash, setBeanSalesFlash] = useState(false);
+  const prevBeanSalesRef = useRef(0);
+
+  // 원두 매출 변경 감지 → 카드 깜빡임
+  useEffect(() => {
+    if (beanSales > 0 && beanSales !== prevBeanSalesRef.current && prevBeanSalesRef.current > 0) {
+      setBeanSalesFlash(true);
+      const timer = setTimeout(() => setBeanSalesFlash(false), 3000);
+      return () => clearTimeout(timer);
+    }
+    prevBeanSalesRef.current = beanSales;
+  }, [beanSales]);
 
   const navigate = useNavigate();
 
@@ -316,6 +328,14 @@ export default function AdminDashboard() {
           100% { opacity: 1; transform: scale(1); }
         }
 
+        @keyframes kpi-orange-glow {
+          0%, 100% { background: #fff; }
+          50% { background: #FFF5EE; box-shadow: 0 0 20px rgba(255, 106, 0, 0.12); }
+        }
+        .kpi-card-flash {
+          animation: kpi-orange-glow 1.5s ease-in-out 2;
+        }
+
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
         .sidebar { width: 240px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         
@@ -438,7 +458,7 @@ export default function AdminDashboard() {
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
-              <div className="kpi-card">
+              <div className={`kpi-card${beanSalesFlash ? ' kpi-card-flash' : ''}`}>
                 <div className="kpi-label">원두 매출</div>
                 <div className="kpi-value-row">
                   <span className="kpi-value">{beanSales.toLocaleString()}</span>
