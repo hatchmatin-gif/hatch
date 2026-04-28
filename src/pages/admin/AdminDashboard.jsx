@@ -346,8 +346,8 @@ export default function AdminDashboard() {
         
         .sidebar-logo { margin-bottom: 40px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 100%; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
-        .logo-main { font-size: 1.6rem; font-weight: 950; letter-spacing: -1px; line-height: 1; width: 100%; }
-        .logo-sub { display: flex; justify-content: space-between; font-size: 0.65rem; font-weight: 900; margin-top: 4px; border-top: 2px solid #111; padding-top: 4px; width: 100%; }
+        .logo-main { display: flex; justify-content: space-between; font-size: 2.1rem; font-weight: 950; line-height: 1; width: 100%; }
+        .logo-sub { display: flex; justify-content: center; gap: 4px; font-size: 1.05rem; font-weight: 900; margin-top: 4px; border-top: 2.5px solid #111; padding-top: 4px; width: 100%; }
         
         .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-top: 10px; }
         .nav-item { padding: 12px 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #888; font-weight: 700; font-size: 0.7rem; text-align: center; }
@@ -410,7 +410,9 @@ export default function AdminDashboard() {
       <aside className="sidebar">
         <div className="sidebar-logo" onClick={() => window.location.href = 'https://www.wuricafe.com/'}>
           <div className="logo-text-stack">
-            <div className="logo-main">WURI.</div>
+            <div className="logo-main">
+              <span>W</span><span>U</span><span>R</span><span>I</span><span>.</span>
+            </div>
             <div className="logo-sub">
               <span>H</span><span>A</span><span>T</span><span>C</span><span>H</span>
             </div>
@@ -421,11 +423,11 @@ export default function AdminDashboard() {
           <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}><span className="dot"></span> 보안 감사</div>
         </nav>
         <div className="sidebar-footer">
-          <div style={{ fontSize: '0.65rem', color: '#ccc', marginBottom: '10px', fontWeight: 600 }}>BUILD VERSION v1.0.8</div>
           <button className={`footer-btn ${isBlurred ? 'active' : ''}`} onClick={() => setIsBlurred(!isBlurred)}>
             프라이버시 보호 {isBlurred ? 'ON' : 'OFF'}
           </button>
           <button className="footer-btn" onClick={handleLogout} style={{color:'#cf222e'}}>로그아웃</button>
+          <div style={{ fontSize: '0.6rem', color: '#ccc', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>v1.0.9</div>
         </div>
       </aside>
 
