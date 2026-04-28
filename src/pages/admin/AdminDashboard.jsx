@@ -472,7 +472,7 @@ export default function AdminDashboard() {
         .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
         .metric-val { color: #666; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 32px; margin-bottom: 60px; width: 100%; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 17px; margin-bottom: 60px; width: 100%; }
         .kpi-card { background: #fff; padding: 18px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
         .kpi-card-empty { background: #fafafa; border: 1.5px dashed #d0d0d0; border-radius: 16px; aspect-ratio: 1 / 1; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
