@@ -463,6 +463,8 @@ export default function AdminDashboard() {
         .page-header { margin-bottom: 20px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; min-height: 85px; }
         .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 15px; }
+        
+        .overview-container { max-width: 1600px; min-width: 1100px; margin: 0 auto; width: 100%; }
 
         .status-panel { text-align: right; display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
         .live-sync-badge { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font-weight: 900; font-size: 0.8rem; color: #FF6A00; }
