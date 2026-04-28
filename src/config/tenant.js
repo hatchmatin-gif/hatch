@@ -22,7 +22,7 @@ export const TENANT_CONFIG = {
     kpiLabels: {
       budget1: "카페1매출",
       budget2: "카페2매출",
-      sales1: "원두 매출",
+      sales1: "원두사업",
       sales2: "디저트 매출"
     }
   },
