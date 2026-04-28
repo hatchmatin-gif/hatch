@@ -3,29 +3,123 @@ import { supabase } from '../../../supabase.js';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// --- Long Press Hook ---
-function useLongPress(callback, ms = 600) {
-  const [startLongPress, setStartLongPress] = useState(false);
+// --- Privacy Scramble Hooks & Components ---
+function usePrivacyButton(initialState = 'normal') {
+  const [privacyState, setPrivacyState] = useState(initialState);
   const timerRef = useRef();
-  useEffect(() => {
-    if (startLongPress) timerRef.current = setTimeout(callback, ms);
-    else clearTimeout(timerRef.current);
-    return () => clearTimeout(timerRef.current);
-  }, [startLongPress, callback, ms]);
-  return {
-    onMouseDown: () => setStartLongPress(true),
-    onMouseUp: () => setStartLongPress(false),
-    onMouseLeave: () => setStartLongPress(false),
-    onTouchStart: () => setStartLongPress(true),
-    onTouchEnd: () => setStartLongPress(false),
+  const isLongPress = useRef(false);
+
+  const startPress = () => {
+    isLongPress.current = false;
+    timerRef.current = setTimeout(() => {
+      isLongPress.current = true;
+      setPrivacyState('normal');
+      if (navigator.vibrate) navigator.vibrate([50, 50]);
+    }, 1300);
   };
+
+  const cancelPress = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+  };
+
+  const handleClick = (e) => {
+    if (isLongPress.current) {
+      e.preventDefault();
+      return;
+    }
+    setPrivacyState(prev => {
+      if (prev === 'normal') return 'scrambling';
+      if (prev === 'scrambling' || prev === 'fake') return 'fake';
+      return prev;
+    });
+  };
+
+  return { privacyState, handlers: { onMouseDown: startPress, onMouseUp: cancelPress, onMouseLeave: cancelPress, onTouchStart: startPress, onTouchEnd: cancelPress, onClick: handleClick } };
 }
+
+const KOREAN_CHARS = "가나다라마바사아자차카타파하거너더러머버서어저처커터퍼허고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후기니디리미비시이지치키티피히";
+const ENG_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const NUM_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+const getRandomChar = (type) => {
+  if (type === 'ko') return KOREAN_CHARS[Math.floor(Math.random() * KOREAN_CHARS.length)];
+  if (type === 'en') return ENG_CHARS[Math.floor(Math.random() * ENG_CHARS.length)];
+  if (type === 'num_alpha') return NUM_ALPHABET[Math.floor(Math.random() * NUM_ALPHABET.length)];
+  return '*';
+};
+
+const ScrambleText = ({ text, mode }) => {
+  const [displayText, setDisplayText] = useState(text);
+  const displayRef = useRef(text);
+
+  useEffect(() => {
+    if (mode === 'normal') {
+      setDisplayText(text);
+      displayRef.current = text;
+      return;
+    }
+    if (mode === 'fake') return;
+    
+    if (mode === 'scrambling') {
+      const strArr = String(text).split('');
+      let letterTimeout;
+      let numberTimeout;
+
+      const scrambleLetters = () => {
+        const koIndices = [];
+        const enIndices = [];
+        strArr.forEach((char, i) => {
+          if (/[가-힣]/.test(char)) koIndices.push(i);
+          else if (/[a-zA-Z]/.test(char)) enIndices.push(i);
+        });
+        let candidates = [...koIndices.map(i => ({ i, type: 'ko' })), ...enIndices.map(i => ({ i, type: 'en' }))];
+        candidates.sort(() => Math.random() - 0.5);
+        candidates.slice(0, 2).forEach(({ i, type }) => strArr[i] = getRandomChar(type));
+        displayRef.current = strArr.join('');
+        setDisplayText(displayRef.current);
+        letterTimeout = setTimeout(scrambleLetters, Math.random() * 2000 + 1000);
+      };
+
+      const scrambleNumbers = () => {
+        const numIndices = [];
+        strArr.forEach((char, i) => {
+          if (/[0-9]/.test(char)) numIndices.push(i);
+        });
+        let candidates = numIndices.map(i => ({ i, type: 'num_alpha' }));
+        candidates.sort(() => Math.random() - 0.5);
+        candidates.slice(0, 3).forEach(({ i, type }) => strArr[i] = getRandomChar(type));
+        displayRef.current = strArr.join('');
+        setDisplayText(displayRef.current);
+        numberTimeout = setTimeout(scrambleNumbers, Math.random() * 1000 + 500);
+      };
+
+      const allNumIndices = [];
+      const allAlphaIndices = [];
+      strArr.forEach((char, i) => {
+        if (/[0-9]/.test(char)) allNumIndices.push(i);
+        else if (/[가-힣]/.test(char)) allAlphaIndices.push({i, type: 'ko'});
+        else if (/[a-zA-Z]/.test(char)) allAlphaIndices.push({i, type: 'en'});
+      });
+      allNumIndices.forEach(i => strArr[i] = getRandomChar('num_alpha'));
+      allAlphaIndices.forEach(({i, type}) => strArr[i] = getRandomChar(type));
+      displayRef.current = strArr.join('');
+      setDisplayText(displayRef.current);
+
+      letterTimeout = setTimeout(scrambleLetters, Math.random() * 2000 + 1000);
+      numberTimeout = setTimeout(scrambleNumbers, Math.random() * 1000 + 500);
+
+      return () => { clearTimeout(letterTimeout); clearTimeout(numberTimeout); };
+    }
+  }, [text, mode]);
+
+  return <>{displayText}</>;
+};
 
 export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // 기본값: 종합
-  const [isBlurred, setIsBlurred] = useState(false);
+  const { privacyState, handlers: privacyHandlers } = usePrivacyButton('normal');
   const [securityLogs, setSecurityLogs] = useState([]);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -360,7 +454,7 @@ export default function AdminDashboard() {
         .footer-btn:hover { background: #f8f8f8; color: #111; }
         .footer-btn.active { background: #111; color: #fff; border-color: #111; }
  
-        .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; filter: ${isBlurred ? 'blur(40px)' : 'none'}; transition: filter 0.5s ease; }
+        .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; filter: ${privacyState === 'scrambling' ? 'blur(8px)' : 'none'}; transition: filter 0.5s ease; }
         .page-header { margin-bottom: 20px; display: flex; flex-direction: column; justify-content: flex-start; align-items: flex-start; min-height: 85px; }
         .page-header h1 { font-size: 2.6rem; font-weight: 950; letter-spacing: -2px; line-height: 1; margin: 0; }
         .page-header p { color: #888; font-weight: 500; font-size: 1.1rem; line-height: 1; margin: 0; margin-top: 15px; }
@@ -423,8 +517,12 @@ export default function AdminDashboard() {
           <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}><span className="dot"></span> 보안 감사</div>
         </nav>
         <div className="sidebar-footer">
-          <button className={`footer-btn ${isBlurred ? 'active' : ''}`} onClick={() => setIsBlurred(!isBlurred)}>
-            프라이버시 보호 {isBlurred ? 'ON' : 'OFF'}
+          <button 
+            className={`footer-btn ${privacyState !== 'normal' ? 'active' : ''}`} 
+            {...privacyHandlers}
+            style={{ userSelect: 'none' }}
+          >
+            프라이버시 보호 {privacyState !== 'normal' ? 'ON' : 'OFF'}
           </button>
           <button className="footer-btn" onClick={handleLogout} style={{color:'#cf222e'}}>로그아웃</button>
           <div style={{ fontSize: '0.6rem', color: '#ccc', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>v1.0.9</div>
@@ -443,36 +541,36 @@ export default function AdminDashboard() {
           <div className="overview-container">
             <div className="kpi-grid">
               <div className="kpi-card">
-                <div className="kpi-label">당월 기준</div>
+                <div className="kpi-label"><ScrambleText text="당월 기준" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value" style={{ fontSize: '1.0rem' }}>{`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`}</span>
+                  <span className="kpi-value" style={{ fontSize: '1.0rem' }}><ScrambleText text={`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`} mode={privacyState} /></span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">카페1매출</div>
+                <div className="kpi-label"><ScrambleText text="카페1매출" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{stats.totalBudget.toLocaleString()}</span>
+                  <span className="kpi-value"><ScrambleText text={stats.totalBudget.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">카페2매출</div>
+                <div className="kpi-label"><ScrambleText text="카페2매출" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{stats.personnel}</span>
+                  <span className="kpi-value"><ScrambleText text={stats.personnel.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className={`kpi-card${beanSalesFlash ? ' kpi-card-flash' : ''}`} onClick={() => setBeanSalesFlash(false)}>
-                <div className="kpi-label">원두 매출</div>
+                <div className="kpi-label"><ScrambleText text="원두 매출" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{beanSales.toLocaleString()}</span>
+                  <span className="kpi-value"><ScrambleText text={beanSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
               <div className="kpi-card">
-                <div className="kpi-label">디저트 매출</div>
+                <div className="kpi-label"><ScrambleText text="디저트 매출" mode={privacyState} /></div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{dessertSales.toLocaleString()}</span>
+                  <span className="kpi-value"><ScrambleText text={dessertSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
