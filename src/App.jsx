@@ -175,6 +175,7 @@ export default function App() {
       const orderData = {
         store_id: stores[0]?.id || 'HATCH_HQ',
         user_id: session.user.id,
+        order_type: '음료',
         items: [{ name: '아메리카노', qty: 1, price: price }],
         total_price: price,
         status: '주문완료'
@@ -258,6 +259,7 @@ export default function App() {
       const orderData = {
         store_id: targetStoreId,
         user_id: session.user.id,
+        order_type: '원두',
         items: cartItems,
         total_price: totalPrice, // 주문 총액 추가
         status: '주문완료' // 매장 테스트할 땐 대기중이겠지만 원두 발주는 주문완료

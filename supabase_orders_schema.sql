@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     id UUID DEFAULT extensions.uuid_generate_v4() PRIMARY KEY,
     store_id INTEGER REFERENCES public.stores(id) ON DELETE CASCADE,
     user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+    order_type TEXT NOT NULL DEFAULT '음료', -- '음료', '원두', '디저트' 등
     items JSONB NOT NULL,                 -- [ {"name": "아메리카노", "qty": 2, "price": 4500} ]
     total_price INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT '대기중', -- 대기중, 수락됨, 완료됨, 취소됨

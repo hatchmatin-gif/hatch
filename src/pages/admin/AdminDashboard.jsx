@@ -84,11 +84,11 @@ export default function AdminDashboard() {
         supabase.from('wuri_unified_hr').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_prod').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_task').select('*').order('target_date', { ascending: false }),
-        supabase.from('orders').select('total_price').gte('created_at', startOfMonth).lte('created_at', endOfMonth)
+        supabase.from('orders').select('total_price, order_type').gte('created_at', startOfMonth).lte('created_at', endOfMonth)
       ]);
 
       if (ordersData && ordersData.data) {
-        setBeanSales(ordersData.data.reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+        setBeanSales(ordersData.data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
       }
 
       const processData = (dataList) => {
