@@ -75,23 +75,32 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUnifiedData = async () => {
+  const fetchOrderSales = async () => {
     try {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+      const { data } = await supabase
+        .from('orders')
+        .select('total_price, order_type')
+        .gte('created_at', startOfMonth)
+        .lte('created_at', endOfMonth);
+      if (data) {
+        setBeanSales(data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+        setDessertSales(data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+      }
+    } catch (e) {
+      console.error('fetchOrderSales error:', e);
+    }
+  };
 
-      const [opsData, hrData, prodData, taskData, ordersData] = await Promise.all([
+  const fetchUnifiedData = async () => {
+    try {
+      const [opsData, hrData, prodData, taskData] = await Promise.all([
         supabase.from('wuri_unified_ops').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_hr').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_prod').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_task').select('*').order('target_date', { ascending: false }),
-        supabase.from('orders').select('total_price, order_type').gte('created_at', startOfMonth).lte('created_at', endOfMonth)
       ]);
-
-      if (ordersData && ordersData.data) {
-        setBeanSales(ordersData.data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
-        setDessertSales(ordersData.data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
-      }
 
       const processData = (dataList) => {
         const seen = new Set();
@@ -113,7 +122,7 @@ export default function AdminDashboard() {
         과제: processData(taskData.data)
       });
     } catch (e) {
-      console.error("fetchUnifiedData error:", e);
+      console.error('fetchUnifiedData error:', e);
     }
   };
 
@@ -128,14 +137,20 @@ export default function AdminDashboard() {
     checkAdminRole();
     fetchSecurityLogs();
     fetchUnifiedData();
+    fetchOrderSales();
 
     const dashboardChannel = supabase.channel('admin_dashboard');
-    const tables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task', 'orders'];
+    const unifiedTables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task'];
     
-    tables.forEach(table => {
-      dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
+    unifiedTables.forEach(table => {
+      dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table }, () => {
         fetchUnifiedData();
       });
+    });
+
+    // orders 테이블은 가벼운 전용 함수만 호출 → 즉각 반영
+    dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+      fetchOrderSales();
     });
     
     dashboardChannel.subscribe();
