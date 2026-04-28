@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- Privacy Scramble Hooks & Components ---
-function usePrivacyButton(initialState = 'normal') {
+function usePrivacyButton(initialState = 'normal', onLogout) {
   const [privacyState, setPrivacyState] = useState(initialState);
   const timerRef = useRef();
   const isLongPress = useRef(false);
@@ -29,7 +29,11 @@ function usePrivacyButton(initialState = 'normal') {
     }
     setPrivacyState(prev => {
       if (prev === 'normal') return 'scrambling';
-      if (prev === 'scrambling' || prev === 'fake') return 'fake';
+      if (prev === 'scrambling') return 'trap';
+      if (prev === 'trap') {
+        if (onLogout) onLogout();
+        return 'trap';
+      }
       return prev;
     });
   };
@@ -58,7 +62,7 @@ const ScrambleText = ({ text, mode }) => {
       displayRef.current = text;
       return;
     }
-    if (mode === 'fake') return;
+    if (mode === 'trap') return;
     
     if (mode === 'scrambling') {
       const strArr = String(text).split('');
@@ -119,7 +123,7 @@ export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview'); // 기본값: 종합
-  const { privacyState, handlers: privacyHandlers } = usePrivacyButton('normal');
+  const { privacyState, handlers: privacyHandlers } = usePrivacyButton('normal', () => handleLogout());
   const [securityLogs, setSecurityLogs] = useState([]);
   const [selectedDetail, setSelectedDetail] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -518,11 +522,11 @@ export default function AdminDashboard() {
         </nav>
         <div className="sidebar-footer">
           <button 
-            className={`footer-btn ${privacyState !== 'normal' ? 'active' : ''}`} 
+            className={`footer-btn ${privacyState === 'scrambling' ? 'active' : ''}`} 
             {...privacyHandlers}
             style={{ userSelect: 'none' }}
           >
-            프라이버시 보호 {privacyState !== 'normal' ? 'ON' : 'OFF'}
+            프라이버시 보호 {privacyState === 'scrambling' ? 'ON' : 'OFF'}
           </button>
           <button className="footer-btn" onClick={handleLogout} style={{color:'#cf222e'}}>로그아웃</button>
           <div style={{ fontSize: '0.6rem', color: '#ccc', marginTop: '6px', fontWeight: 600, textAlign: 'center' }}>v1.0.9</div>
