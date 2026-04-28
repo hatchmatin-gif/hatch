@@ -155,10 +155,10 @@ export default function AdminDashboard() {
     
     dashboardChannel.subscribe();
 
-    // 5초마다 주문 매출 자동 갱신 (Realtime 누락 대비 백업)
+    // 30초마다 주문 매출 자동 갱신 (Realtime 누락 대비 백업, 무료티어 안전)
     const salesPolling = setInterval(() => {
       fetchOrderSales();
-    }, 5000);
+    }, 30000);
 
     return () => {
       mounted = false;
