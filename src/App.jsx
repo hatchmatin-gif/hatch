@@ -230,46 +230,35 @@ export default function App() {
 
     if (!window.confirm(`${orderTitle}을(를) 주문하시겠습니까?\n${formatPoints(totalPrice)} CUP이 차감됩니다.`)) return;
 
+    const newPoints = profile.points - totalPrice;
+
+    // 로컬 상태 즉시 업데이트 (Optimistic UI → 화면 바로 반영)
+    setProfile(prev => ({ ...prev, points: newPoints }));
+
     try {
-      const newPoints = profile.points - totalPrice;
-      
-      // 1. 포인트 차감 업데이트 (select().single()을 붙여서 실제 업데이트가 안 되면 에러를 던지게 함)
-      const { data: updatedProfile, error: profileError } = await supabase
-        .from('profiles')
-        .update({ points: newPoints })
-        .eq('id', session.user.id)
-        .select()
-        .single();
-        
-      if (profileError) {
-        throw new Error('프로필 포인트 업데이트 권한이 없거나 실패했습니다: ' + profileError.message);
-      }
-
-      if (!updatedProfile) {
-        throw new Error('포인트가 데이터베이스에 반영되지 않았습니다. (RLS 보안 정책 문제)');
-      }
-
-      // 로컬 프로필 상태 즉시 업데이트
-      setProfile(prev => ({ ...prev, points: updatedProfile.points }));
-
-      // 2. 주문 내역 기록
-      // 직전 주문 매장이 있으면 그것을 사용, 없으면 현재 목록의 첫번째, 그것도 없으면 '해치2' 더미 ID 사용
       const targetStoreId = lastStoreId || (stores.length > 0 ? stores[0].id : 1);
-      
       const orderData = {
         store_id: targetStoreId,
         user_id: session.user.id,
         order_type: '원두',
         items: cartItems,
-        total_price: totalPrice, // 주문 총액 추가
-        status: '주문완료' // 매장 테스트할 땐 대기중이겠지만 원두 발주는 주문완료
+        total_price: totalPrice,
+        status: '주문완료'
       };
 
-      const { error: orderError } = await supabase.from('orders').insert([orderData]);
-      if (orderError) throw orderError;
-      
+      // 포인트 차감 + 주문 삽입을 동시에 실행 → 지연 최소화
+      const [profileResult, orderResult] = await Promise.all([
+        supabase.from('profiles').update({ points: newPoints }).eq('id', session.user.id),
+        supabase.from('orders').insert([orderData])
+      ]);
+
+      if (profileResult.error) throw profileResult.error;
+      if (orderResult.error) throw orderResult.error;
+
       alert(`주문이 완료되었습니다!\n남은 잔여 CUP: ${formatPoints(newPoints)}P`);
     } catch (err) {
+      // DB 실패 시 로컬 상태 롤백
+      setProfile(prev => ({ ...prev, points: profile.points }));
       console.error(err);
       alert("결제 실패: " + err.message);
     }
