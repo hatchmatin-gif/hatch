@@ -33,6 +33,7 @@ export default function AdminDashboard() {
     운영: [], 인사: [], 생산: [], 과제: []
   });
   const [beanSales, setBeanSales] = useState(0);
+  const [dessertSales, setDessertSales] = useState(0);
 
   const navigate = useNavigate();
 
@@ -89,6 +90,7 @@ export default function AdminDashboard() {
 
       if (ordersData && ordersData.data) {
         setBeanSales(ordersData.data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+        setDessertSales(ordersData.data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
       }
 
       const processData = (dataList) => {
@@ -387,7 +389,7 @@ export default function AdminDashboard() {
               <div className="kpi-card">
                 <div className="kpi-label">디저트 매출</div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{stats.activeTasks}</span>
+                  <span className="kpi-value">{dessertSales.toLocaleString()}</span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
