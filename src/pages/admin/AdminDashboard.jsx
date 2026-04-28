@@ -414,10 +414,6 @@ export default function AdminDashboard() {
         </div>
         <nav className="nav-group">
           <div className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}><span className="dot"></span> 종합 리포트</div>
-          <div className={`nav-item ${activeTab === '운영' ? 'active' : ''}`} onClick={() => setActiveTab('운영')}><span className="dot"></span> 운영 관리</div>
-          <div className={`nav-item ${activeTab === '인사' ? 'active' : ''}`} onClick={() => setActiveTab('인사')}><span className="dot"></span> 인사 정보</div>
-          <div className={`nav-item ${activeTab === '생산' ? 'active' : ''}`} onClick={() => setActiveTab('생산')}><span className="dot"></span> 생산 현황</div>
-          <div className={`nav-item ${activeTab === '과제' ? 'active' : ''}`} onClick={() => setActiveTab('과제')}><span className="dot"></span> 과제 진행</div>
           <div className={`nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}><span className="dot"></span> 보안 감사</div>
         </nav>
         <div className="sidebar-footer">
@@ -519,19 +515,10 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {['운영', '인사', '생산', '과제'].map(type => (
-              <div key={type} className="overview-section">
-                <div className="section-header">
-                  <div className="section-title">{type}</div>
-                  <div className="view-all" onClick={() => setActiveTab(type)}>VIEW ALL</div>
-                </div>
-                <div className="grid-wide">
-                  {sheetData[type].slice(0, 3).map(item => (
-                    <SheetItem key={`${type}-${item.id}`} item={item} type={type} isSummary={true} />
-                  ))}
-                </div>
-              </div>
-            ))}
+            {/* 하단 섹션 공간 확보 (추후 새로운 기능 추가 예정) */}
+            <div style={{ height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #f0f0f0', borderRadius: '24px', margin: '40px 0' }}>
+              <span style={{ color: '#ccc', fontWeight: 700 }}>새로운 대시보드 기능을 준비 중입니다.</span>
+            </div>
           </div>
         ) : activeTab === 'security' ? (
           <div className="card-item" style={{ padding:'40px', borderRadius:'0', borderLeft:'none', borderRight:'none' }}>
