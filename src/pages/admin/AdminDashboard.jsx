@@ -139,6 +139,7 @@ export default function AdminDashboard() {
     fetchUnifiedData();
     fetchOrderSales();
 
+    // Realtime 구독 (즉시 반영 시도)
     const dashboardChannel = supabase.channel('admin_dashboard');
     const unifiedTables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task'];
     
@@ -148,16 +149,21 @@ export default function AdminDashboard() {
       });
     });
 
-    // orders 테이블은 가벼운 전용 함수만 호출 → 즉각 반영
     dashboardChannel.on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
       fetchOrderSales();
     });
     
     dashboardChannel.subscribe();
 
+    // 5초마다 주문 매출 자동 갱신 (Realtime 누락 대비 백업)
+    const salesPolling = setInterval(() => {
+      fetchOrderSales();
+    }, 5000);
+
     return () => {
       mounted = false;
       clearTimeout(fallbackTimer);
+      clearInterval(salesPolling);
       supabase.removeChannel(dashboardChannel);
     };
   }, []);
