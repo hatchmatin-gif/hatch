@@ -32,6 +32,7 @@ export default function AdminDashboard() {
   const [sheetData, setSheetData] = useState({
     운영: [], 인사: [], 생산: [], 과제: []
   });
+  const [beanSales, setBeanSales] = useState(0);
 
   const navigate = useNavigate();
 
@@ -75,12 +76,20 @@ export default function AdminDashboard() {
 
   const fetchUnifiedData = async () => {
     try {
-      const [opsData, hrData, prodData, taskData] = await Promise.all([
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
+      const [opsData, hrData, prodData, taskData, ordersData] = await Promise.all([
         supabase.from('wuri_unified_ops').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_hr').select('*').order('target_date', { ascending: false }),
         supabase.from('wuri_unified_prod').select('*').order('target_date', { ascending: false }),
-        supabase.from('wuri_unified_task').select('*').order('target_date', { ascending: false })
+        supabase.from('wuri_unified_task').select('*').order('target_date', { ascending: false }),
+        supabase.from('orders').select('total_price').gte('created_at', startOfMonth).lte('created_at', endOfMonth)
       ]);
+
+      if (ordersData && ordersData.data) {
+        setBeanSales(ordersData.data.reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+      }
 
       const processData = (dataList) => {
         const seen = new Set();
@@ -118,7 +127,7 @@ export default function AdminDashboard() {
     fetchSecurityLogs();
     fetchUnifiedData();
 
-    const tables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task'];
+    const tables = ['wuri_unified_ops', 'wuri_unified_hr', 'wuri_unified_prod', 'wuri_unified_task', 'orders'];
     const subscriptions = tables.map(table => 
       supabase.channel(`channel_${table}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: table }, payload => {
@@ -371,7 +380,7 @@ export default function AdminDashboard() {
               <div className="kpi-card">
                 <div className="kpi-label">원두 매출</div>
                 <div className="kpi-value-row">
-                  <span className="kpi-value">{stats.prodRate}</span>
+                  <span className="kpi-value">{beanSales.toLocaleString()}</span>
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
