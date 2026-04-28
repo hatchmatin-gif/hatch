@@ -344,12 +344,12 @@ export default function AdminDashboard() {
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
         .sidebar { width: 140px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 12px; display: flex; flex-direction: column; flex-shrink: 0; }
         
-        .sidebar-logo { margin-bottom: 40px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 100%; }
+        .sidebar-logo { margin-top: 8px; margin-bottom: 46px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 100%; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
         .logo-main { display: flex; justify-content: space-between; font-size: 2.1rem; font-weight: 950; line-height: 1; width: 100%; }
-        .logo-sub { display: flex; justify-content: center; gap: 4px; font-size: 1.05rem; font-weight: 900; margin-top: 4px; border-top: 2.5px solid #111; padding-top: 4px; width: 100%; }
+        .logo-sub { display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 900; margin-top: 4px; border-top: 2.5px solid #111; padding-top: 4px; width: 100%; }
         
-        .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-top: 10px; }
+        .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-top: 0px; }
         .nav-item { padding: 12px 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #888; font-weight: 700; font-size: 0.7rem; text-align: center; }
         .nav-item:hover { color: #111; background: #f8f8f8; }
         .nav-item.active { background: #111; color: #fff; }
