@@ -346,8 +346,8 @@ export default function AdminDashboard() {
         
         .sidebar-logo { margin-top: 24px; margin-bottom: 58px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 100%; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
-        .logo-main { display: flex; justify-content: space-between; font-size: 2.1rem; font-weight: 950; line-height: 1; width: 100%; }
-        .logo-sub { display: flex; justify-content: space-between; font-size: 1.05rem; font-weight: 900; margin-top: 4px; border-top: 2.5px solid #111; padding-top: 4px; width: 100%; }
+        .logo-main { display: flex; justify-content: space-between; font-size: 2.4rem; font-weight: 950; line-height: 1; width: 100%; }
+        .logo-sub { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: 900; margin-top: 4px; border-top: 2.5px solid #111; padding-top: 4px; width: 100%; }
         
         .nav-group { display: flex; flex-direction: column; gap: 6px; flex: 1; margin-top: 0px; }
         .nav-item { padding: 12px 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: #888; font-weight: 700; font-size: 0.7rem; text-align: center; }
