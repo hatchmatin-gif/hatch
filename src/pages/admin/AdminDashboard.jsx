@@ -326,12 +326,8 @@ export default function AdminDashboard() {
           100% { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes kpi-orange-glow {
-          0%, 100% { background: #fff; }
-          50% { background: #FFF5EE; box-shadow: 0 0 20px rgba(255, 106, 0, 0.12); }
-        }
         .kpi-card-flash {
-          animation: kpi-orange-glow 1.5s ease-in-out infinite;
+          box-shadow: inset 0 0 0 3px #FF6A00;
           cursor: pointer;
         }
 
