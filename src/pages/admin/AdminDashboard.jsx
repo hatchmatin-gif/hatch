@@ -120,6 +120,38 @@ const ScrambleText = ({ text, mode }) => {
   return <>{displayText}</>;
 };
 
+const renderCalendarMonth = (monthOffset) => {
+  const d = new Date();
+  d.setMonth(d.getMonth() + monthOffset);
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
+  
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDay = new Date(year, month - 1, 1).getDay();
+  
+  const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} />);
+  const days = Array.from({ length: daysInMonth }).map((_, i) => {
+    const isToday = monthOffset === 0 && (i + 1) === new Date().getDate();
+    return (
+      <div key={`day-${i}`} className="calendar-day" style={{ background: isToday ? 'rgba(255,255,255,0.2)' : 'transparent' }}>
+        {i + 1}
+      </div>
+    );
+  });
+
+  return (
+    <div key={`month-${monthOffset}`} className="calendar-month-block" style={{ marginBottom: '24px' }}>
+      <div className="calendar-month-title">{year}년 {month}월</div>
+      <div className="calendar-days-grid">
+        <div className="cal-head">일</div><div className="cal-head">월</div><div className="cal-head">화</div>
+        <div className="cal-head">수</div><div className="cal-head">목</div><div className="cal-head">금</div><div className="cal-head">토</div>
+        {blanks}
+        {days}
+      </div>
+    </div>
+  );
+};
+
 export default function AdminDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -138,6 +170,23 @@ export default function AdminDashboard() {
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [monthOrderCount, setMonthOrderCount] = useState(0);
   const [usageStats, setUsageStats] = useState({ supabase: null, vercel: null, configured: { supabase: false, vercel: false } });
+  
+  const [showCalendar, setShowCalendar] = useState(false);
+  const calendarPopupRef = useRef(null);
+
+  useEffect(() => {
+    if (!showCalendar) return;
+    const handleClickOutside = (e) => {
+      if (calendarPopupRef.current && !calendarPopupRef.current.contains(e.target)) {
+        setShowCalendar(false);
+      }
+    };
+    const timer = setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 10);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showCalendar]);
   const [isKpiRefreshing, setIsKpiRefreshing] = useState(false);
   const [beanSalesFlash, setBeanSalesFlash] = useState(false);
   const prevBeanSalesRef = useRef(0);
@@ -502,6 +551,109 @@ export default function AdminDashboard() {
         .section-title { font-size: 1.4rem; font-weight: 950; letter-spacing: -0.5px; }
         .view-all { color: #aaa; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
         .view-all:hover { color: #111; }
+
+        /* Glass Calendar Popup */
+        .glass-popup {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 280px;
+          height: 340px;
+          background: rgba(120, 120, 120, 0.4);
+          backdrop-filter: blur(30px);
+          -webkit-backdrop-filter: blur(30px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          border-radius: 24px;
+          box-shadow: 0 30px 60px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.4);
+          z-index: 1000;
+          transform-origin: top left;
+          display: flex;
+          flex-direction: column;
+          padding: 24px;
+          cursor: default;
+        }
+        .glass-close-btn {
+          position: absolute;
+          top: -12px;
+          right: -12px;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: rgba(255, 106, 0, 0.65);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 160, 100, 0.5);
+          box-shadow: 0 8px 16px rgba(255, 106, 0, 0.3);
+          color: #fff;
+          font-weight: 900;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 1001;
+          transition: transform 0.2s;
+        }
+        .glass-close-btn:hover { transform: scale(1.1); }
+        .glass-today-btn {
+          position: absolute;
+          bottom: -16px;
+          right: -16px;
+          padding: 10px 24px;
+          border-radius: 100px;
+          background: rgba(46, 204, 113, 0.65);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(100, 255, 150, 0.5);
+          box-shadow: 0 8px 16px rgba(46, 204, 113, 0.3);
+          color: #fff;
+          font-weight: 800;
+          font-size: 0.85rem;
+          cursor: pointer;
+          z-index: 1001;
+          transition: transform 0.2s;
+        }
+        .glass-today-btn:hover { transform: scale(1.05); }
+
+        .glass-calendar-scroll {
+          flex: 1;
+          overflow-y: auto;
+          padding-right: 8px;
+        }
+        .glass-calendar-scroll::-webkit-scrollbar { width: 4px; }
+        .glass-calendar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 4px; }
+
+        .calendar-month-title {
+          color: #fff;
+          font-weight: 800;
+          font-size: 1.1rem;
+          margin-bottom: 12px;
+          text-align: left;
+        }
+        .calendar-days-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 6px;
+          text-align: center;
+        }
+        .cal-head {
+          color: rgba(255,255,255,0.6);
+          font-size: 0.7rem;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+        .calendar-day {
+          color: #fff;
+          font-weight: 600;
+          font-size: 0.85rem;
+          aspect-ratio: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: background 0.2s;
+        }
+        .calendar-day:hover { background: rgba(255,255,255,0.3) !important; }
       `}</style>
 
       <AnimatePresence>
@@ -547,11 +699,43 @@ export default function AdminDashboard() {
         {activeTab === 'overview' ? (
           <div className="overview-container">
             <div className="kpi-grid">
-              <div className="kpi-card">
+              <div 
+                className="kpi-card" 
+                style={{ position: 'relative', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCalendar(true);
+                }}
+              >
                 <div className="kpi-label"><ScrambleText text="당월 기준" mode={privacyState} /></div>
                 <div className="kpi-value-row">
                   <span className="kpi-value" style={{ fontSize: '0.93rem' }}><ScrambleText text={`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`} mode={privacyState} /></span>
                 </div>
+                
+                <AnimatePresence>
+                  {showCalendar && (
+                    <motion.div
+                      ref={calendarPopupRef}
+                      initial={{ opacity: 0, scale: 0.3 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.3 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                      className="glass-popup"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="glass-close-btn" onClick={() => setShowCalendar(false)}>✕</div>
+                      <div className="glass-calendar-scroll">
+                        {[-1, 0, 1].map(renderCalendarMonth)}
+                      </div>
+                      <div className="glass-today-btn" onClick={() => {
+                        const scrollEl = calendarPopupRef.current?.querySelector('.glass-calendar-scroll');
+                        if (scrollEl) {
+                          scrollEl.scrollTop = 220;
+                        }
+                      }}>오늘</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               <div className="kpi-card">
                 <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.budget1} mode={privacyState} /></div>
