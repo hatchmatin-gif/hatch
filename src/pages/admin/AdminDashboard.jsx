@@ -142,8 +142,8 @@ export default function AdminDashboard() {
   const handleKpiRefresh = async () => {
     if (isKpiRefreshing) return;
     setIsKpiRefreshing(true);
-    // UI 전체를 처음부터 다시 불러오기 (key를 바꿔서 컴포넌트 리마운트)
-    setReloadKey(prev => prev + 1);
+    // Vercel 등에 배포된 최신 UI 코드까지 완벽하게 불러오기 위해 진짜 새로고침 수행
+    window.location.reload();
   };
 
   const fetchUnifiedData = async () => {
