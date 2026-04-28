@@ -34,6 +34,9 @@ export default function AdminDashboard() {
   });
   const [beanSales, setBeanSales] = useState(0);
   const [dessertSales, setDessertSales] = useState(0);
+  const [syncStatus, setSyncStatus] = useState('connecting'); // 'live' | 'polling' | 'connecting'
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [monthOrderCount, setMonthOrderCount] = useState(0);
 
   const navigate = useNavigate();
 
@@ -87,6 +90,8 @@ export default function AdminDashboard() {
       if (data) {
         setBeanSales(data.filter(o => o.order_type === '원두').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
         setDessertSales(data.filter(o => o.order_type === '디저트').reduce((acc, cur) => acc + (cur.total_price || 0), 0));
+        setMonthOrderCount(data.length);
+        setLastSyncTime(new Date());
       }
     } catch (e) {
       console.error('fetchOrderSales error:', e);
@@ -153,7 +158,10 @@ export default function AdminDashboard() {
       fetchOrderSales();
     });
     
-    dashboardChannel.subscribe();
+    dashboardChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') setSyncStatus('live');
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setSyncStatus('polling');
+    });
 
     // 30초마다 주문 매출 자동 갱신 (Realtime 누락 대비 백업, 무료티어 안전)
     const salesPolling = setInterval(() => {
@@ -367,17 +375,6 @@ export default function AdminDashboard() {
             <h1>{activeTab === 'overview' ? 'Business Overview' : `${activeTab} Management`}</h1>
             <p>{activeTab === 'overview' ? '통합 비즈니스 인텔리전스 시스템' : `실시간 동기화 데이터 세트`}</p>
           </div>
-          <div className="status-panel">
-            <div className="live-sync-badge">
-              <div className="live-pulse"></div>
-              LIVE SYNC
-            </div>
-            <div className="usage-metrics">
-              <div className="metric-row">SUPABASE <span className="metric-val">1.2k / 50k (2.4%)</span></div>
-              <div className="metric-row">VERCEL REQ <span className="metric-val">1.3%</span></div>
-              <div className="metric-row">VERCEL BAND <span className="metric-val">0.35%</span></div>
-            </div>
-          </div>
         </header>
 
         {activeTab === 'overview' ? (
@@ -419,7 +416,18 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card-empty" />
               <div className="kpi-card-empty" />
-              <div className="kpi-card-empty" />
+              <div className="kpi-card" style={{ gap: '6px', background: syncStatus === 'live' ? '#fff' : '#fffaf7' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none' }} />
+                  <span className="kpi-label" style={{ margin: 0, color: syncStatus === 'live' ? '#FF6A00' : '#aaa', fontSize: '0.75rem' }}>
+                    {syncStatus === 'live' ? 'LIVE SYNC' : syncStatus === 'polling' ? 'POLLING' : 'CONNECTING...'}
+                  </span>
+                </div>
+                <div style={{ fontSize: '1.0rem', fontWeight: 900, letterSpacing: '-0.5px' }}>{monthOrderCount}<span style={{ fontSize: '0.7rem', color: '#ccc', fontWeight: 600, marginLeft: '2px' }}>주문</span></div>
+                <div style={{ fontSize: '0.65rem', color: '#bbb', fontWeight: 600, lineHeight: 1.4, textAlign: 'center' }}>
+                  {lastSyncTime ? `마지막 동기\n${lastSyncTime.getHours().toString().padStart(2,'0')}:${lastSyncTime.getMinutes().toString().padStart(2,'0')}:${lastSyncTime.getSeconds().toString().padStart(2,'0')}` : '동기 대기 중'}
+                </div>
+              </div>
             </div>
 
             {['운영', '인사', '생산', '과제'].map(type => (
