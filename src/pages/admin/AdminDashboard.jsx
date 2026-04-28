@@ -552,34 +552,6 @@ export default function AdminDashboard() {
         .view-all { color: #aaa; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
         .view-all:hover { color: #111; }
 
-        /* Neumorphic Indicator Drop */
-        .indicator-drop {
-          position: absolute;
-          top: 20px;
-          right: 20px;
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: #fdfdfd;
-          box-shadow: 
-            -2px -2px 5px rgba(255, 255, 255, 1),
-            2px 2px 5px rgba(0, 0, 0, 0.08),
-            inset 1px 1px 2px rgba(255, 255, 255, 1),
-            inset -1px -1px 2px rgba(0, 0, 0, 0.04);
-          transition: all 0.4s ease;
-        }
-        .indicator-drop.active {
-          background: #ffb84d;
-          box-shadow: 
-            0 0 12px 3px rgba(255, 136, 0, 0.5),
-            inset 1px 1px 3px rgba(255, 255, 255, 0.9);
-          animation: drop-glow 1.5s infinite alternate;
-        }
-        @keyframes drop-glow {
-          0% { transform: scale(1); box-shadow: 0 0 10px 2px rgba(255, 136, 0, 0.4), inset 1px 1px 3px rgba(255, 255, 255, 0.8); }
-          100% { transform: scale(1.1); box-shadow: 0 0 20px 6px rgba(255, 136, 0, 0.6), inset 2px 2px 5px rgba(255, 255, 255, 1); background: #ffa600; }
-        }
-
         /* Glass Calendar Popup */
         .glass-popup {
           position: absolute;
@@ -737,7 +709,6 @@ export default function AdminDashboard() {
                 }}
               >
                 <div className="kpi-label"><ScrambleText text="당월 기준" mode={privacyState} /></div>
-                <div className="indicator-drop" />
                 <div className="kpi-value-row">
                   <span className="kpi-value" style={{ fontSize: '0.93rem' }}><ScrambleText text={`${new Date().getFullYear()}년 ${new Date().getMonth() + 1}월`} mode={privacyState} /></span>
                 </div>
@@ -769,7 +740,6 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card">
                 <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.budget1} mode={privacyState} /></div>
-                <div className="indicator-drop" />
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={stats.totalBudget.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
@@ -777,7 +747,6 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card">
                 <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.budget2} mode={privacyState} /></div>
-                <div className="indicator-drop" />
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={stats.personnel.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
@@ -785,7 +754,6 @@ export default function AdminDashboard() {
               </div>
               <div className={`kpi-card${beanSalesFlash ? ' kpi-card-flash' : ''}`} onClick={() => setBeanSalesFlash(false)}>
                 <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.sales1} mode={privacyState} /></div>
-                <div className={`indicator-drop ${beanSalesFlash ? 'active' : ''}`} />
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={beanSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
@@ -793,7 +761,6 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card">
                 <div className="kpi-label"><ScrambleText text={TENANT_CONFIG.dashboard.kpiLabels.sales2} mode={privacyState} /></div>
-                <div className="indicator-drop" />
                 <div className="kpi-value-row">
                   <span className="kpi-value"><ScrambleText text={dessertSales.toLocaleString()} mode={privacyState} /></span>
                   <span className="kpi-unit">원</span>
