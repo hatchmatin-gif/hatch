@@ -342,7 +342,7 @@ export default function AdminDashboard() {
         }
 
         .admin-layout { display: flex; height: 100vh; width: 100vw; background: #fff; color: #111; font-family: 'Pretendard', sans-serif; overflow: hidden; }
-        .sidebar { width: 140px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 12px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar { width: 160px; background: #fff; border-right: 1px solid #f0f0f0; padding: 40px 16px; display: flex; flex-direction: column; flex-shrink: 0; }
         
         .sidebar-logo { margin-top: 24px; margin-bottom: 58px; display: flex; flex-direction: column; cursor: pointer; color: #111; width: 100%; }
         .logo-text-stack { display: flex; flex-direction: column; width: 100%; }
