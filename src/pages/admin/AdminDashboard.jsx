@@ -302,8 +302,9 @@ export default function AdminDashboard() {
         .metric-row { font-size: 0.65rem; font-weight: 700; color: #aaa; display: flex; gap: 10px; }
         .metric-val { color: #666; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 60px; width: 60%; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 20px; margin-bottom: 60px; width: 100%; }
         .kpi-card { background: #fff; padding: 20px; border-radius: 16px; border: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 8px; justify-content: center; align-items: center; text-align: center; aspect-ratio: 1 / 1; transition: 0.3s; }
+        .kpi-card-empty { background: #fafafa; border: 1.5px dashed #e8e8e8; border-radius: 16px; aspect-ratio: 1 / 1; }
         .kpi-card:hover { border-color: #111; transform: translateY(-2px); }
         .kpi-label { font-size: 1.0rem; color: #888; font-weight: 800; margin-top: -4px; margin-bottom: -4px; letter-spacing: -0.5px; }
         .kpi-value-row { display: flex; align-items: baseline; justify-content: center; gap: 4px; }
@@ -416,6 +417,9 @@ export default function AdminDashboard() {
                   <span className="kpi-unit">원</span>
                 </div>
               </div>
+              <div className="kpi-card-empty" />
+              <div className="kpi-card-empty" />
+              <div className="kpi-card-empty" />
             </div>
 
             {['운영', '인사', '생산', '과제'].map(type => (
