@@ -34,9 +34,10 @@ export default function AdminDashboard() {
   });
   const [beanSales, setBeanSales] = useState(0);
   const [dessertSales, setDessertSales] = useState(0);
-  const [syncStatus, setSyncStatus] = useState('connecting'); // 'live' | 'polling' | 'connecting'
+  const [syncStatus, setSyncStatus] = useState('connecting');
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [monthOrderCount, setMonthOrderCount] = useState(0);
+  const [usageStats, setUsageStats] = useState({ supabase: null, vercel: null, configured: { supabase: false, vercel: false } });
 
   const navigate = useNavigate();
 
@@ -98,6 +99,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchUsageStats = async () => {
+    try {
+      const res = await fetch('/api/usage');
+      if (res.ok) {
+        const data = await res.json();
+        setUsageStats(data);
+      }
+    } catch (e) {
+      console.error('fetchUsageStats error:', e);
+    }
+  };
+
   const fetchUnifiedData = async () => {
     try {
       const [opsData, hrData, prodData, taskData] = await Promise.all([
@@ -143,6 +156,7 @@ export default function AdminDashboard() {
     fetchSecurityLogs();
     fetchUnifiedData();
     fetchOrderSales();
+    fetchUsageStats();
 
     // Realtime 구독 (즉시 반영 시도)
     const dashboardChannel = supabase.channel('admin_dashboard');
@@ -168,10 +182,16 @@ export default function AdminDashboard() {
       fetchOrderSales();
     }, 30000);
 
+    // 5분마다 사용량 지표 갱신 (API 호출 반복 최소화)
+    const usagePolling = setInterval(() => {
+      fetchUsageStats();
+    }, 300000);
+
     return () => {
       mounted = false;
       clearTimeout(fallbackTimer);
       clearInterval(salesPolling);
+      clearInterval(usagePolling);
       supabase.removeChannel(dashboardChannel);
     };
   }, []);
@@ -416,16 +436,44 @@ export default function AdminDashboard() {
               </div>
               <div className="kpi-card-empty" />
               <div className="kpi-card-empty" />
-              <div className="kpi-card" style={{ gap: '6px', background: syncStatus === 'live' ? '#fff' : '#fffaf7' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none' }} />
-                  <span className="kpi-label" style={{ margin: 0, color: syncStatus === 'live' ? '#FF6A00' : '#aaa', fontSize: '0.75rem' }}>
-                    {syncStatus === 'live' ? 'LIVE SYNC' : syncStatus === 'polling' ? 'POLLING' : 'CONNECTING...'}
+              <div className="kpi-card" style={{ gap: '0', background: syncStatus === 'live' ? '#fff' : '#fffaf7', position: 'relative', padding: '16px', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+                {/* 상단: 상태 배지 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: syncStatus === 'live' ? '#FF6A00' : '#ccc', animation: syncStatus === 'live' ? 'pulse-orange 1.5s infinite' : 'none', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.7rem', fontWeight: 900, color: syncStatus === 'live' ? '#FF6A00' : '#aaa', letterSpacing: '0.5px' }}>
+                    {syncStatus === 'live' ? 'LIVE' : syncStatus === 'polling' ? 'POLL' : 'CONN...'}
                   </span>
                 </div>
-                <div style={{ fontSize: '1.0rem', fontWeight: 900, letterSpacing: '-0.5px' }}>{monthOrderCount}<span style={{ fontSize: '0.7rem', color: '#ccc', fontWeight: 600, marginLeft: '2px' }}>주문</span></div>
-                <div style={{ fontSize: '0.65rem', color: '#bbb', fontWeight: 600, lineHeight: 1.4, textAlign: 'center' }}>
-                  {lastSyncTime ? `마지막 동기\n${lastSyncTime.getHours().toString().padStart(2,'0')}:${lastSyncTime.getMinutes().toString().padStart(2,'0')}:${lastSyncTime.getSeconds().toString().padStart(2,'0')}` : '동기 대기 중'}
+                {/* 중단: Supabase / Vercel 사용량 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
+                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>SUPABASE DB</span>
+                    <span style={{ color: '#666' }}>
+                      {usageStats.supabase?.dbSize != null
+                        ? `${(usageStats.supabase.dbSize / 1024 / 1024).toFixed(1)}MB / 512MB`
+                        : usageStats.configured?.supabase ? '로딩...' : '설정 필요'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>API REQ</span>
+                    <span style={{ color: '#666' }}>
+                      {usageStats.supabase?.apiRequests != null
+                        ? `${(usageStats.supabase.apiRequests / 1000).toFixed(1)}k / 500k`
+                        : '—'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>VERCEL</span>
+                    <span style={{ color: '#666' }}>
+                      {usageStats.configured?.vercel ? '연동됨' : '설정 필요'}
+                    </span>
+                  </div>
+                </div>
+                {/* 하단 우측: 마지막 동기 시간 */}
+                <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '0.55rem', color: '#ccc', fontWeight: 600, textAlign: 'right' }}>
+                  {lastSyncTime
+                    ? `${lastSyncTime.getHours().toString().padStart(2,'0')}:${lastSyncTime.getMinutes().toString().padStart(2,'0')}:${lastSyncTime.getSeconds().toString().padStart(2,'0')}`
+                    : '--:--:--'}
                 </div>
               </div>
             </div>
