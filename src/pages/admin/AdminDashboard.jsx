@@ -537,8 +537,8 @@ export default function AdminDashboard() {
       <main className="main-content">
         <header className="page-header">
           <div>
-            <h1>{activeTab === 'overview' ? 'Business Overview' : `${activeTab} Management`}</h1>
-            <p>{activeTab === 'overview' ? '통합 비즈니스 인텔리전스 시스템' : `실시간 동기화 데이터 세트`}</p>
+            <h1>{activeTab === 'overview' ? TENANT_CONFIG.dashboard.overviewTitle : `${activeTab} Management`}</h1>
+            <p>{activeTab === 'overview' ? TENANT_CONFIG.dashboard.overviewSubtitle : `실시간 동기화 데이터 세트`}</p>
           </div>
         </header>
 
@@ -623,10 +623,8 @@ export default function AdminDashboard() {
                     : '--:--:--'}
                 </div>
               </div>
-            </div>
-
-            {/* 하단 확장 섹션: 8열 x 3행 그리드 추가 */}
-            <div className="kpi-grid" style={{ marginTop: '20px' }}>
+              
+              {/* 하단 확장 섹션: 8열 x 3행 그리드 추가 */}
               {[...Array(24)].map((_, i) => (
                 <div key={i} className="kpi-card-empty" />
               ))}
