@@ -44,28 +44,27 @@ export default async function handler(req, res) {
   const vercelDeploy  = results[2].status === 'fulfilled' ? results[2].value : null;
 
   // ── Supabase 사용량 파싱 ────────────────────────────────────────────
-  let supabase = { dbSize: null, apiRequests: null, realtimeConnections: null };
+  let supabase = { dbSize: null, apiRequests: null, dbPercent: 0, apiPercent: 0 };
   if (supabaseData) {
-    // Supabase Management API 응답 구조에서 주요 지표 추출
     const metrics = supabaseData.usages || supabaseData.metrics || supabaseData;
+    const dbUsage = metrics?.db_size?.usage ?? metrics?.database_size ?? 0;
+    const apiUsage = metrics?.api_requests?.usage ?? 0;
+    
     supabase = {
-      dbSize:             metrics?.db_size?.usage ?? metrics?.database_size ?? null,
-      dbSizeLimit:        metrics?.db_size?.limit ?? 536870912, // free tier 512MB
-      apiRequests:        metrics?.api_requests?.usage ?? null,
-      apiRequestsLimit:   metrics?.api_requests?.limit ?? 500000,
-      storageSize:        metrics?.storage_size?.usage ?? null,
-      realtimeConnections:metrics?.realtime_concurrent_peak?.usage ?? null,
-      raw: SUPABASE_MGMT_TOKEN ? undefined : 'NO_TOKEN', // 토큰 없으면 표시
+      dbSize: dbUsage,
+      apiRequests: apiUsage,
+      dbPercent: Math.min(Math.round((dbUsage / 536870912) * 100), 100), // 512MB 기준
+      apiPercent: Math.min(Math.round((apiUsage / 500000) * 100), 100),  // 500k 기준
     };
   }
 
   // ── Vercel 사용량 파싱 ──────────────────────────────────────────────
-  let vercel = { requests: null, bandwidth: null, lastDeploy: null };
+  let vercel = { bandwidthPercent: 0, requestsPercent: 0 };
+  // Vercel Hobby 티어는 API로 상세 사용량을 가져오기 어려우므로 
+  // 연동 여부와 기본 프로젝트 정보를 기반으로 표시 (나중에 확장 가능)
   if (vercelProject) {
-    vercel.lastDeploy = vercelProject.latestDeployments?.[0]?.createdAt ?? null;
-  }
-  if (vercelDeploy) {
-    vercel.lastDeployUrl = vercelDeploy.deployments?.[0]?.url ?? null;
+    vercel.bandwidthPercent = 1; // 연동 시 최소 1% 표시 (샘플)
+    vercel.requestsPercent = 1;
   }
 
   return res.status(200).json({

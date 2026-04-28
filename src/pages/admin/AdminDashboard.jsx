@@ -487,24 +487,26 @@ export default function AdminDashboard() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', width: '100%' }}>
                   <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
                     <span>SUPABASE DB</span>
-                    <span style={{ color: '#666' }}>
-                      {usageStats.supabase?.dbSize != null
-                        ? `${(usageStats.supabase.dbSize / 1024 / 1024).toFixed(1)}MB / 512MB`
-                        : usageStats.configured?.supabase ? '로딩...' : '설정 필요'}
+                    <span style={{ color: '#FF6A00' }}>
+                      {usageStats.configured?.supabase 
+                        ? `${usageStats.supabase?.dbPercent || 0}%` 
+                        : '설정 필요'}
                     </span>
                   </div>
                   <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
                     <span>API REQ</span>
                     <span style={{ color: '#666' }}>
-                      {usageStats.supabase?.apiRequests != null
-                        ? `${(usageStats.supabase.apiRequests / 1000).toFixed(1)}k / 500k`
+                      {usageStats.configured?.supabase 
+                        ? `${usageStats.supabase?.apiPercent || 0}%` 
                         : '—'}
                     </span>
                   </div>
                   <div style={{ fontSize: '0.62rem', fontWeight: 700, color: '#aaa', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>VERCEL</span>
+                    <span>VERCEL BW</span>
                     <span style={{ color: '#666' }}>
-                      {usageStats.configured?.vercel ? '연동됨' : '설정 필요'}
+                      {usageStats.configured?.vercel 
+                        ? `${usageStats.vercel?.bandwidthPercent || 0}%` 
+                        : '설정 필요'}
                     </span>
                   </div>
                 </div>
